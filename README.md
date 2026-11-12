@@ -8,6 +8,7 @@
 [![PostgreSQL 16 + pgvector](https://img.shields.io/badge/PostgreSQL-16_+_pgvector-336791.svg?logo=postgresql&logoColor=white)](https://github.com/pgvector/pgvector)
 [![FastEmbed ONNX](https://img.shields.io/badge/AI%2FML-FastEmbed_ONNX-FF6F00.svg)](https://github.com/qdrant/fastembed)
 [![Test Suite Status](https://img.shields.io/badge/Tests-146%2F146_Passing-brightgreen.svg)]()
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](cortexx_flame_in_freefall_demo.ipynb)
 
 **A production-ready Scientific Intelligence (SI) and flight-telemetry analytics platform transforming NASA microgravity combustion flight archives into explainable spacecraft fire safety insights.**
 
@@ -204,6 +205,17 @@ npm run dev
 ```
 
 Open `http://localhost:3000` in your web browser.
+
+---
+
+### Option C: Interactive Google Colab Notebook (Zero Local Setup)
+
+Run the complete Scientific Intelligence engine, authentic NASA data ingestion, Plotly charts, and query console directly in your browser with zero installation:
+
+- **Colab Notebook**: [`notebooks/cortexx_flame_in_freefall_demo.ipynb`](file:///c:/dev/NASA-SPACE-APP-2026/notebooks/cortexx_flame_in_freefall_demo.ipynb)
+- **Top-Level Copy**: [`cortexx_flame_in_freefall_demo.ipynb`](file:///c:/dev/NASA-SPACE-APP-2026/cortexx_flame_in_freefall_demo.ipynb)
+- **Features**: FastEmbed ONNX local embeddings, RRF hybrid ranking, $d^2$ droplet burning regression curves, sensor missingness matrix, and live judge query console.
+
 
 ---
 
