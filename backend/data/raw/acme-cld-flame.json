@@ -1,0 +1,51 @@
+{
+  "combustion_regime": "laminar_diffusion",
+  "facility": "Combustion Integrated Rack (CIR)",
+  "fuel_type": "Methane (CH4)",
+  "gravity_level": "microgravity (~10^-6 g)",
+  "measurements": {
+    "chamber_pressure": {
+      "raw": 1.0,
+      "si": 101325.0,
+      "si_unit": "Pa",
+      "unit": "atm"
+    },
+    "chamber_temperature": {
+      "raw": 25.0,
+      "si": 298.15,
+      "si_unit": "K",
+      "unit": "degC"
+    },
+    "coflow_air_velocity": {
+      "raw": 20.0,
+      "si": 0.2,
+      "si_unit": "m/s",
+      "unit": "cm/s"
+    },
+    "flame_height": {
+      "raw": 18.5,
+      "si": 0.0185,
+      "si_unit": "m",
+      "unit": "mm"
+    },
+    "fuel_flow_rate": {
+      "raw": 25.0,
+      "si": 4.16667e-07,
+      "si_unit": "m^3/s",
+      "unit": "sccm"
+    },
+    "initial_droplet_diameter": null,
+    "soot_volume_fraction": {
+      "raw": 1.2e-06,
+      "si": 1.2e-06,
+      "si_unit": "dimensionless",
+      "unit": "dimensionless"
+    }
+  },
+  "nasa_source_url": "https://ntrs.nasa.gov/citations/20190001859",
+  "project_acronym": "ACME",
+  "slug": "acme-cld-flame",
+  "source_repository": "NASA NTRS",
+  "summary": "Coflow laminar diffusion flames in microgravity to study soot formation and thermal radiation.",
+  "title": "ACME Coflow Laminar Diffusion Flame"
+}

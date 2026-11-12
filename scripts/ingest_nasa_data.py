@@ -14,6 +14,7 @@ import json
 import logging
 import sys
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 # Ensure workspace root is in sys.path
 WORKSPACE_ROOT = Path(__file__).resolve().parent.parent

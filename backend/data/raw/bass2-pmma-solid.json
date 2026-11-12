@@ -1,0 +1,39 @@
+{
+  "combustion_regime": "solid_spread",
+  "facility": "Microgravity Science Glovebox (MSG)",
+  "fuel_type": "PMMA",
+  "gravity_level": "microgravity (~10^-6 g)",
+  "measurements": {
+    "chamber_pressure": {
+      "raw": 14.7,
+      "si": 101352.93,
+      "si_unit": "Pa",
+      "unit": "psi"
+    },
+    "chamber_temperature": {
+      "raw": 75.0,
+      "si": 297.04,
+      "si_unit": "K",
+      "unit": "degF"
+    },
+    "flame_spread_rate": {
+      "raw": 5.2,
+      "si": 0.0052,
+      "si_unit": "m/s",
+      "unit": "mm/s"
+    },
+    "radiative_flux": null,
+    "soot_volume_fraction": {
+      "raw": 3.5e-06,
+      "si": 3.5e-06,
+      "si_unit": "dimensionless",
+      "unit": "dimensionless"
+    }
+  },
+  "nasa_source_url": "https://ntrs.nasa.gov/citations/20160005721",
+  "project_acronym": "BASS-II",
+  "slug": "bass2-pmma-solid",
+  "source_repository": "NASA NTRS",
+  "summary": "Burning and suppression of solid fuels (PMMA) in microgravity aboard the ISS.",
+  "title": "BASS-II PMMA Solid Fuel Burning and Suppression"
+}

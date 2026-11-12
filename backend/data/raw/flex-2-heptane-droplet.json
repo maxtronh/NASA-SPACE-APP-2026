@@ -1,0 +1,51 @@
+{
+  "combustion_regime": "droplet_combustion",
+  "facility": "Combustion Integrated Rack (CIR)",
+  "fuel_type": "n-Heptane",
+  "gravity_level": "microgravity (~10^-6 g)",
+  "measurements": {
+    "burning_rate_constant": {
+      "raw": 0.78,
+      "si": 7.8e-07,
+      "si_unit": "m^2/s",
+      "unit": "mm^2/s"
+    },
+    "chamber_pressure": {
+      "raw": 14.7,
+      "si": 101352.93,
+      "si_unit": "Pa",
+      "unit": "psi"
+    },
+    "chamber_temperature": {
+      "raw": 77.0,
+      "si": 298.15,
+      "si_unit": "K",
+      "unit": "degF"
+    },
+    "extinction_diameter": {
+      "raw": 0.95,
+      "si": 0.00095,
+      "si_unit": "m",
+      "unit": "mm"
+    },
+    "initial_droplet_diameter": {
+      "raw": 2.1,
+      "si": 0.0021,
+      "si_unit": "m",
+      "unit": "mm"
+    },
+    "radiant_emission": {
+      "raw": 0.45,
+      "si": 0.45,
+      "si_unit": "W",
+      "unit": "W"
+    },
+    "soot_volume_fraction": null
+  },
+  "nasa_source_url": "https://ntrs.nasa.gov/citations/20140011032",
+  "project_acronym": "FLEX-2",
+  "slug": "flex-2-heptane-droplet",
+  "source_repository": "NASA NTRS",
+  "summary": "Investigation of isolated n-heptane droplet burning and extinction in microgravity aboard the ISS.",
+  "title": "FLEX-2 Heptane Droplet Combustion in Microgravity"
+}

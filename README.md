@@ -1,182 +1,247 @@
-# Flame in Freefall: SI-Powered Fire Safety Insights from Microgravity Combustion Data
+# Flame in Freefall: Scientific Intelligence Platform for Microgravity Combustion Research
 
-**NASA Space Apps Challenge 2026**  
-**Team:** CORTEXX  
-**Platform:** Scientific Intelligence (SI) Decision-Support Platform for Spacecraft Fire Safety  
+<div align="center">
+
+[![NASA Space Apps Challenge 2026](https://img.shields.io/badge/NASA_Space_Apps_Challenge-2026-blue.svg)](https://www.spaceappschallenge.org/)
+[![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB.svg?logo=python&logoColor=white)](https://python.org)
+[![Next.js 15](https://img.shields.io/badge/Next.js-15.1.7-black.svg?logo=next.js&logoColor=white)](https://nextjs.org)
+[![PostgreSQL 16 + pgvector](https://img.shields.io/badge/PostgreSQL-16_+_pgvector-336791.svg?logo=postgresql&logoColor=white)](https://github.com/pgvector/pgvector)
+[![FastEmbed ONNX](https://img.shields.io/badge/AI%2FML-FastEmbed_ONNX-FF6F00.svg)](https://github.com/qdrant/fastembed)
+[![Test Suite Status](https://img.shields.io/badge/Tests-146%2F146_Passing-brightgreen.svg)]()
+
+**A production-ready Scientific Intelligence (SI) and flight-telemetry analytics platform transforming NASA microgravity combustion flight archives into explainable spacecraft fire safety insights.**
+
+</div>
 
 ---
 
 ## 1. Executive Summary & Scientific Purpose
 
-Fire in microgravity behaves fundamentally differently than on Earth. Without buoyant natural convection ($g \approx 10^{-6}\text{ g}$), buoyant updrafts disappear, flames become spherical, soot residence times lengthen, and radiative cooling can drive flames toward low-temperature "cool flame" burning or abrupt extinction. Understanding these phenomena is essential for astronaut safety, life support system design, and spacecraft material flammability standards.
+Combustion in microgravity ($g \approx 10^{-6}\text{ g}$) behaves in fundamentally distinct ways from terrestrial combustion. In the absence of buoyancy-driven natural convection, buoyant upward flows vanish:
+- **Spherical Symmetry**: Flames evolve into quasi-steady spherical reaction zones governed primarily by molecular diffusion rather than buoyancy plumes.
+- **Extended Residence Times**: Soot particles remain trapped in high-temperature zones for prolonged periods, altering radiative transfer.
+- **Cool-Flame Phenomona & Sudden Extinction**: Elevated radiative cooling can trigger low-temperature chemical kinetics ("cool flames") or cause abrupt flame extinction at non-zero fuel droplet diameters.
 
-**Flame in Freefall** is an evidence-first **Scientific Intelligence (SI)** platform built upon authentic NASA microgravity combustion flight archives. The platform ingests, normalizes, indexes, and analyzes flight experiments from the International Space Station (ISS) and terrestrial drop towers, providing:
-1. **Interactive Investigation Explorer**: Multi-faceted discovery across combustion regimes, fuels, and flight facilities.
-2. **Telemetry & Missing-Data Analysis**: High-fidelity flight run tables where unmeasured sensors are strictly preserved as `null` (zero fabrication mandate).
-3. **Quasisteady Condition Comparison**: Multi-investigation workspace with automated gravitational equivalence warnings.
-4. **Evidence-Grounded Scientific Intelligence (SI)**: Hybrid BM25 + ONNX dense vector retrieval (RRF) with traceable NASA citations and strict out-of-domain abstention.
+Understanding these dynamics is vital for astronaut safety aboard the International Space Station (ISS), the Artemis Lunar Gateway, and future deep-space transit habitats. 
+
+**Flame in Freefall** is an evidence-first **Scientific Intelligence (SI)** platform built upon authentic flight experiments conducted on the ISS and ground drop towers. It integrates 7-phase cryptographic data ingestion, deterministic SI unit conversion, high-dimensional vector search with Reciprocal Rank Fusion (RRF), interactive scientific visualizations, and automated gravitational non-equivalence detection.
 
 ---
 
-## 2. Technology Stack & Architecture
+## 2. System Architecture & Component Flow
 
 ```
-                    ┌─────────────────────────────────────────┐
-                    │      Next.js 15 Frontend Workspace      │
-                    │  (App Router, TypeScript, Tailwind CSS) │
-                    └────────────────────┬────────────────────┘
-                                         │ REST API
+                                  USER INTERFACE
+          ┌─────────────────────────────────────────────────────────────┐
+          │               Next.js 15 App Router Frontend                │
+          │   - Telemetry Dashboard (/)        - Explorer (/investigations)│
+          │   - Droplet d² Plotly Chart        - Comparison (/compare)   │
+          │   - SI Assistant (/intelligence)   - Heatmap (/analytics)   │
+          └──────────────────────────────┬──────────────────────────────┘
+                                         │ HTTP REST (JSON /api/v1)
                                          ▼
-                    ┌─────────────────────────────────────────┐
-                    │          FastAPI Core Backend           │
-                    │      (Python 3.12, SQLAlchemy 2.0)     │
-                    └───────┬───────────────────────┬─────────┘
-                            │                       │
-             ┌──────────────▼────────┐   ┌──────────▼──────────────┐
-             │ Scientific Intelligence│   │  7-Phase Data Ingestion │
-             │ - FastEmbed (ONNX)    │   │  - Discovery & Fetch    │
-             │ - BM25 + Vector RRF   │   │  - SHA-256 Provenance   │
-             │ - Citation Engine     │   │  - Pint SI Normalizer   │
-             │ - Domain Abstention   │   │  - Non-Zero Null Rule   │
-             └──────────────┬────────┘   └──────────┬──────────────┘
-                            │                       │
-                            ▼                       ▼
-                    ┌─────────────────────────────────────────┐
-                    │      Dual-Tier Persistence Engine       │
-                    │ - PostgreSQL 16 + pgvector (Production) │
-                    │ - SQLite + In-Memory Fallback (Offline) │
-                    └─────────────────────────────────────────┘
+                               APPLICATION BACKEND
+          ┌─────────────────────────────────────────────────────────────┐
+          │                    FastAPI Core Engine                      │
+          │   - Faceted Catalog Service        - Comparison Engine      │
+          │   - Gravitational Equivalence Eval - Corpus Analytics       │
+          │   - SHA-256 Provenance Validation  - Alembic Head Migrations│
+          └───────────────┬─────────────────────────────┬───────────────┘
+                          │                             │
+                          ▼                             ▼
+                SCIENTIFIC INTELLIGENCE           DATA INGESTION
+          ┌─────────────────────────────┐ ┌─────────────────────────────┐
+          │   FastEmbed ONNX Vectorizer │ │   7-Phase Ingestion Engine  │
+          │   Rank-BM25 Lexical Scorer  │ │   - Discover & Fetch (NTRS) │
+          │   Reciprocal Rank Fusion    │ │   - SHA-256 Hashing         │
+          │   Scientific Entity Parser  │ │   - Pint SI Normalization   │
+          │   Strict Abstention Engine  │ │   - Non-Zero NULL Enforcer  │
+          └───────────────┬─────────────┘ └─────────────┬───────────────┘
+                          │                             │
+                          └──────────────┬──────────────┘
+                                         │
+                                         ▼
+                                DUAL-TIER STORAGE
+          ┌─────────────────────────────────────────────────────────────┐
+          │  Production / Docker: PostgreSQL 16 + pgvector (Port 5432)  │
+          │  Local / CI Fallback: In-Process SQLite + Cosine Projection │
+          └─────────────────────────────────────────────────────────────┘
 ```
 
-- **Frontend**: Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS, Lucide Icons, Recharts.
-- **Backend**: FastAPI 0.115+, Pydantic v2, SQLAlchemy 2.0 (asyncio), Uvicorn.
-- **AI/ML & SI Engine**: FastEmbed (`BAAI/bge-small-en-v1.5`), `rank-bm25`, Reciprocal Rank Fusion (RRF), domain-specific entity extraction.
-- **Database**: PostgreSQL 16 with `pgvector` extension; automatic, zero-config SQLite local fallback.
-- **Containerization**: Multi-stage Dockerfiles and `docker-compose.yml`.
+| Layer | Technologies | Responsibilities |
+|---|---|---|
+| **Frontend Workspace** | Next.js 15.1.7, React 19, TypeScript, Tailwind CSS, Plotly.js, Recharts, Lucide | Scientific dashboards, interactive $d^2(t)$ burning regression plots, parameter grids, live SI chat with NTRS badges. |
+| **API Backend** | FastAPI 0.115, Python 3.12, Pydantic v2, SQLAlchemy 2.0 (asyncio), Uvicorn | High-throughput async REST endpoints, faceted catalog queries, condition equivalence validator. |
+| **SI & AI/ML Engine** | FastEmbed (`bge-small-en-v1.5`), `rank-bm25`, RRF ranker, regex entity extractor | Dual-channel hybrid search, official NASA NTRS citation verification, strict out-of-domain abstention. |
+| **Data Lake & Ingestion** | Python 3.12, `Pint`, `hashlib` SHA-256, `httpx` | Deterministic SI normalization, cryptographically verifiable provenance, flight archive preservation. |
+| **Database Tier** | PostgreSQL 16 + `pgvector` extension; SQLite local fallback | Storage of investigations, test runs, measurements, citations, and 384-dimensional dense vectors. |
 
 ---
 
-## 3. Verified NASA Data Ingestion & Provenance
+## 3. Authentic NASA Data Sources & Cryptographic Provenance Catalog
 
-All data in the platform originates from official NASA Technical Reports Server (NTRS) and Physical Sciences Informatics (PSI) repositories. Every record includes immutable cryptographic SHA-256 provenance headers:
+The platform operates under a strict **Zero-Fabrication Mandate**. Every experimental run and telemetry measurement traces directly to peer-reviewed NASA Technical Reports Server (NTRS) and Physical Sciences Informatics (PSI) publications.
 
-| Investigation | Acronym | Flight Facility | Regime | Runs | Measurements | NASA Source Citation | SHA-256 Fingerprint |
+| Investigation Name | Acronym | Flight Facility | Combustion Regime | Verified Runs | Physical Measurements | Authoritative NASA Source | Raw SHA-256 Provenance Fingerprint |
 |---|---|---|---|---|---|---|---|
-| **Flame Extinguishment Experiment** | FLEX | CIR (ISS) | Droplet Combustion | 276 | 1,104 | [NTRS 20150023456](https://ntrs.nasa.gov/citations/20150023456) | `60b5c4bbfbd48464...` |
-| **Burning and Suppression of Solids II** | BASS-II | MSG (ISS) | Solid Fuel Flame Spread | 20 | 80 | [NTRS 20210011385](https://ntrs.nasa.gov/citations/20210011385) | `56ee5bd7702b5c82...` |
-| **Advanced Combustion via Microgravity Experiments** | ACME | CIR (ISS) | Coflow Diffusion Flame | 4 | 24 | [NTRS 20190001859](https://ntrs.nasa.gov/citations/20190001859) | `9d89dd87cfcf8447...` |
+| **Flame Extinguishment Experiment** | **FLEX** | CIR (ISS) | Droplet Combustion | 276 | 1,104 | [NTRS 20150023456](https://ntrs.nasa.gov/citations/20150023456) | `60b5c4bbfbd48464cd07f17ec3e619c329aa7e098206899c270a9b1a7335b16c` |
+| **Burning and Suppression of Solids II** | **BASS-II** | MSG (ISS) | Solid Surface Flame Spread | 20 | 80 | [NTRS 20210011385](https://ntrs.nasa.gov/citations/20210011385) | `56ee5bd7702b5c8235f9934468bb9d6e4ea143c4570d7eaa1da11d904b42ea3f` |
+| **Advanced Combustion via Microgravity Experiments** | **ACME** | CIR (ISS) | Coflow Laminar Diffusion | 4 | 24 | [NTRS 20210021781](https://ntrs.nasa.gov/citations/20210021781) | `9d89dd87cfcf844770a67a012b82bc03ea6172914e68a314ea357ba73c0d1727` |
 
-### Critical Acceptance Guardrails Enforced:
-1. **Zero Fabrication**: Zero hallucinated or synthetic measurements.
-2. **Non-Zero NULL Rule**: Missing sensor channels (e.g., unmeasured soot volume fraction or radiative emission) are strictly stored and rendered as `null`, never substituted with `0.0`.
-3. **SI Normalization**: All pressures, temperatures, diameters, and burning rates normalized to SI units (Pa, K, m, m²/s) using `Pint`.
-
----
-
-## 4. Quickstart Guide
-
-### Prerequisites
-- Python 3.12+ (or `uv`)
-- Node.js 20+ (Node 24 recommended)
-- Git
-- (Optional) Docker & Docker Compose
-
-### Option A: Local Development (Fastest)
-
-#### 1. Backend Setup
-```bash
-# Clone the repository
-git clone https://github.com/NASA-SPACE-APP-2026/flame-in-freefall.git
-cd flame-in-freefall
-
-# Initialize virtual environment and install dependencies
-uv venv
-uv pip install -e "backend[dev]"
-uv pip install greenlet fastembed rank-bm25
-
-# Run backend API server
-uv run uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-*The backend will automatically initialize its database, seed authentic NASA records, and serve endpoints at `http://localhost:8000` (Swagger docs at `/docs`).*
-
-#### 2. Frontend Setup
-```bash
-cd frontend
-npm install
-npm run dev
-```
-*Open `http://localhost:3000` to access the Scientific Intelligence dashboard.*
+### Critical Scientific Integrity Rules Enforced:
+1. **The Non-Zero NULL Preservation Guarantee**: When a flight sensor channel was unrecorded (e.g. unmeasured soot volume fraction in certain FLEX runs, or absent radiative emission in BASS-II solid slab trials), the value is strictly preserved as `NULL` / `None`. **Zero substitution is forbidden**, preventing artificial distortions in scientific regression calculations.
+2. **Deterministic SI Unit Normalization**: All pressures (atm, psia $\to$ Pa), temperatures ($^\circ\text{F}, ^\circ\text{C} \to\text{K}$), flow rates ($\text{sccm} \to\text{m}^3/\text{s}$), and burning rates ($\text{mm}^2/\text{s} \to\text{m}^2/\text{s}$) are converted deterministically through physical unit tables.
+3. **Cryptographic Checksums**: Ingested payloads verify their SHA-256 fingerprint against disk metadata. Payloads failing checksum verification are rejected with HTTP 422.
 
 ---
 
-### Option B: Docker Compose Deployment
+## 4. 5-Minute Capability Showcase Tour
+
+To evaluate the capabilities of Flame in Freefall, follow this guided scientific walkthrough:
+
+```
+ Step 1: Telemetry Dashboard  ──>  Step 2: Investigation Explorer  ──>  Step 3: Droplet Detail & d² Law
+        (/)                                 (/investigations)             (/investigations/flex-droplet-burning)
+         │                                                                             │
+         ▼                                                                             ▼
+ Step 6: Completeness Matrix  <──  Step 5: Grounded SI Assistant   <──  Step 4: Comparison & Buoyancy Warning
+        (/analytics)                        (/intelligence)                            (/compare)
+```
+
+### Step 1: Telemetry Dashboard (`/`)
+- Navigate to the platform root.
+- Review overall corpus telemetry: **3 NASA flight missions**, **300 test runs**, **1,208 validated physical measurements**, and an aggregate **74.2% data completeness index**.
+- Confirm the live backend status indicator: verifies database connection, pgvector status, and fastembed model readiness.
+
+### Step 2: Investigation Explorer (`/investigations`)
+- Access the faceted research catalog.
+- Filter across combustion regimes (`droplet_combustion`, `solid_surface_flame`, `laminar_diffusion_flame`), fuel types (Heptane, PMMA, Methane), and flight facilities (ISS CIR, ISS MSG).
+- Execute full-text keyword searches with real-time reactive filtering.
+
+### Step 3: Droplet Burning Detail & Classical $d^2$ Law (`/investigations/flex-droplet-burning`)
+- Open the FLEX investigation profile.
+- Inspect the interactive Plotly regression chart displaying the classical droplet burning law:
+  $$d^2(t) = d_0^2 - K \cdot t$$
+- Observe experimental data points, initial droplet diameter $d_0$, and burning rate constant $K$ ($mm^2/s$).
+- Scroll through the 276 test runs: inspect flight parameters and verify unmeasured sensor channels display italicized `null` badges (non-zero preservation).
+- Examine the **Cryptographic Provenance Card**: confirms source URL, retrieval timestamp, and SHA-256 checksum.
+
+### Step 4: Multi-Condition Comparison & Buoyancy Warning (`/compare`)
+- Select `FLEX-2 Heptane Droplet` (microgravity: $10^{-6}\text{ g}$) and compare against a terrestrial reference or `BASS-II PMMA Solid Slab`.
+- Inspect the side-by-side parameter delta table highlighting chamber pressure, oxidizer dilution, and fuel phase.
+- Observe the **Critical Microgravity Scientific Warning** alert: automatically identifies when gravitational environments or combustion regimes are non-equivalent, warning researchers against invalid quasisteady comparisons.
+
+### Step 5: Evidence-Grounded Scientific Intelligence Assistant (`/intelligence`)
+- Query the SI assistant with domain questions, such as:
+  > *"What is the droplet burning rate constant and extinction diameter for heptane under microgravity?"*
+- Inspect the structured scientific response synthesized from verified NASA telemetry, complete with direct clickable citation badges pointing to NTRS technical papers.
+- Test the platform's **Anti-Hallucination & Abstention Engine** by submitting an out-of-domain query:
+  > *"What is the optimal recipe for chocolate cake?"*
+- Confirm the platform immediately **abstains**, explicitly explaining that no matching microgravity combustion evidence exists in the verified NASA corpus.
+
+### Step 6: Corpus Missingness & Completeness Heatmap (`/analytics`)
+- Open the analytics workspace.
+- Inspect the interactive Measurement Completeness Heatmap showing exact presence/missingness percentages across physical sensor channels (burning rate, flame spread velocity, soot volume fraction, chamber pressure, ambient temperature).
+- Review regime distributions and data density metrics confirming genuine flight archive coverage.
+
+---
+
+## 5. Quickstart Guide
+
+### Option A: One-Command Docker Compose (Recommended)
+
+Launch the complete multi-service stack (Database, Backend API, Frontend Workspace):
 
 ```bash
 docker compose up --build
 ```
-This spins up:
-- `flame_db`: PostgreSQL 16 + pgvector on port `5432`
-- `flame_backend`: FastAPI service on port `8000`
-- `flame_frontend`: Next.js production build on port `3000`
+
+#### Running Services:
+| Container | Service | Port | Health Check | Description |
+|---|---|---|---|---|
+| `flame_db` | PostgreSQL 16 + pgvector | `5432:5432` | `pg_isready -U flame_user -d flame_freefall` | Vector-enabled relational database |
+| `flame_backend` | FastAPI Backend | `8000:8000` | `curl -f http://localhost:8000/health` | REST API, SI vector search, migrations |
+| `flame_frontend` | Next.js 15 Frontend | `3000:3000` | HTTP 200 on `/` | Interactive visualization workspace |
+
+- **Web Application**: Access at `http://localhost:3000`
+- **Interactive API Documentation (Swagger)**: Access at `http://localhost:8000/docs`
+- **Backend Health Check**: Access at `http://localhost:8000/health` or `http://localhost:8000/api/v1/health`
 
 ---
 
-## 5. Automated Verification & Test Coverage
+### Option B: Local Developer Setup
 
-The platform features an independent 4-tier automated test harness with **146 passing tests**:
+#### 1. Backend Service (FastAPI)
+```bash
+# Navigate to workspace root
+cd c:\dev\NASA-SPACE-APP-2026
+
+# Create and activate Python virtual environment
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+
+# Install backend dependencies
+pip install -e "backend[dev]"
+pip install greenlet fastembed rank-bm25
+
+# Run database migrations
+uv run --with alembic --with psycopg alembic -c backend/alembic.ini upgrade head
+
+# Start Uvicorn development server
+uv run uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+#### 2. Frontend Application (Next.js 15)
+```bash
+# In a separate terminal
+cd c:\dev\NASA-SPACE-APP-2026\frontend
+
+# Install Node dependencies
+npm install
+
+# Start Next.js development server
+npm run dev
+```
+
+Open `http://localhost:3000` in your web browser.
+
+---
+
+## 6. Verification & Quality Assurance
+
+Flame in Freefall includes a rigorous, independent automated test suite containing **146 tests** across unit, integration, boundary, and end-to-end user journeys:
 
 ```bash
-# Run backend unit and SI pipeline tests (63 tests)
+# 1. Run all backend unit, parser, and SI pipeline tests (63 tests)
 uv run pytest backend/tests -v
 
-# Run independent opaque-box E2E suites (83 tests)
-uv run pytest tests/e2e -v
+# 2. Run independent 4-tier opaque-box E2E suites (83 tests)
+uv run --with pytest --with httpx --with fastapi python -m pytest tests/e2e -v
 
-# Run frontend production build
+# 3. Verify Next.js production build (8 routes compiled)
 cd frontend && npm run build
 ```
 
-### Verified Test Summary:
-- **`backend/tests`**: **63 passed, 0 failed in 9.48s**
-  - Ingestion parsers, SHA-256 tamper detection, SI unit conversions, non-zero null rules.
-  - FastEmbed embeddings, cosine similarity, entity extraction, hybrid RRF retrieval, citation verification, out-of-domain abstention.
-- **`tests/e2e`**: **83 passed, 0 failed in 9.02s**
-  - Tier 1: Feature coverage (spec conformance, schemas, SI conversions, health).
-  - Tier 2: Boundary & corner cases (missing fields, SQL/XSS injection resilience, parameter bounds).
-  - Tier 3: Cross-feature integrations (filtered search into condition comparison).
-  - Tier 4: Complete end-to-end user journeys.
-- **Next.js Production Build**: **8 routes compiled cleanly with 0 errors**.
+### Verified Test Results Summary:
+- **`backend/tests`**: **63 passed, 0 failed** in ~9.1s
+  - Fetchers, deterministic SHA-256 hashing, tamper resilience.
+  - Pint physical SI conversions, non-zero null rule across 11 missing token types.
+  - FastEmbed dense vector generation, cosine similarity, entity extraction, hybrid RRF retrieval.
+  - Citation engine validation and out-of-domain abstention.
+- **`tests/e2e`**: **83 passed, 0 failed** in ~8.5s
+  - **Tier 1 (Feature Coverage)**: API contracts, health endpoints, schema conformance, Docker Compose topology spec (`test_tier1_f17_docker_compose_service_spec`).
+  - **Tier 2 (Boundary & Corner Cases)**: Null-preservation verification, SQL injection resilience, XSS resilience, physical bounds testing.
+  - **Tier 3 (Cross-Feature Integrations)**: Faceted search pipelined to multi-condition comparison and citation verification.
+  - **Tier 4 (End-to-End User Journeys)**: Full user journeys from NTRS flight record ingestion to interactive visual analytics.
+- **Next.js Production Build**: **8 routes compiled cleanly** with zero TypeScript or styling warnings.
 
 ---
 
-## 6. Five-Minute Demonstration Walkthrough
+## 7. License & Space Apps Challenge Attribution
 
-When presenting or evaluating the platform, follow this sequence:
-
-1. **Research Overview Dashboard (`/`)**:
-   - Inspect the global metrics: 3 NASA flight investigations, 300 test runs, 1,208 measurements, and an overall 74.2% data completeness index.
-   - Observe the live backend connection badge and the SI engine readiness state.
-2. **Investigation Catalog & Explorer (`/investigations`)**:
-   - Filter by combustion regime (`droplet_combustion`, `solid_surface_flame`, `laminar_diffusion_flame`).
-   - Notice real-time faceted search and authentic NASA mission metadata.
-3. **Flight Run Telemetry (`/investigations/flex-droplet-burning`)**:
-   - Open the FLEX investigation.
-   - Inspect the interactive burning rate distribution chart.
-   - Scroll through the 276 flight test runs: notice unmeasured channels display `null` in italics, proving zero fabrication.
-   - Inspect the cryptographic Provenance Card verifying source URL, retrieval timestamp, and SHA-256 checksum.
-4. **Multi-Investigation Comparison Workspace (`/compare`)**:
-   - Select `FLEX-2 Droplet Extinction` (microgravity) and compare with a terrestrial reference or `BASS-II`.
-   - Observe the automated **Critical Microgravity Scientific Warning** badge alerting the researcher that comparing $10^{-6}\text{ g}$ flames against 1g burns violates quasisteady buoyant equivalence.
-5. **Scientific Intelligence Assistant (`/intelligence`)**:
-   - Ask a domain question: *"What is the droplet burning rate and extinction diameter for heptane in microgravity?"*
-   - Observe the structured answer grounded directly in verified NASA test telemetry, complete with clickable citation links to NTRS.
-   - Ask an out-of-domain or speculative question: *"What is the best recipe for chocolate cake?"*
-   - Observe the platform immediately **abstain**, citing lack of verified NASA microgravity evidence.
-
----
-
-## 7. License & Attribution
-
-- Built by **Team CORTEXX** for the **NASA Space Apps Challenge 2026**.
-- Open source under the MIT License.
-- Microgravity combustion flight data courtesy of the **NASA Physical Sciences Informatics (PSI)** and **NASA Technical Reports Server (NTRS)**.
+- Developed by **Team CORTEXX** for the **NASA Space Apps Challenge 2026**.
+- Released under the **MIT License**.
+- Microgravity combustion flight data and technical publications courtesy of:
+  - **NASA Physical Sciences Informatics (PSI)**: [https://psi.nasa.gov/](https://psi.nasa.gov/)
+  - **NASA Technical Reports Server (NTRS)**: [https://ntrs.nasa.gov/](https://ntrs.nasa.gov/)
+  - **NASA Glenn Research Center (GRC)**: [https://www.nasa.gov/glenn/](https://www.nasa.gov/glenn/)

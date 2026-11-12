@@ -1,0 +1,12 @@
+{
+  "id": 20190001859,
+  "title": "ACME Coflow Laminar Diffusion Flame",
+  "project_acronym": "ACME",
+  "facility": "Combustion Integrated Rack (CIR)",
+  "combustion_regime": "laminar_diffusion",
+  "fuel_type": "Methane (CH4)",
+  "gravity_level": "microgravity (~10^-6 g)",
+  "summary": "Coflow laminar diffusion flames in microgravity to study soot formation and thermal radiation.",
+  "nasa_source_url": "https://ntrs.nasa.gov/citations/20190001859",
+  "source_repository": "NASA NTRS"
+}
