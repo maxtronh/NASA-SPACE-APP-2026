@@ -1,4 +1,4 @@
-from typing import Dict
+
 from pydantic import BaseModel
 
 
@@ -10,5 +10,5 @@ class MissingDataMetric(BaseModel):
 
 class CorpusAnalyticsResponse(BaseModel):
     total_investigations: int
-    combustion_regimes: Dict[str, int]
-    missing_data_matrix: Dict[str, MissingDataMetric]
+    combustion_regimes: dict[str, int]
+    missing_data_matrix: dict[str, MissingDataMetric]

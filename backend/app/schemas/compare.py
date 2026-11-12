@@ -1,9 +1,10 @@
-from typing import Any, Dict, List
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
 class CompareRequest(BaseModel):
-    investigation_ids: List[str] = Field(
+    investigation_ids: list[str] = Field(
         ...,
         min_length=2,
         description="List of at least 2 investigation UUIDs or slugs to compare"
@@ -12,10 +13,10 @@ class CompareRequest(BaseModel):
 
 class EquivalenceAssessment(BaseModel):
     equivalent: bool
-    reasons: List[str]
+    reasons: list[str]
 
 
 class CompareResponse(BaseModel):
-    investigation_ids: List[str]
+    investigation_ids: list[str]
     equivalence_assessment: EquivalenceAssessment
-    comparison_grid: Dict[str, Any]
+    comparison_grid: dict[str, Any]

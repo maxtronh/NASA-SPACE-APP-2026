@@ -4,8 +4,10 @@ CORTEXX Scientific Intelligence Platform
 """
 
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.exc import SQLAlchemyError
 
 from backend.app.api.v1.router import api_v1_router
 from backend.app.core.config import settings
@@ -24,7 +26,7 @@ async def lifespan(app: FastAPI):
     # Initialize tables and pgvector extension
     try:
         await init_db()
-    except Exception as exc:
+    except (SQLAlchemyError, OSError) as exc:
         logger.error(f"Error during init_db: {exc}")
 
     # Seed authentic NASA records if empty
@@ -33,7 +35,7 @@ async def lifespan(app: FastAPI):
         async with session_factory() as session:
             try:
                 await seed_database_if_empty(session)
-            except Exception as exc:
+            except (SQLAlchemyError, OSError) as exc:
                 logger.error(f"Error seeding authentic NASA records: {exc}")
 
     logger.info("Flame in Freefall Backend initialized successfully.")

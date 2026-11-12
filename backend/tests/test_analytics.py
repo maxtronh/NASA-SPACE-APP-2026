@@ -1,4 +1,3 @@
-import pytest
 from fastapi.testclient import TestClient
 
 
@@ -19,7 +18,7 @@ def test_corpus_analytics_endpoint(client: TestClient):
 
     matrix = data["missing_data_matrix"]
     assert len(matrix) >= 5
-    for metric_name, stats in matrix.items():
+    for stats in matrix.values():
         assert "present_count" in stats
         assert "missing_count" in stats
         assert "completeness_pct" in stats

@@ -2,7 +2,7 @@
   "investigation": {
     "id": null,
     "slug": "acme-cld-flame",
-    "title": "ACME Coflow Laminar Diffusion Flame",
+    "title": "Recent Research on Flames of Gaseous Fuel Aboard the International Space Station ",
     "short_name": "ACME Laminar Diffusion Flame",
     "project_acronym": "ACME",
     "facility": "Combustion Integrated Rack (CIR)",
@@ -53,7 +53,7 @@
     "id": null,
     "investigation_id": null,
     "source_url": "https://ntrs.nasa.gov/citations/20190001859",
-    "retrieval_timestamp": "2026-11-12T18:32:37.283434+00:00",
+    "retrieval_timestamp": "2026-11-12T18:39:49.083439+00:00",
     "sha256_checksum": "9d89dd87cfcf844770a67a012b82bc03ea6172914e68a314ea357ba73c0d1727",
     "http_etag": null,
     "byte_size": 36240,

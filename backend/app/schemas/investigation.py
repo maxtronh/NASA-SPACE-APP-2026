@@ -1,6 +1,6 @@
-from typing import Any, Dict, List, Optional
-from uuid import UUID
-from pydantic import BaseModel, Field
+from typing import Any
+
+from pydantic import BaseModel
 
 
 class InvestigationSummary(BaseModel):
@@ -22,22 +22,22 @@ class PaginatedInvestigationsResponse(BaseModel):
     total: int
     limit: int
     offset: int
-    items: List[InvestigationSummary]
+    items: list[InvestigationSummary]
 
 
 class ProvenanceInfo(BaseModel):
     source_url: str
     retrieval_timestamp: Any
     sha256_checksum: str
-    original_measurements: Dict[str, Any]
-    si_measurements: Dict[str, Any]
+    original_measurements: dict[str, Any]
+    si_measurements: dict[str, Any]
     conversion_method: str = "deterministic_si_table_v1"
     validation_status: str = "VALIDATED"
 
 
 class InvestigationDetailResponse(BaseModel):
-    investigation: Dict[str, Any]
+    investigation: dict[str, Any]
     provenance: ProvenanceInfo
-    test_runs: Optional[List[Dict[str, Any]]] = None
+    test_runs: list[dict[str, Any]] | None = None
 
     model_config = {"from_attributes": True}

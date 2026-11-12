@@ -6,7 +6,7 @@ and strictly enforces the Non-Zero NULL policy for missing/unobserved values.
 """
 
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from ..models import (
     IngestionPayload,
@@ -32,7 +32,7 @@ class FLEXParser(BaseFlightParser):
     def parse(
         self,
         raw_text: str,
-        citation_metadata: Dict[str, Any],
+        citation_metadata: dict[str, Any],
         source_url: str = "https://ntrs.nasa.gov/citations/20150023456"
     ) -> IngestionPayload:
         """Parses full-text report and citation metadata into an authentic IngestionPayload."""
@@ -107,10 +107,10 @@ class FLEXParser(BaseFlightParser):
             measurements=measurements
         )
 
-    def _extract_table_ix_runs(self, raw_text: str) -> Tuple[List[TestRunRecord], List[MeasurementRecord]]:
+    def _extract_table_ix_runs(self, raw_text: str) -> tuple[list[TestRunRecord], list[MeasurementRecord]]:
         """Extracts individual test runs from Table IX in report text."""
-        test_runs: List[TestRunRecord] = []
-        measurements: List[MeasurementRecord] = []
+        test_runs: list[TestRunRecord] = []
+        measurements: list[MeasurementRecord] = []
 
         table_idx = raw_text.find("TABLE IX")
         if table_idx == -1:

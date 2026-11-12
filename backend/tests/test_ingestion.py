@@ -12,7 +12,6 @@ Tests:
 import json
 import math
 import os
-from pathlib import Path
 import sys
 import pytest
 
@@ -26,44 +25,36 @@ if BACKEND_ROOT not in sys.path:
 
 try:
     from backend.app.ingestion.fetcher import NASADataFetcher
-    from backend.app.ingestion.models import IngestionPayload, InvestigationRecord, ProvenanceRecord
     from backend.app.ingestion.normalizer import (
         convert_burning_rate_to_m2_s,
         convert_flow_rate_to_m3_s,
         convert_length_to_m,
-        convert_mole_fraction,
         convert_pressure_to_pa,
         convert_temperature_to_kelvin,
         convert_velocity_to_m_s,
         is_null_or_unobserved,
         normalize_to_si,
-        parse_float_token,
     )
     from backend.app.ingestion.parsers import ACMEParser, BASSParser, FLEXParser
     from backend.app.ingestion.preserver import (
-        build_provenance_record,
         calculate_sha256,
         save_raw_payload,
         verify_provenance_integrity,
     )
 except ImportError:
     from app.ingestion.fetcher import NASADataFetcher
-    from app.ingestion.models import IngestionPayload, InvestigationRecord, ProvenanceRecord
     from app.ingestion.normalizer import (
         convert_burning_rate_to_m2_s,
         convert_flow_rate_to_m3_s,
         convert_length_to_m,
-        convert_mole_fraction,
         convert_pressure_to_pa,
         convert_temperature_to_kelvin,
         convert_velocity_to_m_s,
         is_null_or_unobserved,
         normalize_to_si,
-        parse_float_token,
     )
     from app.ingestion.parsers import ACMEParser, BASSParser, FLEXParser
     from app.ingestion.preserver import (
-        build_provenance_record,
         calculate_sha256,
         save_raw_payload,
         verify_provenance_integrity,
@@ -77,11 +68,9 @@ except ImportError:
 def test_fetcher_cached_citation(tmp_path):
     """Verifies that fetcher correctly caches and reads citation payloads."""
     fetcher = NASADataFetcher(raw_dir=tmp_path)
-    # Save dummy citation into cache
     sample_data = {"id": 12345, "title": "Test Microgravity Combustion"}
     save_raw_payload("12345_citation.json", json.dumps(sample_data), raw_dir=tmp_path)
 
-    # Fetch should read directly from cache without network
     result = fetcher.fetch_citation("12345", force_refresh=False)
     assert result["id"] == 12345
     assert result["title"] == "Test Microgravity Combustion"
@@ -122,7 +111,6 @@ def test_sha256_deterministic_calculation():
     assert hash1 == hash2
     assert len(hash1) == 64
 
-    # Dict hashing must be canonical (key-order independent)
     dict_a = {"pressure": 101.3, "fuel": "Heptane"}
     dict_b = {"fuel": "Heptane", "pressure": 101.3}
     assert calculate_sha256(dict_a) == calculate_sha256(dict_b)
@@ -148,61 +136,48 @@ def test_tamper_detection(tmp_path):
 
 def test_si_pressure_conversions():
     """Tests pressure conversion across all aerospace units to Pascals."""
-    # 1 psi = 6894.757293 Pa
     p_psi = convert_pressure_to_pa(14.7, "psi")
     assert math.isclose(p_psi, 14.7 * 6894.757293, abs_tol=1e-3)
 
-    # 1 atm = 101325 Pa
     p_atm = convert_pressure_to_pa(1.0, "atm")
     assert math.isclose(p_atm, 101325.0, abs_tol=1e-3)
 
-    # 760 mmHg = 101325 Pa
     p_mmhg = convert_pressure_to_pa(760.0, "mmHg")
     assert math.isclose(p_mmhg, 101325.0, abs_tol=1e-2)
 
-    # 101.3 kPa = 101300 Pa
     p_kpa = convert_pressure_to_pa(101.3, "kPa")
     assert math.isclose(p_kpa, 101300.0, abs_tol=1e-3)
 
-    # 1 bar = 100000 Pa
     p_bar = convert_pressure_to_pa(1.0, "bar")
     assert math.isclose(p_bar, 100000.0, abs_tol=1e-3)
 
 
 def test_si_velocity_and_burning_rate():
     """Tests velocity and droplet d^2 burning rate conversions to SI."""
-    # 20.0 cm/s = 0.20 m/s
     v_ms = convert_velocity_to_m_s(20.0, "cm/s")
     assert math.isclose(v_ms, 0.20, abs_tol=1e-5)
 
-    # 0.85 mm/s = 0.00085 m/s
     v_mms = convert_velocity_to_m_s(0.85, "mm/s")
     assert math.isclose(v_mms, 0.00085, abs_tol=1e-7)
 
-    # 0.78 mm^2/s = 7.8e-7 m^2/s
     k_m2s = convert_burning_rate_to_m2_s(0.78, "mm^2/s")
     assert math.isclose(k_m2s, 7.8e-7, abs_tol=1e-10)
 
 
 def test_si_length_temperature_and_flow():
     """Tests length, temperature, and volumetric flow rate conversions to SI."""
-    # 2.1 mm = 0.0021 m
     d_m = convert_length_to_m(2.1, "mm")
     assert math.isclose(d_m, 0.0021, abs_tol=1e-6)
 
-    # 0.25 in = 0.00635 m
     d_in = convert_length_to_m(0.25, "in")
     assert math.isclose(d_in, 0.00635, abs_tol=1e-6)
 
-    # 77.0 °F = 298.15 K
     t_k_f = convert_temperature_to_kelvin(77.0, "degF")
     assert math.isclose(t_k_f, 298.15, abs_tol=1e-2)
 
-    # 25.0 °C = 298.15 K
     t_k_c = convert_temperature_to_kelvin(25.0, "degC")
     assert math.isclose(t_k_c, 298.15, abs_tol=1e-2)
 
-    # 25.0 sccm = 25 * 1e-6 / 60 m^3/s = 4.16667e-7 m^3/s
     q_si = convert_flow_rate_to_m3_s(25.0, "sccm")
     assert math.isclose(q_si, 4.166667e-7, rel_tol=1e-4)
 
@@ -234,8 +209,7 @@ def test_non_zero_null_rule(missing_token):
     """
     assert is_null_or_unobserved(missing_token) is True
 
-    # Test master normalizer
-    val_si, unit_si, method, status = normalize_to_si("visible_extinction_diameter", missing_token, "mm")
+    val_si, _unit_si, method, status = normalize_to_si("visible_extinction_diameter", missing_token, "mm")
     assert val_si is None, f"VIOLATION: token '{missing_token}' was normalized to {val_si} instead of None"
     assert status == "MISSING_DATA"
     assert method == "null_preservation"
@@ -246,7 +220,7 @@ def test_zero_is_not_treated_as_null():
     assert is_null_or_unobserved(0.0) is False
     assert is_null_or_unobserved(0) is False
 
-    val_si, unit_si, method, status = normalize_to_si("velocity", 0.0, "m/s")
+    val_si, _unit_si, _method, status = normalize_to_si("velocity", 0.0, "m/s")
     assert val_si == 0.0
     assert status == "VALID"
 
@@ -278,19 +252,16 @@ def test_flex_parser_table_ix():
     assert payload.investigation.combustion_regime == "droplet_combustion"
     assert len(payload.test_runs) >= 3
 
-    # Check FLEX-001 (complete measurements)
     run_001 = payload.test_runs[0]
     assert run_001.run_identifier == "FLEX-001"
     assert run_001.droplet_initial_diameter_mm == 1.69
     assert run_001.burning_rate_constant_k_mm2_s == 0.52
     assert run_001.extinction_type == "disruption"
 
-    # Check FLEX-004 (unobserved extinction diameter: MUST be NULL)
     run_004 = payload.test_runs[1]
     assert run_004.run_identifier == "FLEX-004"
     assert run_004.si_normalized_parameters["extinction_diameter_m"] is None
 
-    # Check FLEX-007 (Heptane fuel)
     run_007 = payload.test_runs[2]
     assert run_007.run_identifier == "FLEX-007"
     assert run_007.raw_parameters["fuel"] == "n-Heptane"
@@ -311,19 +282,16 @@ def test_bass_parser_table_51():
     assert payload.investigation.combustion_regime == "solid_flame_spread"
     assert len(payload.test_runs) == 2
 
-    # Check M1
     m1 = payload.test_runs[0]
     assert m1.run_identifier == "BASS-II-M1"
     assert m1.flame_spread_rate_mm_s == 0.071
     assert math.isclose(m1.si_normalized_parameters["flame_spread_rate_m_s"], 0.000071, abs_tol=1e-8)
 
-    # Check M6 (Spread rate "Not tracked" -> strictly NULL)
     m6 = payload.test_runs[1]
     assert m6.run_identifier == "BASS-II-M6"
     assert m6.flame_spread_rate_mm_s is None
     assert m6.si_normalized_parameters["flame_spread_rate_m_s"] is None
 
-    # Check that solid fuels strictly have droplet initial diameter as NULL
     assert m1.raw_parameters["initial_droplet_diameter_mm"] is None
     assert m1.si_normalized_parameters["droplet_initial_diameter_m"] is None
 
@@ -339,11 +307,9 @@ def test_acme_parser_cld_flames():
     ch4_run = payload.test_runs[0]
     assert ch4_run.run_identifier == "ACME-CLD-CH4-01"
     assert ch4_run.fuel_flow_rate_sccm == 25.0
-    # 25 sccm converted to SI: 4.16667e-7 m^3/s
     flow_si = ch4_run.si_normalized_parameters["fuel_flow_rate_m3_s"]
     assert math.isclose(flow_si, 4.16667e-7, rel_tol=1e-4)
 
-    # Droplet initial diameter MUST be None for gaseous diffusion flame
     assert ch4_run.si_normalized_parameters["droplet_initial_diameter_m"] is None
 
 

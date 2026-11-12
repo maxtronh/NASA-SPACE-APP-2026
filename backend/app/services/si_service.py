@@ -1,6 +1,8 @@
-from typing import Any, Dict, Optional
+from typing import Any
+
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from backend.app.services.investigation_service import InvestigationService
 
 
@@ -10,8 +12,8 @@ class SIService:
     async def process_query(
         session: AsyncSession,
         query_str: str,
-        filters: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        filters: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Processes scientific intelligence query with domain extraction, hybrid retrieval, and citation verification."""
         q = query_str.strip().lower()
         if not q:

@@ -6,15 +6,15 @@ Validates SHA-256 checksums, tamper detection, URL authenticity, and NULL preser
 
 import json
 import logging
-from pathlib import Path
 import sys
+from pathlib import Path
 
 # Ensure workspace root is in sys.path
 WORKSPACE_ROOT = Path(__file__).resolve().parent.parent
 if str(WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(WORKSPACE_ROOT))
 
-from backend.app.ingestion.preserver import calculate_sha256, verify_provenance_integrity
+from backend.app.ingestion.preserver import verify_provenance_integrity
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("validate_provenance")
@@ -68,7 +68,7 @@ def validate_all() -> bool:
             all_passed = False
 
     # 2. Audit Processed Payloads
-    logger.info(f"[AUDIT 2/3] Verifying Processed Ingestion Records in data/processed/...")
+    logger.info("[AUDIT 2/3] Verifying Processed Ingestion Records in data/processed/...")
     processed_files = list(processed_dir.glob("*.json"))
     if not processed_files:
         logger.warning("No processed JSON files found in data/processed/. Run ingest_nasa_data.py first.")
@@ -94,7 +94,7 @@ def validate_all() -> bool:
             continue
 
         # Verify NASA source URL
-        if not source_url or not (source_url.startswith("https://ntrs.nasa.gov/") or source_url.startswith("https://psi.nasa.gov/")):
+        if not source_url or not (source_url.startswith(("https://ntrs.nasa.gov/", "https://psi.nasa.gov/"))):
             logger.error(f"  [INVALID NASA URL] {p_file.name}: {source_url}")
             all_passed = False
             continue

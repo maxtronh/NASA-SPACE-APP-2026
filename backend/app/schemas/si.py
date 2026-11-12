@@ -1,10 +1,11 @@
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
 class SIQueryRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=2000)
-    filters: Optional[Dict[str, Any]] = None
+    filters: dict[str, Any] | None = None
 
 
 class SICitation(BaseModel):
@@ -15,9 +16,9 @@ class SICitation(BaseModel):
 
 
 class SIExplainability(BaseModel):
-    matched_entities: List[str]
+    matched_entities: list[str]
     retrieval_method: str = "hybrid_rrf_bm25_vector"
-    abstention_reason: Optional[str] = None
+    abstention_reason: str | None = None
 
 
 class SIQueryResponse(BaseModel):
@@ -25,5 +26,5 @@ class SIQueryResponse(BaseModel):
     answer: str
     confidence_score: float
     abstention_flag: bool
-    citations: List[SICitation]
+    citations: list[SICitation]
     explainability: SIExplainability

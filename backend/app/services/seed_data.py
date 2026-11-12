@@ -1,24 +1,26 @@
 import hashlib
 import json
-from datetime import datetime, timezone
 import uuid
-from typing import Any, Dict, List
+from datetime import UTC, datetime
+from typing import Any
+
 from sqlalchemy import select
 from sqlalchemy.engine import Engine
-from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
+
 from backend.app.core.logging import logger
+from backend.app.models.embedding import VectorEmbedding
 from backend.app.models.investigation import Investigation
-from backend.app.models.test_run import TestRun
 from backend.app.models.measurement import Measurement
 from backend.app.models.provenance import ProvenanceRecord
-from backend.app.models.embedding import VectorEmbedding
+from backend.app.models.test_run import TestRun
 
 # ==============================================================================
 # AUTHENTIC NASA COMBUSTION RESEARCH TEST PAYLOADS (Zero Fabrication Mandate)
 # ==============================================================================
 
-AUTHENTIC_NASA_DATA: List[Dict[str, Any]] = [
+AUTHENTIC_NASA_DATA: list[dict[str, Any]] = [
     {
         "title": "FLEX-2 Heptane Droplet Combustion in Microgravity",
         "slug": "flex-2-heptane-droplet",
@@ -198,7 +200,7 @@ def calculate_sha256(data: Any) -> str:
     return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
 
 
-def format_measurements_dicts(raw_measurements: Dict[str, Any]) -> tuple[Dict[str, Any], Dict[str, Any]]:
+def format_measurements_dicts(raw_measurements: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
     """Separates raw measurements into original_measurements and si_measurements dicts."""
     raw_m = {}
     si_m = {}
@@ -222,7 +224,7 @@ def format_measurements_dicts(raw_measurements: Dict[str, Any]) -> tuple[Dict[st
     return raw_m, si_m
 
 
-def _build_records_for_item(item: Dict[str, Any]) -> tuple[Investigation, TestRun, List[Measurement], ProvenanceRecord, VectorEmbedding]:
+def _build_records_for_item(item: dict[str, Any]) -> tuple[Investigation, TestRun, list[Measurement], ProvenanceRecord, VectorEmbedding]:
     raw_m, si_m = format_measurements_dicts(item["measurements"])
 
     checksum = calculate_sha256({
@@ -268,7 +270,7 @@ def _build_records_for_item(item: Dict[str, Any]) -> tuple[Investigation, TestRu
         id=tr_id,
         investigation_id=inv_id,
         run_identifier=tr_data["run_identifier"],
-        run_date=datetime.now(timezone.utc),
+        run_date=datetime.now(UTC),
         fuel_phase=tr_data["fuel_phase"],
         chamber_pressure_kpa=tr_data.get("chamber_pressure_kpa"),
         ambient_temperature_k=tr_data.get("ambient_temperature_k"),
@@ -319,7 +321,7 @@ def _build_records_for_item(item: Dict[str, Any]) -> tuple[Investigation, TestRu
         id=uuid.uuid4(),
         investigation_id=inv_id,
         source_url=item["nasa_source_url"],
-        retrieval_timestamp=datetime.now(timezone.utc),
+        retrieval_timestamp=datetime.now(UTC),
         sha256_checksum=checksum,
         http_etag=f'W/"{checksum[:16]}"',
         byte_size=len(json.dumps(item)),

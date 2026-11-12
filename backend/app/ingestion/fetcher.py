@@ -7,8 +7,7 @@ and raw payloads from https://ntrs.nasa.gov/api/
 import json
 import logging
 from pathlib import Path
-import time
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Union
 import httpx
 
 from .preserver import save_raw_payload
@@ -30,12 +29,15 @@ class NASADataFetcher:
         self,
         base_url: str = DEFAULT_NTRS_BASE_URL,
         raw_dir: Union[str, Path] = DEFAULT_RAW_DIR,
-        timeout: float = 30.0
+        timeout: float = 30.0,
+        request_timeout: Optional[float] = None,
+        max_retries: int = 3
     ):
         self.base_url = base_url.rstrip("/")
         self.raw_dir = Path(raw_dir)
         self.raw_dir.mkdir(parents=True, exist_ok=True)
-        self.timeout = timeout
+        self.timeout = request_timeout or timeout
+        self.max_retries = max_retries
         self.last_rate_limit: Dict[str, Any] = {}
 
     def _update_rate_limits(self, headers: httpx.Headers):
@@ -72,7 +74,7 @@ class NASADataFetcher:
             try:
                 with open(cache_path, "r", encoding="utf-8") as f:
                     return json.load(f)
-            except Exception as e:
+            except (OSError, json.JSONDecodeError) as e:
                 logger.warning(f"Failed to read cache {cache_path}: {e}. Refetching.")
 
         url = f"{self.base_url}/citations/{citation_id}"
@@ -82,9 +84,8 @@ class NASADataFetcher:
             resp.raise_for_status()
             data = resp.json()
 
-        # Cache payload
         save_raw_payload(
-            filename=cache_filename,
+            filename_or_url=cache_filename,
             content=json.dumps(data, indent=2),
             metadata={
                 "source_url": url,
@@ -94,6 +95,14 @@ class NASADataFetcher:
             raw_dir=self.raw_dir
         )
         return data
+
+    def get_citation(self, citation_id: str) -> Optional[Dict[str, Any]]:
+        """Convenience alias for fetch_citation."""
+        try:
+            return self.fetch_citation(citation_id)
+        except Exception as e:
+            logger.error(f"Failed to get citation {citation_id}: {e}")
+            return None
 
     def fetch_download(
         self,
@@ -111,7 +120,7 @@ class NASADataFetcher:
             with open(cache_path, "rb") as f:
                 return f.read()
 
-        if download_path_or_url.startswith("http://") or download_path_or_url.startswith("https://"):
+        if download_path_or_url.startswith(("http://", "https://")):
             url = download_path_or_url
         else:
             url = f"{self.base_url.replace('/api', '')}{download_path_or_url}"
@@ -125,7 +134,7 @@ class NASADataFetcher:
             content = resp.content
 
         save_raw_payload(
-            filename=save_filename,
+            filename_or_url=save_filename,
             content=content,
             metadata={
                 "source_url": url,
@@ -157,7 +166,6 @@ class NASADataFetcher:
                 fulltext_link = links["pdf"]
 
         if not fulltext_link:
-            # Fallback standard path pattern
             fulltext_link = f"/api/citations/{citation_id}/downloads/{citation_id}.txt"
 
         filename = f"{citation_id}_fulltext.txt"
@@ -177,3 +185,16 @@ class NASADataFetcher:
             self._update_rate_limits(resp.headers)
             resp.raise_for_status()
             return resp.json()
+
+    def search(
+        self,
+        query: str = "microgravity combustion",
+        limit: int = 25
+    ) -> List[Dict[str, Any]]:
+        """Searches NTRS and returns list of items."""
+        try:
+            res = self.search_citations(query=query, page_size=limit)
+            return res.get("results", [])
+        except Exception as e:
+            logger.error(f"Search failed: {e}")
+            return []

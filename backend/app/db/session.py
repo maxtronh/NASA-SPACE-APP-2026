@@ -1,22 +1,25 @@
 import os
 import threading
-from typing import AsyncGenerator, Optional, Tuple
+from collections.abc import AsyncGenerator
+
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
     async_sessionmaker,
     create_async_engine,
 )
+
 from backend.app.core.config import settings
 from backend.app.core.logging import logger
 from backend.app.models.base import Base
 
-_engine: Optional[AsyncEngine] = None
-_session_factory: Optional[async_sessionmaker[AsyncSession]] = None
-_sync_engine: Optional[Engine] = None
-_active_tier: Optional[str] = None
+_engine: AsyncEngine | None = None
+_session_factory: async_sessionmaker[AsyncSession] | None = None
+_sync_engine: Engine | None = None
+_active_tier: str | None = None
 _db_initialized: bool = False
 _init_lock = threading.Lock()
 
@@ -39,7 +42,7 @@ def _probe_postgres(url: str) -> bool:
             conn.execute(text("SELECT 1"))
         test_engine.dispose()
         return True
-    except Exception as exc:
+    except (SQLAlchemyError, OSError) as exc:
         logger.warning(f"PostgreSQL probe failed ({exc}). Falling back to SQLite.")
         return False
 
@@ -64,11 +67,11 @@ def _ensure_tables_and_seeds(sync_engine: Engine, tier: str):
 
             _db_initialized = True
             logger.info(f"Database ({tier}) tables and authentic seeds verified.")
-        except Exception as exc:
+        except (SQLAlchemyError, OSError) as exc:
             logger.error(f"Error during table creation/seeding: {exc}")
 
 
-def get_db_engines() -> Tuple[AsyncEngine, async_sessionmaker[AsyncSession], Engine, str]:
+def get_db_engines() -> tuple[AsyncEngine, async_sessionmaker[AsyncSession], Engine, str]:
     """Initializes and returns dual-tier async engine, session factory, sync engine, and tier name."""
     global _engine, _session_factory, _sync_engine, _active_tier
 
@@ -162,11 +165,11 @@ async def check_db_health() -> dict:
             "pgvector_ready": True,
             "version": settings.VERSION,
         }
-    except Exception as exc:
+    except (SQLAlchemyError, OSError) as exc:
         logger.error(f"Database health check failed: {exc}")
         return {
             "status": "unhealthy",
-            "database": f"error: {str(exc)}",
+            "database": f"error: {exc!s}",
             "tier": tier,
             "pgvector_ready": False,
             "version": settings.VERSION,

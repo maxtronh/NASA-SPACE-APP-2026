@@ -12,9 +12,8 @@ Executes the repeatable 7-phase ingestion pipeline:
 
 import json
 import logging
-from pathlib import Path
 import sys
-from typing import Any, Dict, List, Optional
+from pathlib import Path
 
 # Ensure workspace root is in sys.path
 WORKSPACE_ROOT = Path(__file__).resolve().parent.parent
@@ -24,13 +23,12 @@ if str(WORKSPACE_ROOT) not in sys.path:
 from backend.app.ingestion.fetcher import NASADataFetcher
 from backend.app.ingestion.models import IngestionPayload
 from backend.app.ingestion.parsers import ACMEParser, BASSParser, FLEXParser
-from backend.app.ingestion.preserver import verify_provenance_integrity
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("ingest_nasa_data")
 
 
-def run_pipeline() -> List[IngestionPayload]:
+def run_pipeline() -> list[IngestionPayload]:
     logger.info("================================================================================")
     logger.info("STARTING NASA MICROGRAVITY COMBUSTION INGESTION PIPELINE (7 PHASES)")
     logger.info("================================================================================")
@@ -41,7 +39,7 @@ def run_pipeline() -> List[IngestionPayload]:
     processed_dir.mkdir(parents=True, exist_ok=True)
 
     fetcher = NASADataFetcher(raw_dir=raw_dir)
-    payloads: List[IngestionPayload] = []
+    payloads: list[IngestionPayload] = []
 
     # --------------------------------------------------------------------------
     # 1. FLEX / FLEX-2 Droplet Extinction Experiment (NTRS Citation 20150023456)
@@ -176,5 +174,4 @@ def run_pipeline() -> List[IngestionPayload]:
 
 
 if __name__ == "__main__":
-    from typing import List
     run_pipeline()

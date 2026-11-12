@@ -5,8 +5,8 @@ import sys
 os.environ["ALEMBIC_CONTEXT"] = "1"
 
 from logging.config import fileConfig
+
 from alembic import context
-from sqlalchemy import pool
 
 # Add workspace and backend to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))

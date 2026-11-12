@@ -1,10 +1,11 @@
-from typing import Any, Dict
+from typing import Any
+
 from pydantic import BaseModel
 
 
 class IngestValidationRequest(BaseModel):
-    investigation: Dict[str, Any]
-    provenance: Dict[str, Any]
+    investigation: dict[str, Any]
+    provenance: dict[str, Any]
 
 
 class IngestValidationResponse(BaseModel):

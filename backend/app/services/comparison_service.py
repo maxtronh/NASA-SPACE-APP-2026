@@ -1,6 +1,8 @@
-from typing import Any, Dict, List
+from typing import Any
+
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from backend.app.services.investigation_service import InvestigationService
 
 
@@ -9,8 +11,8 @@ class ComparisonService:
     @staticmethod
     async def compare(
         session: AsyncSession,
-        investigation_ids: List[str],
-    ) -> Dict[str, Any]:
+        investigation_ids: list[str],
+    ) -> dict[str, Any]:
         """Compares two or more investigations side-by-side with scientific condition equivalence assessment."""
         if len(investigation_ids) < 2:
             raise HTTPException(
@@ -41,12 +43,12 @@ class ComparisonService:
 
         if len(gravities) > 1:
             is_equivalent = False
-            reasons.append(f"Gravitational regime mismatch: {sorted(list(gravities))}")
+            reasons.append(f"Gravitational regime mismatch: {sorted(gravities)}")
         if len(regimes) > 1:
             is_equivalent = False
-            reasons.append(f"Combustion regime mismatch: {sorted(list(regimes))}")
+            reasons.append(f"Combustion regime mismatch: {sorted(regimes)}")
         if len(fuels) > 1:
-            reasons.append(f"Different fuel types: {sorted(list(fuels))}")
+            reasons.append(f"Different fuel types: {sorted(fuels)}")
 
         # Comparison matrix
         grid = {}

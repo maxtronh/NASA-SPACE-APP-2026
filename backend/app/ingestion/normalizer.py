@@ -2,11 +2,20 @@
 Mathematical SI Unit Normalization Engine & Strict Non-Zero NULL Policy.
 Enforces deterministic conversions and physical validity bounds documented in:
 docs/NASA_RESEARCH_LOG.md Section 4 & Section 5.
+Supports dual-mode dispatch: single-metric tuple normalization and dictionary normalization.
 """
 
 import math
 import re
-from typing import Any, Optional, Set, Tuple
+from typing import Any, Dict, Optional, Set, Tuple, Union
+
+try:
+    from pint import UnitRegistry
+    ureg = UnitRegistry()
+    Q_ = ureg.Quantity
+except ImportError:
+    ureg = None
+    Q_ = None
 
 # Canonical tokens representing missing or unmeasured data in NASA flight logs
 NULL_TOKENS: Set[str] = {
@@ -20,8 +29,10 @@ NULL_TOKENS: Set[str] = {
     "null",
     "none",
     "nd",
+    "nil",
     "unmeasured",
     "unobserved",
+    "uncalibrated",
     "missing",
     "not tracked",
     "not recorded",
@@ -210,15 +221,38 @@ def convert_mole_fraction(val: Any, unit: str = "%") -> Optional[float]:
 
 
 def normalize_to_si(
-    metric_name: str,
-    val_raw: Any,
+    metric_or_dict: Union[str, Dict[str, Any]],
+    val_raw: Any = None,
     unit_raw: Optional[str] = None
-) -> Tuple[Optional[float], str, str, str]:
+) -> Union[Tuple[Optional[float], str, str, str], Dict[str, Any]]:
     """
-    Master SI normalizer for any combustion metric.
-    Returns: (value_si, unit_si, conversion_method, validation_status)
-    Strictly preserves None/NULL when val_raw is missing or unobserved.
+    Dual-mode master SI normalizer.
+    Mode 1 (Single Metric): normalize_to_si(metric_name, val_raw, unit_raw) -> (val_si, unit_si, method, status)
+    Mode 2 (Dict): normalize_to_si(measurements_dict) -> dict of normalized measurements
     """
+    # Mode 2: Dict normalization
+    if isinstance(metric_or_dict, dict) and val_raw is None:
+        raw_m = metric_or_dict
+        si_m: Dict[str, Any] = {}
+        for k, v in raw_m.items():
+            if v is None:
+                si_m[f"{k}_si"] = None
+            elif isinstance(v, dict):
+                raw_val = v.get("raw")
+                raw_unit = v.get("unit", "")
+                if is_null_or_unobserved(raw_val):
+                    si_m[f"{k}_si"] = None
+                else:
+                    norm_val, norm_u, _, _ = normalize_to_si(k, raw_val, raw_unit)
+                    clean_u = norm_u.replace("/", "_").replace("^", "")
+                    si_m[f"{k}_{clean_u}"] = norm_val
+            else:
+                norm_val, norm_u, _, _ = normalize_to_si(k, v, None)
+                si_m[f"{k}_si"] = norm_val
+        return si_m
+
+    # Mode 1: Single Metric Normalization
+    metric_name = str(metric_or_dict)
     if is_null_or_unobserved(val_raw):
         m_lower = metric_name.lower()
         if "pressure" in m_lower:

@@ -1,6 +1,8 @@
-from typing import Any, Dict
+from typing import Any
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from backend.app.models.investigation import Investigation
 from backend.app.services.investigation_service import InvestigationService
 
@@ -8,14 +10,14 @@ from backend.app.services.investigation_service import InvestigationService
 class AnalyticsService:
 
     @staticmethod
-    async def get_corpus_analytics(session: AsyncSession) -> Dict[str, Any]:
+    async def get_corpus_analytics(session: AsyncSession) -> dict[str, Any]:
         """Calculates global corpus metrics, regime distributions, and missing data matrix."""
         query = select(Investigation)
         result = await session.execute(query)
         investigations = result.scalars().all()
 
         total = len(investigations)
-        regime_counts: Dict[str, int] = {}
+        regime_counts: dict[str, int] = {}
 
         # Fetch detail for each to gather complete measurement metrics
         all_details = []
@@ -29,8 +31,8 @@ class AnalyticsService:
         for item in all_details:
             all_keys.update(item["provenance"]["si_measurements"].keys())
 
-        missing_matrix: Dict[str, Dict[str, Any]] = {}
-        for k in sorted(list(all_keys)):
+        missing_matrix: dict[str, dict[str, Any]] = {}
+        for k in sorted(all_keys):
             present = sum(
                 1 for item in all_details if item["provenance"]["si_measurements"].get(k) is not None
             )

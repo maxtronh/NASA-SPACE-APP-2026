@@ -1,14 +1,16 @@
 import uuid
 from datetime import date, datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
+
 from sqlalchemy import Date, DateTime, Float, String, Text, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from backend.app.models.base import Base, JSONType
 
 if TYPE_CHECKING:
-    from backend.app.models.test_run import TestRun
     from backend.app.models.measurement import Measurement
     from backend.app.models.provenance import ProvenanceRecord
+    from backend.app.models.test_run import TestRun
 
 
 class Investigation(Base):
@@ -25,16 +27,16 @@ class Investigation(Base):
     combustion_regime: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     fuel_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     oxidizer_type: Mapped[str] = mapped_column(String(100), nullable=False, default="Air")
-    diluents: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    diluents: Mapped[str | None] = mapped_column(String(100), nullable=True)
     gravity_level: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
-    start_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    end_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    principal_investigators: Mapped[List[Dict[str, Any]]] = mapped_column(
+    start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    principal_investigators: Mapped[list[dict[str, Any]]] = mapped_column(
         JSONType, nullable=False, default=list
     )
     summary: Mapped[str] = mapped_column(Text, nullable=False)
     objectives: Mapped[str] = mapped_column(Text, nullable=False, default="")
-    apparatus_description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    apparatus_description: Mapped[str | None] = mapped_column(Text, nullable=True)
     data_completeness_index: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     nasa_source_url: Mapped[str] = mapped_column(Text, nullable=False)
     source_repository: Mapped[str] = mapped_column(String(50), nullable=False, default="NASA NTRS")
@@ -46,19 +48,19 @@ class Investigation(Base):
     )
 
     # Relationships
-    test_runs: Mapped[List["TestRun"]] = relationship(
+    test_runs: Mapped[list["TestRun"]] = relationship(
         "TestRun",
         back_populates="investigation",
         cascade="all, delete-orphan",
         lazy="selectin",
     )
-    measurements: Mapped[List["Measurement"]] = relationship(
+    measurements: Mapped[list["Measurement"]] = relationship(
         "Measurement",
         back_populates="investigation",
         cascade="all, delete-orphan",
         lazy="selectin",
     )
-    provenance_records: Mapped[List["ProvenanceRecord"]] = relationship(
+    provenance_records: Mapped[list["ProvenanceRecord"]] = relationship(
         "ProvenanceRecord",
         back_populates="investigation",
         cascade="all, delete-orphan",

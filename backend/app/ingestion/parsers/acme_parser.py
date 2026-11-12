@@ -6,7 +6,8 @@ Electric-Field flames, and Spherical diffusion flames.
 Enforces deterministic SI conversions and strict Non-Zero NULL policy.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 from ..models import (
     IngestionPayload,
     InvestigationRecord,
@@ -19,7 +20,6 @@ from ..normalizer import (
     convert_pressure_to_pa,
     convert_temperature_to_kelvin,
     convert_velocity_to_m_s,
-    normalize_to_si,
 )
 from ..preserver import build_provenance_record
 from .base import BaseFlightParser
@@ -31,13 +31,13 @@ class ACMEParser(BaseFlightParser):
     def parse(
         self,
         raw_text: str,
-        citation_metadata: Dict[str, Any],
+        citation_metadata: dict[str, Any],
         source_url: str = "https://ntrs.nasa.gov/citations/20210021781"
     ) -> IngestionPayload:
         """Parses ACME report and citation metadata into an authentic IngestionPayload."""
         title = citation_metadata.get(
             "title",
-            "Recent Research on Flames of Gaseous Fuel Aboard the International Space Station"
+            "ACME Coflow Laminar Diffusion Flame"
         )
         description = citation_metadata.get(
             "description",
@@ -49,7 +49,7 @@ class ACMEParser(BaseFlightParser):
 
         investigation = InvestigationRecord(
             slug="acme-cld-flame",
-            title="ACME Coflow Laminar Diffusion Flame",
+            title=title,
             short_name="ACME Laminar Diffusion Flame",
             project_acronym="ACME",
             facility="Combustion Integrated Rack (CIR)",
@@ -75,8 +75,8 @@ class ACMEParser(BaseFlightParser):
             source_repository="NASA NTRS"
         )
 
-        test_runs: List[TestRunRecord] = []
-        measurements: List[MeasurementRecord] = []
+        test_runs: list[TestRunRecord] = []
+        measurements: list[MeasurementRecord] = []
 
         # Authentic flight runs documented in Stocker et al. (2021)
         flight_trials = [

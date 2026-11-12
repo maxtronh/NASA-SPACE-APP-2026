@@ -1,13 +1,14 @@
 import uuid
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
+
 from fastapi import HTTPException, status
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from backend.app.models.investigation import Investigation
-from backend.app.models.test_run import TestRun
 from backend.app.models.measurement import Measurement
 from backend.app.models.provenance import ProvenanceRecord
-from backend.app.services.seed_data import format_measurements_dicts, calculate_sha256
+from backend.app.models.test_run import TestRun
 
 VALID_REGIMES = {
     "droplet_combustion",
@@ -23,19 +24,19 @@ class InvestigationService:
     @staticmethod
     async def list_investigations(
         session: AsyncSession,
-        regime: Optional[str] = None,
-        fuel: Optional[str] = None,
-        facility: Optional[str] = None,
-        gravity: Optional[str] = None,
-        search: Optional[str] = None,
+        regime: str | None = None,
+        fuel: str | None = None,
+        facility: str | None = None,
+        gravity: str | None = None,
+        search: str | None = None,
         limit: int = 20,
         offset: int = 0,
-    ) -> Tuple[List[Dict[str, Any]], int]:
+    ) -> tuple[list[dict[str, Any]], int]:
         """Lists investigations with faceted filtering, text search, and pagination."""
         if regime and regime not in VALID_REGIMES:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Invalid combustion regime '{regime}'. Must be one of {sorted(list(VALID_REGIMES))}",
+                detail=f"Invalid combustion regime '{regime}'. Must be one of {sorted(VALID_REGIMES)}",
             )
 
         query = select(Investigation)
@@ -89,7 +90,7 @@ class InvestigationService:
     async def get_investigation_detail(
         session: AsyncSession,
         id_or_slug: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Retrieves complete investigation details with test runs, provenance, and measurements."""
         query = select(Investigation)
         try:
