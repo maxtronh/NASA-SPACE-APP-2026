@@ -283,7 +283,7 @@ Flame in Freefall is an advanced Scientific Intelligence (SI) platform leveragin
 | BASELINE | Git Baseline & E2E Live Verification | Initial commit, live backend E2E execution | M2, M3, M-E2E | **DONE** | Commit `9b04e06`, 83/83 E2E passed against live `backend.app.main:app` |
 | M4 | AI/ML & Data Science | FastEmbed ONNX, RRF hybrid retrieval, entity extractor, abstention engine | M2, M3 | **DONE** | `backend/app/ml/`, 63 backend tests passed |
 | M5 | Frontend and UI/UX | Next.js 15 App Router, 6 views, Plotly d² burning curves, comparison, chat | M1, M3 | **DONE** | `frontend/src/app/`, `npm run build` exit 0 (8 routes) |
-| M6 | Full System Integration & Validation | Full-stack live test, Tier 5 adversarial hardening, Forensic Audit | M4, M5 | **PLANNED** | Live integration pass, forensic audit report |
+| M6 | Full System Integration & Validation | Full-stack live test, Tier 5 adversarial hardening, Forensic Audit | M4, M5 | **DONE** | 83/83 E2E passed, 63/63 backend passed, Forensic Audit CLEAN |
 | M7 | Deployment & Showcase Materials | Docker Compose multi-stage build, demo runbook, presentation materials | M6 | **DONE** | `docker-compose.yml`, `backend/Dockerfile`, `frontend/Dockerfile`, `README.md` |
 
 ---
