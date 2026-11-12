@@ -1,0 +1,49 @@
+{
+  "total_investigations": 3,
+  "total_test_runs": 300,
+  "total_measurements": 1208,
+  "investigations": [
+    {
+      "slug": "flex-droplet-burning",
+      "title": "Detailed Results from the Flame Extinguishment Experiment (FLEX) March 2009 to December 2011",
+      "project_acronym": "FLEX",
+      "combustion_regime": "droplet_combustion",
+      "facility": "Combustion Integrated Rack (CIR)",
+      "fuel_type": "Methanol / n-Heptane / Decane",
+      "gravity_level": "microgravity (~10^-6 g)",
+      "data_completeness_index": 94.5,
+      "test_runs_count": 276,
+      "measurements_count": 1104,
+      "nasa_source_url": "https://ntrs.nasa.gov/citations/20150023456",
+      "sha256_checksum": "60b5c4bbfbd48464cd07f17ec3e619c329aa7e098206899c270a9b1a7335b16c"
+    },
+    {
+      "slug": "bass-ii-solid-slab",
+      "title": "Burning and Suppression of Solids\u2013II  (BASS-II) Summary Report",
+      "project_acronym": "BASS-II",
+      "combustion_regime": "solid_flame_spread",
+      "facility": "Microgravity Science Glovebox (MSG)",
+      "fuel_type": "Polymethylmethacrylate (PMMA)",
+      "gravity_level": "microgravity (~10^-6 g)",
+      "data_completeness_index": 91.0,
+      "test_runs_count": 20,
+      "measurements_count": 80,
+      "nasa_source_url": "https://ntrs.nasa.gov/citations/20210011385",
+      "sha256_checksum": "56ee5bd7702b5c8235f9934468bb9d6e4ea143c4570d7eaa1da11d904b42ea3f"
+    },
+    {
+      "slug": "acme-cld-flame",
+      "title": "ACME Coflow Laminar Diffusion Flame",
+      "project_acronym": "ACME",
+      "combustion_regime": "laminar_diffusion",
+      "facility": "Combustion Integrated Rack (CIR)",
+      "fuel_type": "Methane (CH4)",
+      "gravity_level": "microgravity (~10^-6 g)",
+      "data_completeness_index": 96.0,
+      "test_runs_count": 4,
+      "measurements_count": 24,
+      "nasa_source_url": "https://ntrs.nasa.gov/citations/20190001859",
+      "sha256_checksum": "9d89dd87cfcf844770a67a012b82bc03ea6172914e68a314ea357ba73c0d1727"
+    }
+  ]
+}
