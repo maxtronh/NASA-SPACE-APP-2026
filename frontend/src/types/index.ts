@@ -163,6 +163,8 @@ export interface SIExplainability {
   abstention_reason?: string | null;
 }
 
+export * from "./artifacts";
+
 export interface SIQueryResponse {
   query: string;
   answer: string;
@@ -170,4 +172,5 @@ export interface SIQueryResponse {
   abstention_flag: boolean;
   citations: SICitation[];
   explainability: SIExplainability;
+  artifacts?: import("./artifacts").ScientificArtifact[];
 }

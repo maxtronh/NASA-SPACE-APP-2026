@@ -191,6 +191,7 @@ class ScientificIntelligencePipeline:
                     "retrieval_method": "hybrid_rrf_bm25_vector",
                     "abstention_reason": "Query string cannot be empty.",
                 },
+                "artifacts": [],
             }
 
         # Stage 2: Scientific Entity Extraction
@@ -214,6 +215,7 @@ class ScientificIntelligencePipeline:
                     "retrieval_method": "hybrid_rrf_bm25_vector",
                     "abstention_reason": pre_eval.abstention_reason,
                 },
+                "artifacts": [],
             }
 
         # Stage 4 & 5: Dense Vector Embedding & Hybrid Retrieval (BM25 + Cosine + RRF k=60)
@@ -245,6 +247,7 @@ class ScientificIntelligencePipeline:
                     "retrieval_method": "hybrid_rrf_bm25_vector",
                     "abstention_reason": post_eval.abstention_reason,
                 },
+                "artifacts": [],
             }
 
         # Stage 7: Citation Verification & Grounded Answer Synthesis
@@ -267,6 +270,7 @@ class ScientificIntelligencePipeline:
                     "retrieval_method": "hybrid_rrf_bm25_vector",
                     "abstention_reason": "Zero authenticated NASA citations could be verified for this query.",
                 },
+                "artifacts": [],
             }
 
         # Synthesize evidence-grounded scientific response

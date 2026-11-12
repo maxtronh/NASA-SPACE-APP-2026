@@ -7,6 +7,8 @@ from backend.app.api.v1.endpoints import (
     health,
     ingest,
     investigations,
+    provenance,
+    safety,
     si,
 )
 
@@ -20,3 +22,5 @@ api_v1_router.include_router(analytics.router)
 api_v1_router.include_router(si.router)
 api_v1_router.include_router(ingest.router)
 api_v1_router.include_router(citations.router)
+api_v1_router.include_router(provenance.router)
+api_v1_router.include_router(safety.router)

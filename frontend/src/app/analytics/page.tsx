@@ -11,6 +11,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { fetchCorpusAnalytics } from "@/lib/api";
+import FlammabilityEvaluatorWidget from "@/components/FlammabilityEvaluatorWidget";
 
 export const revalidate = 60;
 
@@ -207,6 +208,9 @@ export default async function AnalyticsPage() {
           </table>
         </div>
       </div>
+
+      {/* NASA-STD-6001B Flammability & Merkle Provenance Widget */}
+      <FlammabilityEvaluatorWidget />
 
       {/* Regime Breakdown Breakdown Cards */}
       <div className="space-y-4">
