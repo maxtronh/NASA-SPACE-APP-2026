@@ -21,6 +21,7 @@ dependencies = [
     "rank-bm25>=0.2.2",
     "duckdb>=1.1.0",
     "pyarrow>=17.0.0",
+    "networkx>=3.0.0",
 ]
 
 [project.optional-dependencies]

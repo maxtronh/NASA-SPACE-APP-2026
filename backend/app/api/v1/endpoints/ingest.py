@@ -1,4 +1,9 @@
-from fastapi import APIRouter, HTTPException, status
+from dataclasses import asdict
+from typing import Any, Optional
+
+from fastapi import APIRouter, HTTPException, Query, status
+
+from backend.app.ingestion.psi_sync import PSIS3SyncClient
 from backend.app.schemas.ingest import IngestValidationRequest, IngestValidationResponse
 
 router = APIRouter(prefix="/ingest", tags=["ingestion"])
@@ -46,3 +51,32 @@ async def validate_ingest(payload: IngestValidationRequest):
         "slug": inv["slug"],
         "checksum_verified": True,
     }
+
+
+@router.get("/psi/datasets")
+async def list_psi_datasets(prefix: Optional[str] = Query(None, description="Optional S3 prefix filter")):
+    """Lists authentic NASA Physical Sciences Informatics (PSI) datasets cataloged from open archives."""
+    client = PSIS3SyncClient()
+    datasets = client.list_datasets(prefix=prefix)
+    return [asdict(d) for d in datasets]
+
+
+@router.get("/psi/datasets/{dataset_id}")
+async def get_psi_dataset(dataset_id: str):
+    """Retrieves metadata and authentic S3 file records for a specific NASA PSI dataset."""
+    client = PSIS3SyncClient()
+    dataset = client.get_dataset(dataset_id)
+    if not dataset:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"NASA PSI dataset '{dataset_id}' not found in catalog.",
+        )
+    return asdict(dataset)
+
+
+@router.get("/psi/files")
+async def list_psi_files(prefix: str = Query(default="combustion/", description="S3 prefix to query")):
+    """Queries or syncs files from the NASA PSI S3 catalog."""
+    client = PSIS3SyncClient()
+    records = await client.fetch_remote_listing(prefix=prefix)
+    return [asdict(r) for r in records]

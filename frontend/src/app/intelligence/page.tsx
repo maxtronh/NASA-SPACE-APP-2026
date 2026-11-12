@@ -17,8 +17,10 @@ import {
   CornerDownLeft,
 } from "lucide-react";
 import GenerativeUIArtifact from "@/components/GenerativeUIArtifact";
+import ArtifactRenderer from "@/components/artifacts/ArtifactRenderer";
+import ArtifactCanvasDrawer from "@/components/artifacts/ArtifactCanvasDrawer";
 import { queryScientificIntelligence } from "@/lib/api";
-import { SIQueryResponse } from "@/types";
+import { SIQueryResponse, ScientificArtifact } from "@/types";
 
 interface ChatMessage {
   id: string;
@@ -46,6 +48,7 @@ export default function IntelligenceChatPage() {
   ]);
   const [inputQuery, setInputQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const [activeCanvasArtifact, setActiveCanvasArtifact] = useState<ScientificArtifact | null>(null);
 
   const handleSubmit = async (queryText: string) => {
     const q = queryText.trim();
@@ -289,8 +292,27 @@ export default function IntelligenceChatPage() {
                       </div>
                     )}
 
-                    {/* Interactive Generative UI Artifact Widget */}
-                    {!msg.response.abstention_flag && (
+                    {/* Discriminated Generative UI Scientific Artifacts (Upgrade 17) */}
+                    {!msg.response.abstention_flag && msg.response.artifacts && msg.response.artifacts.length > 0 && (
+                      <div className="space-y-3 pt-2">
+                        <div className="flex items-center space-x-1.5 text-[11px] font-mono text-nasa-cyan uppercase tracking-wider">
+                          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                          <span>Grounded Scientific Artifacts ({msg.response.artifacts.length}):</span>
+                        </div>
+                        <div className="grid grid-cols-1 gap-3">
+                          {msg.response.artifacts.map((art, artIdx) => (
+                            <ArtifactRenderer
+                              key={artIdx}
+                              artifact={art}
+                              onExpand={(artifact) => setActiveCanvasArtifact(artifact)}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Interactive Generative UI Artifact Widget Fallback / Companion */}
+                    {!msg.response.abstention_flag && (!msg.response.artifacts || msg.response.artifacts.length === 0) && (
                       <GenerativeUIArtifact
                         query={msg.response.query}
                         matchedEntities={msg.response.explainability.matched_entities}
@@ -341,6 +363,12 @@ export default function IntelligenceChatPage() {
           </button>
         </form>
       </div>
+
+      {/* Split Canvas Side Drawer (Upgrade 17) */}
+      <ArtifactCanvasDrawer
+        artifact={activeCanvasArtifact}
+        onClose={() => setActiveCanvasArtifact(null)}
+      />
     </div>
   );
 }

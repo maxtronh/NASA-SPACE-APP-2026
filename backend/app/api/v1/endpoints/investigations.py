@@ -9,7 +9,7 @@ from backend.app.timeseries import (
     TimeseriesResponse,
     ensure_flight_telemetry_seeded,
 )
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/investigations", tags=["investigations"])
@@ -120,3 +120,24 @@ async def get_investigation_timeseries(
         "telemetry": ts_data.get("telemetry", []),
         "statistics": ts_data.get("statistics"),
     }
+
+
+@router.websocket("/{id_or_slug}/timeseries/stream")
+async def investigation_telemetry_stream(
+    websocket: WebSocket,
+    id_or_slug: str,
+    run_id: str | None = Query(default=None),
+    playback_speed: float = Query(default=1.0),
+    burst_mode: bool = Query(default=False),
+):
+    """WebSocket stream for investigation timeseries telemetry."""
+    from backend.app.api.v1.endpoints.telemetry import handle_telemetry_streaming
+
+    await handle_telemetry_streaming(
+        websocket=websocket,
+        id_or_slug=id_or_slug,
+        run_id=run_id,
+        playback_speed=playback_speed,
+        burst_mode=burst_mode,
+    )
+

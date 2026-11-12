@@ -28,6 +28,16 @@ from .parsers import (
     BASSParser,
     FLEXParser,
 )
+from .psi_sync import (
+    PSIDatasetRecord,
+    PSIS3FileRecord,
+    PSIS3SyncClient,
+)
+from .drop_tower import (
+    DropTowerFacility,
+    DropTowerService,
+    DropTowerTestRun,
+)
 from .preserver import (
     build_provenance_record,
     calculate_sha256,
@@ -39,11 +49,17 @@ __all__ = [
     "ACMEParser",
     "BASSParser",
     "BaseFlightParser",
+    "DropTowerFacility",
+    "DropTowerService",
+    "DropTowerTestRun",
     "FLEXParser",
     "IngestionPayload",
     "InvestigationRecord",
     "MeasurementRecord",
     "NASADataFetcher",
+    "PSIDatasetRecord",
+    "PSIS3FileRecord",
+    "PSIS3SyncClient",
     "ProvenanceRecord",
     "TestRunRecord",
     "build_provenance_record",
