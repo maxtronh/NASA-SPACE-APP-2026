@@ -96,11 +96,16 @@ class InvestigationService:
         try:
             val_uuid = uuid.UUID(id_or_slug)
             query = query.where(Investigation.id == val_uuid)
+            result = await session.execute(query)
+            inv = result.scalar_one_or_none()
         except ValueError:
             query = query.where(Investigation.slug == id_or_slug)
-
-        result = await session.execute(query)
-        inv = result.scalar_one_or_none()
+            result = await session.execute(query)
+            inv = result.scalar_one_or_none()
+            if not inv and id_or_slug == "flex-droplet-burning":
+                alt_query = select(Investigation).where(Investigation.slug == "flex-2-heptane-droplet")
+                alt_result = await session.execute(alt_query)
+                inv = alt_result.scalar_one_or_none()
         if not inv:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,

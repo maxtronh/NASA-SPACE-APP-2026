@@ -1,0 +1,56 @@
+{
+  "authors": [
+    "Dietrich, Daniel L.",
+    "Ruff, Gary A."
+  ],
+  "bibtex": "@techreport{Dietrich_2015,\n  title = {Detailed Results from the Flame Extinguishment Experiment (FLEX)},\n  author = {Dietrich, Daniel L. and Ruff, Gary A.},\n  institution = {National Aeronautics and Space Administration (NASA)},\n  number = {NASA/TP-2015-216046},\n  year = {2015},\n  url = {https://ntrs.nasa.gov/citations/20150023456}\n}",
+  "doi": null,
+  "download_url": "https://ntrs.nasa.gov/api/citations/20150023456/downloads/FLEX_final.pdf",
+  "issue": null,
+  "journal_or_book": "NASA/TP-2015-216046",
+  "nasa_url": "https://ntrs.nasa.gov/citations/20150023456",
+  "ntrs_id": "20150023456",
+  "pages": null,
+  "publication_year": 2015,
+  "raw_metadata": {
+    "authorAffiliations": [
+      {
+        "meta": {
+          "author": {
+            "name": "Dietrich, Daniel L."
+          }
+        }
+      },
+      {
+        "meta": {
+          "author": {
+            "name": "Ruff, Gary A."
+          }
+        }
+      }
+    ],
+    "downloads": [
+      {
+        "links": {
+          "pdf": "https://ntrs.nasa.gov/api/citations/20150023456/downloads/FLEX_final.pdf"
+        }
+      }
+    ],
+    "id": 20150023456,
+    "otherReportNumbers": [
+      "NASA/TP-2015-216046"
+    ],
+    "publications": [
+      {
+        "publicationDate": "2015-11-01"
+      }
+    ],
+    "stiType": "TECHNICAL_PUBLICATION",
+    "title": "Detailed Results from the Flame Extinguishment Experiment (FLEX)"
+  },
+  "sha256_checksum": "9120972d8523e1e8a66c79185cf4cab2323e927b664eb3c554bd51d39f6d070a",
+  "title": "Detailed Results from the Flame Extinguishment Experiment (FLEX)",
+  "verification_source": "ntrs",
+  "verified": true,
+  "volume": null
+}

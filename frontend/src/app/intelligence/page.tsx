@@ -16,6 +16,7 @@ import {
   FileText,
   CornerDownLeft,
 } from "lucide-react";
+import GenerativeUIArtifact from "@/components/GenerativeUIArtifact";
 import { queryScientificIntelligence } from "@/lib/api";
 import { SIQueryResponse } from "@/types";
 
@@ -286,6 +287,15 @@ export default function IntelligenceChatPage() {
                           ))}
                         </div>
                       </div>
+                    )}
+
+                    {/* Interactive Generative UI Artifact Widget */}
+                    {!msg.response.abstention_flag && (
+                      <GenerativeUIArtifact
+                        query={msg.response.query}
+                        matchedEntities={msg.response.explainability.matched_entities}
+                        investigationSlug={msg.response.citations?.[0]?.investigation_id || "flex-droplet-burning"}
+                      />
                     )}
                   </div>
                 )}

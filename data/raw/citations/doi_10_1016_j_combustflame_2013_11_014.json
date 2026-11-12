@@ -1,0 +1,52 @@
+{
+  "authors": [
+    "Bauerheim, Micha\u00ebl",
+    "Law, Chung K."
+  ],
+  "bibtex": "@article{Bauerheim_2014,\n  title = {Detailed Droplet Combustion in Microgravity},\n  author = {Bauerheim, Micha\u00ebl and Law, Chung K.},\n  journal = {Combustion and Flame},\n  volume = {161},\n  number = {4},\n  pages = {123--135},\n  year = {2014},\n  doi = {10.1016/j.combustflame.2013.11.014}\n}",
+  "doi": "10.1016/j.combustflame.2013.11.014",
+  "download_url": "https://doi.org/10.1016/j.combustflame.2013.11.014",
+  "issue": "4",
+  "journal_or_book": "Combustion and Flame",
+  "nasa_url": null,
+  "ntrs_id": null,
+  "pages": "123-135",
+  "publication_year": 2014,
+  "raw_metadata": {
+    "DOI": "10.1016/j.combustflame.2013.11.014",
+    "URL": "https://doi.org/10.1016/j.combustflame.2013.11.014",
+    "author": [
+      {
+        "family": "Bauerheim",
+        "given": "Micha\u00ebl"
+      },
+      {
+        "family": "Law",
+        "given": "Chung K."
+      }
+    ],
+    "container-title": [
+      "Combustion and Flame"
+    ],
+    "issue": "4",
+    "issued": {
+      "date-parts": [
+        [
+          2014,
+          4,
+          1
+        ]
+      ]
+    },
+    "page": "123-135",
+    "title": [
+      "Detailed Droplet Combustion in Microgravity"
+    ],
+    "volume": "161"
+  },
+  "sha256_checksum": "27a6127cf94796f38a9a01ca5382466fa222781799263f951b701d5722768f94",
+  "title": "Detailed Droplet Combustion in Microgravity",
+  "verification_source": "crossref",
+  "verified": true,
+  "volume": "161"
+}

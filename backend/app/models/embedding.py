@@ -1,14 +1,30 @@
 import uuid
 from typing import Any
 
-from sqlalchemy import Integer, String, Text, Uuid
+from sqlalchemy import Index, Integer, String, Text, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
 
 from backend.app.models.base import Base, JSONType, VectorType
 
+try:
+    from pgvector.sqlalchemy import Vector as PgVector
+    VectorType.comparator_factory = PgVector.Comparator
+except (ImportError, AttributeError):
+    PgVector = None
+
 
 class VectorEmbedding(Base):
     __tablename__ = "vector_embeddings"
+
+    __table_args__ = (
+        Index(
+            "ix_vector_embeddings_hnsw_cosine",
+            "embedding",
+            postgresql_using="hnsw",
+            postgresql_with={"m": 16, "ef_construction": 64},
+            postgresql_ops={"embedding": "vector_cosine_ops"},
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(
         Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4

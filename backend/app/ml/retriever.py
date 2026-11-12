@@ -15,6 +15,7 @@ from typing import Any
 from rank_bm25 import BM25Okapi
 
 from backend.app.ml.embeddings import EmbeddingPipeline
+from backend.app.ml.reranker import CrossEncoderReranker
 
 logger = logging.getLogger(__name__)
 
@@ -52,9 +53,11 @@ class HybridRetriever:
     def __init__(
         self,
         embedder: EmbeddingPipeline | None = None,
+        reranker: CrossEncoderReranker | None = None,
         rrf_k: int = DEFAULT_RRF_K,
     ):
         self.embedder = embedder or EmbeddingPipeline()
+        self.reranker = reranker or CrossEncoderReranker()
         self.rrf_k = rrf_k
         self._documents: list[dict[str, Any]] = []
         self._document_texts: list[str] = []
@@ -87,8 +90,12 @@ class HybridRetriever:
                     data = json.load(f)
                     for item in data.get("investigations", []):
                         slug = item.get("slug")
+                        if slug == "flex-droplet-burning":
+                            slug = "flex-2-heptane-droplet"
                         if slug and slug not in docs_by_slug:
-                            docs_by_slug[slug] = item
+                            item_copy = dict(item)
+                            item_copy["slug"] = slug
+                            docs_by_slug[slug] = item_copy
             except (OSError, json.JSONDecodeError) as exc:
                 logger.warning(f"Could not read corpus_index.json: {exc}")
 
@@ -103,8 +110,12 @@ class HybridRetriever:
                         inv = payload.get("investigation")
                         if inv and isinstance(inv, dict):
                             slug = inv.get("slug")
+                            if slug == "flex-droplet-burning":
+                                slug = "flex-2-heptane-droplet"
                             if slug and slug not in docs_by_slug:
-                                docs_by_slug[slug] = inv
+                                inv_copy = dict(inv)
+                                inv_copy["slug"] = slug
+                                docs_by_slug[slug] = inv_copy
                 except (OSError, json.JSONDecodeError) as exc:
                     logger.debug(f"Skipping unreadable JSON {p}: {exc}")
 
@@ -151,8 +162,9 @@ class HybridRetriever:
         query: str,
         top_k: int = 5,
         filters: dict[str, Any] | None = None,
+        rerank: bool = True,
     ) -> list[dict[str, Any]]:
-        """Executes hybrid retrieval using BM25, dense vector similarity, and RRF (k=60)."""
+        """Executes hybrid retrieval using BM25, dense vector similarity, and two-stage cross-encoder re-ranking."""
         if not self._documents or not query.strip():
             return []
 
@@ -203,6 +215,7 @@ class HybridRetriever:
         max_rrf = 2.0 / (k + 1)
 
         # 4. Filter and Rank Results
+        candidate_pool_limit = max(top_k * 3, 10) if rerank else top_k
         ranked_indices = sorted(range(num_docs), key=lambda i: rrf_scores[i], reverse=True)
         results: list[dict[str, Any]] = []
 
@@ -234,7 +247,11 @@ class HybridRetriever:
             entry["vector_similarity"] = round(float(vec_sim), 4)
             results.append(entry)
 
-            if len(results) >= top_k:
+            if len(results) >= candidate_pool_limit:
                 break
 
-        return results
+        # Stage 2: Cross-Encoder Reranking
+        if rerank and results:
+            return self.reranker.rerank(clean_query, candidates=results, top_k=top_k)
+
+        return results[:top_k]
