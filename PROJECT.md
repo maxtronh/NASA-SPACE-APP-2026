@@ -272,6 +272,22 @@ Flame in Freefall is an advanced Scientific Intelligence (SI) platform leveragin
 
 ---
 
+## 🔒 Milestones Status
+| # | Milestone Name | Scope | Dependencies | Status | Key Outputs / Evidence |
+|---|----------------|-------|--------------|--------|------------------------|
+| M0 | Survey & Planning | Environment audit, NASA specs, architecture exploration | none | **DONE** | 3 survey reports, `PROJECT.md`, `TEST_INFRA.md` |
+| M1 | Research & Product Architecture | Architecture docs, schemas, roadmaps, task boards, Git & Python setup | M0 | **DONE** | `docs/ENVIRONMENT_AUDIT.md`, `NASA_RESEARCH_LOG.md`, `.venv`, `.git` |
+| M-E2E | E2E Testing Track | Independent 4-tier opaque-box test suite | M1 | **DONE** | `tests/e2e/` (83 tests), `TEST_READY.md` published |
+| M2 | NASA Data Ingestion Pipeline | Ingestion engine, SI normalization, SHA-256 provenance | M1 | **DONE** | 300 test runs, 1208 measurements, FLEX 20150023456 verified |
+| M3 | Database & Backend Architecture | FastAPI app mounting, Alembic migrations, CRUD endpoints | M1, M2 | **DONE** | `0001_initial_schema.py` head, `backend/app/main.py`, 48 backend tests passed |
+| BASELINE | Git Baseline & E2E Live Verification | Initial commit, live backend E2E execution | M2, M3, M-E2E | **DONE** | Commit `9b04e06`, 83/83 E2E passed against live `backend.app.main:app` |
+| M4 | AI/ML & Data Science | FastEmbed ONNX, RRF hybrid retrieval, entity extractor, abstention engine | M2, M3 | **IN_PROGRESS** | `backend/app/ml/`, `test_si_pipeline.py` |
+| M5 | Frontend and UI/UX | Next.js 15 App Router, 6 views, Plotly d² burning curves, comparison, chat | M1, M3 | **IN_PROGRESS** | `frontend/src/app/`, `npm run build` |
+| M6 | Full System Integration & Validation | Full-stack live test, Tier 5 adversarial hardening, Forensic Audit | M4, M5 | **PLANNED** | Live integration pass, forensic audit report |
+| M7 | Deployment & Showcase Materials | Docker Compose multi-stage build, demo runbook, presentation materials | M6 | **PLANNED** | `docker-compose.yml`, README, showcase artifacts |
+
+---
+
 ## Interface Contracts
 
 ### 1. Data Ingestion Output -> Database Schema
