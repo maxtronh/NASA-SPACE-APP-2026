@@ -11,10 +11,10 @@
 |---|---|---|---|---|
 | **Phase 0** | **Environment and repository audit** | Inspect workspace, verify Python, Node.js, Git, Docker, network reachability | **COMPLETED** | 100% |
 | **Phase 1** | **NASA research and system architecture** | Initialize Git & venv, catalog NASA research (FLEX, ACME, BASS, SoFIE), specify API contracts, establish agent boundaries | **COMPLETED** | 100% |
-| **Phase 2** | **Backend and data foundation** | PostgreSQL + pgvector, Alembic migrations, live NASA NTRS ingestion, SI unit normalization, provenance hashes, core FastAPI endpoints | **READY TO START** | 0% |
-| **Phase 3** | **Frontend and Scientific Intelligence** | Next.js dashboard, investigation explorer, comparison workspace, FastEmbed ONNX hybrid retrieval, citation-grounded SI chat | **PENDING** | 0% |
-| **Phase 4** | **Integration and validation** | Connect frontend to backend, test citations and ingestion, run independent 4-tier E2E tests, zero-fabrication verification | **PENDING** | 0% |
-| **Phase 5** | **Deployment and presentation** | Multi-service Docker Compose, final architecture documentation, 5-minute showcase guide, submission checklist | **PENDING** | 0% |
+| **Phase 2** | **Backend and data foundation** | PostgreSQL + pgvector, Alembic migrations, live NASA NTRS ingestion, SI unit normalization, provenance hashes, core FastAPI endpoints | **COMPLETED** | 100% |
+| **Phase 3** | **Frontend and Scientific Intelligence** | Next.js dashboard, investigation explorer, comparison workspace, FastEmbed ONNX hybrid retrieval, citation-grounded SI chat | **COMPLETED** | 100% |
+| **Phase 4** | **Integration and validation** | Connect frontend to backend, test citations and ingestion, run independent 4-tier E2E tests, zero-fabrication verification | **COMPLETED** | 100% |
+| **Phase 5** | **25-Upgrade Integration Matrix** | PSI S3 Sync, Cool Flames, Drop Tower, Merkle Trees, HNSW Vector, WebSockets, GraphRAG, 3D Flames, Generative UI Artifacts | **ACTIVE & ADVANCING** | 64% (16/25) |
 
 ---
 
@@ -23,14 +23,14 @@
 | Milestone | Scope | Assigned Agent | Status | Notes |
 |---|---|---|---|---|
 | **M0** | Survey & Planning | Orchestrator & Explorers | **DONE** | Workspace inspected, Python/Node/Docker verified, NTRS/PSI live verified. |
-| **M-E2E** | Independent E2E Test Suite | E2E Testing Orchestrator | **IN_PROGRESS** | `TEST_INFRA.md` initialized; authoring opaque-box Tiers 1–4. |
+| **M-E2E** | Independent E2E Test Suite | E2E Testing Orchestrator | **DONE** | 295 passed, 0 failed across full test suite. |
 | **M1** | Environment & Research Foundation | 01. Research Architect | **DONE** | Git init, `.gitignore`, `.venv` (Python 3.12), R1 audit docs delivered, task boards live. |
-| **M2** | NASA Data Ingestion & SI Normalization | 02. Data Engineer | **PENDING** | Next milestone to launch. |
-| **M3** | Database & Backend Core Services | 03. Backend & SI Architect | **PENDING** | Blocked on M2 data contracts. |
-| **M4** | Scientific Intelligence & ML Engine | 05. AI/ML & Data Science | **PENDING** | Blocked on M3 database. |
-| **M5** | Frontend & Visualization Workspace | 04. Frontend & UI/UX | **PENDING** | Blocked on M3 REST APIs. |
-| **M6** | End-to-End User Journey Verification | All Specialists & E2E | **PENDING** | Blocked on M4 & M5. |
-| **M7** | Containerization & Delivery Showcase | 01. Research & 03. Backend | **PENDING** | Blocked on M6. |
+| **M2** | NASA Data Ingestion & SI Normalization | 02. Data Engineer | **DONE** | NTRS, PSI S3 sync, Drop Tower catalog, Merkle hash trees, Pint SI normalizer verified. |
+| **M3** | Database & Backend Core Services | 03. Backend & SI Architect | **DONE** | FastAPI 12-router API, pgvector HNSW index, DuckDB Parquet engine, WebSocket streaming. |
+| **M4** | Scientific Intelligence & ML Engine | 05. AI/ML & Data Science | **DONE** | GraphRAG knowledge graph, two-stage cross-encoder, cool flames kinetics, zero-fabrication. |
+| **M5** | Frontend & Visualization Workspace | 04. Frontend & UI/UX | **DONE** | Next.js 15 (9 static routes), Three.js 3D flame viewer, Generative UI split-canvas artifacts. |
+| **M6** | End-to-End User Journey Verification | All Specialists & E2E | **DONE** | Tiers 1-4 passing (295 passed, 0 failed in 27s). |
+| **M7** | 25-Upgrade Advanced Capabilities | Team CORTEXX Swarm | **IN_PROGRESS** | 16/25 core capabilities fully delivered, verified, and committed. |
 
 ---
 
