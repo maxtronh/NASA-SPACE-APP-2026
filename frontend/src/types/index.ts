@@ -105,12 +105,37 @@ export interface InvestigationDetailResponse {
 export interface EquivalenceAssessment {
   equivalent: boolean;
   reasons: string[];
+  buoyancy_warning?: string | null;
 }
 
 export interface CompareResponse {
   investigation_ids: string[];
   equivalence_assessment: EquivalenceAssessment;
   comparison_grid: Record<string, any>;
+}
+
+export interface GravityRegimeProfile {
+  gravity_level: string;
+  category: string;
+  buoyancy_parameter: number;
+  convection_regime: string;
+  flame_geometry: string;
+  soot_behavior: string;
+}
+
+export interface AntigravityCompareRequest {
+  investigation_ids: string[];
+  gravity_regimes?: string[] | null;
+  include_equivalence_matrix?: boolean;
+}
+
+export interface AntigravityCompareResponse {
+  investigation_ids: string[];
+  gravity_regimes_compared: string[];
+  equivalence_assessment: EquivalenceAssessment;
+  gravity_matrix: Record<string, GravityRegimeProfile>;
+  comparison_grid: Record<string, any>;
+  buoyancy_warning?: string | null;
 }
 
 export interface MissingDataMetric {

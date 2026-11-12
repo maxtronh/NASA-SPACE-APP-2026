@@ -9,6 +9,7 @@ import {
   GitCompare,
   Sparkles,
   BarChart3,
+  Orbit,
   Activity,
   Menu,
   X,
@@ -21,6 +22,7 @@ const NAV_LINKS = [
   { href: "/", label: "Dashboard", icon: Flame },
   { href: "/investigations", label: "Explorer", icon: Compass },
   { href: "/compare", label: "Compare", icon: GitCompare },
+  { href: "/antigravity", label: "Antigravity", icon: Orbit },
   { href: "/intelligence", label: "SI Chat", icon: Sparkles },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
 ];

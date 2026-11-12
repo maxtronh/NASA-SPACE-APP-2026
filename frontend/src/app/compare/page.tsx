@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { compareInvestigations, fetchInvestigations } from "@/lib/api";
 import { CompareResponse, InvestigationSummary } from "@/types";
+import AntigravityWarning from "@/components/AntigravityWarning";
 
 function CompareWorkspaceContent() {
   const searchParams = useSearchParams();
@@ -202,7 +203,11 @@ function CompareWorkspaceContent() {
                 ))}
               </div>
 
-              {isGravityMismatch && (
+              {comparison.equivalence_assessment.buoyancy_warning ? (
+                <div className="mt-3">
+                  <AntigravityWarning warning={comparison.equivalence_assessment.buoyancy_warning} />
+                </div>
+              ) : isGravityMismatch && (
                 <div className="mt-3 p-3 rounded-lg bg-space-950/90 border border-amber-500/40 text-xs text-amber-300 leading-relaxed font-sans">
                   <strong>Critical Microgravity Scientific Warning:</strong> Comparing microgravity
                   flames (g ≈ 10⁻⁶ g) against terrestrial 1g reference burns violates

@@ -220,7 +220,10 @@ export default function InvestigationsExplorerPage() {
             >
               <option value="all">All Gravity Levels</option>
               <option value="microgravity">Microgravity (~10⁻⁶ g)</option>
+              <option value="lunar">Lunar Gravity (0.16 g)</option>
+              <option value="mars">Mars Gravity (0.38 g)</option>
               <option value="normal_gravity">Normal Gravity (1.0 g)</option>
+              <option value="hypergravity">Hypergravity (2.0g / 5.0g)</option>
             </select>
           </div>
 

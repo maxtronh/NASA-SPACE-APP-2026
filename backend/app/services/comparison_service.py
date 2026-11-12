@@ -3,6 +3,7 @@ from typing import Any
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.app.core.gravity import generate_buoyancy_warning
 from backend.app.services.investigation_service import InvestigationService
 
 
@@ -63,11 +64,14 @@ class ComparisonService:
                 "si_measurements": si_m,
             }
 
+        buoyancy_warning = generate_buoyancy_warning(list(gravities)) if len(gravities) > 1 else None
+
         return {
             "investigation_ids": investigation_ids,
             "equivalence_assessment": {
                 "equivalent": is_equivalent,
                 "reasons": reasons if reasons else ["Research conditions are directly comparable"],
+                "buoyancy_warning": buoyancy_warning,
             },
             "comparison_grid": grid,
         }

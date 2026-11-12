@@ -1,6 +1,8 @@
-from typing import Any
+from typing import Annotated, Any, Union
 
 from pydantic import BaseModel, Field
+
+from backend.app.schemas.artifacts import ScientificArtifact
 
 
 class SIQueryRequest(BaseModel):
@@ -28,3 +30,4 @@ class SIQueryResponse(BaseModel):
     abstention_flag: bool
     citations: list[SICitation]
     explainability: SIExplainability
+    artifacts: list[ScientificArtifact] = Field(default_factory=list)

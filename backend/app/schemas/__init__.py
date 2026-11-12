@@ -2,6 +2,18 @@ from backend.app.schemas.analytics import (
     CorpusAnalyticsResponse,
     MissingDataMetric,
 )
+from backend.app.schemas.artifacts import (
+    ChartArtifact,
+    ChartDataSeries,
+    CitationArtifact,
+    EquationArtifact,
+    Flame3DArtifact,
+    ScientificArtifact,
+    TableArtifact,
+    TableColumn,
+    TimeseriesArtifact,
+    TimeseriesChannel,
+)
 from backend.app.schemas.compare import (
     CompareRequest,
     CompareResponse,
@@ -26,10 +38,15 @@ from backend.app.schemas.si import (
 )
 
 __all__ = [
+    "ChartArtifact",
+    "ChartDataSeries",
+    "CitationArtifact",
     "CompareRequest",
     "CompareResponse",
     "CorpusAnalyticsResponse",
+    "EquationArtifact",
     "EquivalenceAssessment",
+    "Flame3DArtifact",
     "HealthResponse",
     "IngestValidationRequest",
     "IngestValidationResponse",
@@ -42,4 +59,9 @@ __all__ = [
     "SIExplainability",
     "SIQueryRequest",
     "SIQueryResponse",
+    "ScientificArtifact",
+    "TableArtifact",
+    "TableColumn",
+    "TimeseriesArtifact",
+    "TimeseriesChannel",
 ]

@@ -157,6 +157,48 @@ MEASUREMENT_PATTERNS: dict[str, list[str]] = {
     ],
 }
 
+GRAVITY_PATTERNS: dict[str, list[str]] = {
+    "microgravity (~10^-6 g)": [
+        r"\bmicrogravity\b",
+        r"\b10\^-?6\s*g\b",
+        r"\bzero-g\b",
+        r"\bfreefall\b",
+        r"\bweightless\b",
+    ],
+    "lunar_gravity (0.16 g)": [
+        r"\blunar gravity\b",
+        r"\blunar\b",
+        r"\bmoon gravity\b",
+        r"\b0\.16\s*g\b",
+        r"\bone-sixth g\b",
+    ],
+    "mars_gravity (0.38 g)": [
+        r"\bmars gravity\b",
+        r"\bmartian gravity\b",
+        r"\b0\.38\s*g\b",
+        r"\bthree-eighths g\b",
+    ],
+    "normal_gravity (1.0 g)": [
+        r"\bnormal gravity\b",
+        r"\b1\.?0?\s*g\b",
+        r"\bterrestrial gravity\b",
+        r"\b1-g\b",
+        r"\bground test\b",
+    ],
+    "hypergravity_2g (2.0 g)": [
+        r"\bhypergravity\b",
+        r"\b2\s*g\b",
+        r"\b2\.0\s*g\b",
+        r"\b2g\b",
+    ],
+    "hypergravity_5g (5.0 g)": [
+        r"\b5\s*g\b",
+        r"\b5\.0\s*g\b",
+        r"\b5g\b",
+        r"\bcentrifuge\b",
+    ],
+}
+
 
 class ScientificEntityExtractor:
     """Extracts domain-specific combustion entities from natural language queries and documents."""
@@ -167,6 +209,7 @@ class ScientificEntityExtractor:
         self._compiled_oxidizers = self._compile(OXIDIZER_PATTERNS)
         self._compiled_facilities = self._compile(FACILITY_PATTERNS)
         self._compiled_measurements = self._compile(MEASUREMENT_PATTERNS)
+        self._compiled_gravity = self._compile(GRAVITY_PATTERNS)
 
     @staticmethod
     def _compile(patterns_dict: dict[str, list[str]]) -> dict[str, list[re.Pattern]]:
@@ -183,6 +226,7 @@ class ScientificEntityExtractor:
             "oxidizers": [],
             "facilities": [],
             "measurements": [],
+            "gravity_regimes": [],
         }
 
         for cat, patterns in self._compiled_regimes.items():
@@ -204,6 +248,10 @@ class ScientificEntityExtractor:
         for meas, patterns in self._compiled_measurements.items():
             if any(p.search(text) for p in patterns):
                 result["measurements"].append(meas)
+
+        for grav, patterns in self._compiled_gravity.items():
+            if any(p.search(text) for p in patterns):
+                result["gravity_regimes"].append(grav)
 
         return result
 
@@ -230,6 +278,7 @@ class ScientificEntityExtractor:
 
         flat.extend(extracted["facilities"])
         flat.extend(extracted["oxidizers"])
+        flat.extend(extracted.get("gravity_regimes", []))
 
         # Check for specific key phrases directly in text to maintain high entity precision
         specific_phrases = [
