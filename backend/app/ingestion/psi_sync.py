@@ -131,6 +131,13 @@ class PSIDatasetRecord:
     files: List[PSIS3FileRecord] = field(default_factory=list)
 
 
+@dataclass
+class S3ListingMetadata:
+    is_truncated: bool = False
+    next_continuation_token: Optional[str] = None
+    common_prefixes: List[str] = field(default_factory=list)
+
+
 class PSIS3SyncClient:
     """Sync client for NASA Physical Sciences Informatics (PSI) Open S3 Buckets.
 
@@ -149,6 +156,7 @@ class PSIS3SyncClient:
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.timeout = timeout
         self.enable_network = enable_network
+        self.last_metadata: Optional[S3ListingMetadata] = None
 
     def list_datasets(self, prefix: Optional[str] = None) -> List[PSIDatasetRecord]:
         """Lists known NASA PSI combustion datasets filtered by prefix."""
@@ -203,14 +211,32 @@ class PSIS3SyncClient:
         )
 
     def parse_s3_xml_listing(self, xml_content: str) -> List[PSIS3FileRecord]:
-        """Parses standard AWS S3 ListBucketResult XML into file records."""
+        """Parses standard AWS S3 ListBucketResult XML into file records and records pagination metadata."""
         records: List[PSIS3FileRecord] = []
+        is_truncated = False
+        next_continuation_token = None
+        common_prefixes: List[str] = []
         try:
             root = ET.fromstring(xml_content)
             # Remove namespace if present
             ns = ""
             if "}" in root.tag:
                 ns = root.tag.split("}")[0] + "}"
+
+            # Check pagination and truncation markers
+            trunc_el = root.find(f"{ns}IsTruncated")
+            if trunc_el is not None and trunc_el.text:
+                is_truncated = trunc_el.text.strip().lower() == "true"
+
+            token_el = root.find(f"{ns}NextContinuationToken") or root.find(f"{ns}NextMarker")
+            if token_el is not None and token_el.text:
+                next_continuation_token = token_el.text.strip()
+
+            # Check CommonPrefixes (virtual directories)
+            for cp in root.findall(f"{ns}CommonPrefixes"):
+                p_el = cp.find(f"{ns}Prefix")
+                if p_el is not None and p_el.text:
+                    common_prefixes.append(p_el.text.strip())
 
             for contents in root.findall(f"{ns}Contents"):
                 key_el = contents.find(f"{ns}Key")
@@ -226,6 +252,12 @@ class PSIS3SyncClient:
                     records.append(PSIS3FileRecord(key=k, size_bytes=sz, etag=etag, last_modified=lm))
         except ET.ParseError as err:
             logger.warning(f"Error parsing S3 XML response: {err}")
+
+        self.last_metadata = S3ListingMetadata(
+            is_truncated=is_truncated,
+            next_continuation_token=next_continuation_token,
+            common_prefixes=common_prefixes,
+        )
         return records
 
     async def fetch_remote_listing(self, prefix: str = "combustion/") -> List[PSIS3FileRecord]:

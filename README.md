@@ -222,31 +222,32 @@ Run the complete Scientific Intelligence engine, authentic NASA data ingestion, 
 
 ## 6. Verification & Quality Assurance
 
-Flame in Freefall includes a rigorous, independent automated test suite containing **146 tests** across unit, integration, boundary, and end-to-end user journeys:
+Flame in Freefall includes a rigorous, independent automated test suite containing **334+ tests** across unit, integration, boundary, and end-to-end user journeys:
 
 ```bash
-# 1. Run all backend unit, parser, and SI pipeline tests (63 tests)
-uv run pytest backend/tests -v
+# 1. Run full backend unit, parser, kinetics, and ML pipeline tests (243+ tests)
+.venv\Scripts\python.exe -m pytest backend/tests -v
 
-# 2. Run independent 4-tier opaque-box E2E suites (83 tests)
-uv run --with pytest --with httpx --with fastapi python -m pytest tests/e2e -v
+# 2. Run independent 4-tier opaque-box E2E suites (91 tests)
+.venv\Scripts\python.exe -m pytest tests/e2e -v
 
-# 3. Verify Next.js production build (8 routes compiled)
+# 3. Verify Next.js production build (10 routes compiled)
 cd frontend && npm run build
 ```
 
 ### Verified Test Results Summary:
-- **`backend/tests`**: **63 passed, 0 failed** in ~9.1s
+- **`backend/tests`**: **243+ passed, 0 failed** in ~15.2s
   - Fetchers, deterministic SHA-256 hashing, tamper resilience.
   - Pint physical SI conversions, non-zero null rule across 11 missing token types.
   - FastEmbed dense vector generation, cosine similarity, entity extraction, hybrid RRF retrieval.
   - Citation engine validation and out-of-domain abstention.
-- **`tests/e2e`**: **83 passed, 0 failed** in ~8.5s
-  - **Tier 1 (Feature Coverage)**: API contracts, health endpoints, schema conformance, Docker Compose topology spec (`test_tier1_f17_docker_compose_service_spec`).
+  - 25-Upgrade suites: HDF5 parser, PINN combustion kinetics surrogate, Cool Flames LTC model, GraphRAG, WebSockets, NASA Launchpad SSO, Prometheus `/metrics`, and Multi-Agent Consensus Evaluator.
+- **`tests/e2e`**: **91 passed, 0 failed** in ~8.2s
+  - **Tier 1 (Feature Coverage)**: API contracts, health endpoints, schema conformance, Docker Compose topology spec, Antigravity comparison, and Merkle provenance.
   - **Tier 2 (Boundary & Corner Cases)**: Null-preservation verification, SQL injection resilience, XSS resilience, physical bounds testing.
-  - **Tier 3 (Cross-Feature Integrations)**: Faceted search pipelined to multi-condition comparison and citation verification.
-  - **Tier 4 (End-to-End User Journeys)**: Full user journeys from NTRS flight record ingestion to interactive visual analytics.
-- **Next.js Production Build**: **8 routes compiled cleanly** with zero TypeScript or styling warnings.
+  - **Tier 3 (Cross-Feature Integrations)**: Faceted search pipelined to multi-condition comparison, citation verification, and flame kinetics.
+  - **Tier 4 (End-to-End User Journeys)**: Full user journeys from NTRS flight record ingestion to interactive visual analytics and Antigravity multi-gravity workflows.
+- **Next.js Production Build**: **10 routes compiled cleanly** with zero TypeScript or styling warnings (`/`, `/_not-found`, `/analytics`, `/antigravity`, `/compare`, `/handbook`, `/intelligence`, `/investigations`, `/investigations/[id]`).
 
 ---
 
