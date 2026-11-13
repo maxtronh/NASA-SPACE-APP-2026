@@ -32,6 +32,7 @@ from .psi_sync import (
     PSIDatasetRecord,
     PSIS3FileRecord,
     PSIS3SyncClient,
+    S3ListingMetadata,
 )
 from .drop_tower import (
     DropTowerFacility,
@@ -61,6 +62,7 @@ __all__ = [
     "PSIS3FileRecord",
     "PSIS3SyncClient",
     "ProvenanceRecord",
+    "S3ListingMetadata",
     "TestRunRecord",
     "build_provenance_record",
     "calculate_sha256",
