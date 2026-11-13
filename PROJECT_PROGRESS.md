@@ -14,7 +14,7 @@
 | **Phase 2** | **Backend and data foundation** | PostgreSQL + pgvector, Alembic migrations, live NASA NTRS ingestion, SI unit normalization, provenance hashes, core FastAPI endpoints | **COMPLETED** | 100% |
 | **Phase 3** | **Frontend and Scientific Intelligence** | Next.js dashboard, investigation explorer, comparison workspace, FastEmbed ONNX hybrid retrieval, citation-grounded SI chat | **COMPLETED** | 100% |
 | **Phase 4** | **Integration and validation** | Connect frontend to backend, test citations and ingestion, run independent 4-tier E2E tests, zero-fabrication verification | **COMPLETED** | 100% |
-| **Phase 5** | **25-Upgrade Integration Matrix** | PSI S3 Sync, Cool Flames, Drop Tower, Merkle Trees, HNSW Vector, WebSockets, GraphRAG, 3D Flames, Generative UI Artifacts | **ACTIVE & ADVANCING** | 64% (16/25) |
+| **Phase 5** | **25-Upgrade Integration Matrix** | PSI S3 Sync, Cool Flames, Drop Tower, Merkle Trees, HNSW Vector, WebSockets, GraphRAG, 3D Flames, Generative UI Artifacts, PWA, Consensus Evaluator | **COMPLETED** | 100% (25/25) |
 
 ---
 
@@ -23,14 +23,14 @@
 | Milestone | Scope | Assigned Agent | Status | Notes |
 |---|---|---|---|---|
 | **M0** | Survey & Planning | Orchestrator & Explorers | **DONE** | Workspace inspected, Python/Node/Docker verified, NTRS/PSI live verified. |
-| **M-E2E** | Independent E2E Test Suite | E2E Testing Orchestrator | **DONE** | 295 passed, 0 failed across full test suite. |
+| **M-E2E** | Independent E2E Test Suite | E2E Testing Orchestrator | **DONE** | 338 passed, 0 failed across full test suite. |
 | **M1** | Environment & Research Foundation | 01. Research Architect | **DONE** | Git init, `.gitignore`, `.venv` (Python 3.12), R1 audit docs delivered, task boards live. |
 | **M2** | NASA Data Ingestion & SI Normalization | 02. Data Engineer | **DONE** | NTRS, PSI S3 sync, Drop Tower catalog, Merkle hash trees, Pint SI normalizer verified. |
-| **M3** | Database & Backend Core Services | 03. Backend & SI Architect | **DONE** | FastAPI 12-router API, pgvector HNSW index, DuckDB Parquet engine, WebSocket streaming. |
+| **M3** | Database & Backend Core Services | 03. Backend & SI Architect | **DONE** | FastAPI 14-router API, pgvector HNSW index, DuckDB Parquet engine, WebSocket streaming. |
 | **M4** | Scientific Intelligence & ML Engine | 05. AI/ML & Data Science | **DONE** | GraphRAG knowledge graph, two-stage cross-encoder, cool flames kinetics, zero-fabrication. |
-| **M5** | Frontend & Visualization Workspace | 04. Frontend & UI/UX | **DONE** | Next.js 15 (9 static routes), Three.js 3D flame viewer, Generative UI split-canvas artifacts. |
-| **M6** | End-to-End User Journey Verification | All Specialists & E2E | **DONE** | Tiers 1-4 passing (295 passed, 0 failed in 27s). |
-| **M7** | 25-Upgrade Advanced Capabilities | Team CORTEXX Swarm | **IN_PROGRESS** | 16/25 core capabilities fully delivered, verified, and committed. |
+| **M5** | Frontend & Visualization Workspace | 04. Frontend & UI/UX | **DONE** | Next.js 15 (10 static routes), Three.js 3D flame viewer, Generative UI split-canvas artifacts, PWA handbook. |
+| **M6** | End-to-End User Journey Verification | All Specialists & E2E | **DONE** | Tiers 1-4 passing (338 passed, 0 failed in 26s). |
+| **M7** | 25-Upgrade Advanced Capabilities | Team CORTEXX Swarm | **COMPLETED** | All 25/25 capabilities fully delivered, verified, and committed. |
 
 ---
 
