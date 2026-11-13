@@ -1,10 +1,11 @@
 from dataclasses import asdict
-from typing import Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query, status
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from backend.app.db.session import get_db
+from backend.app.ml.consensus_evaluator import MultiAgentConsensusEvaluator
 from backend.app.ml.vision_tracker import FlameVisionTracker
 from backend.app.schemas.analytics import CorpusAnalyticsResponse
 from backend.app.services.analytics_service import AnalyticsService
@@ -64,3 +65,24 @@ async def get_missing_data_analysis(
         "total_investigations": data["total_investigations"],
         "missing_data_matrix": data["missing_data_matrix"],
     }
+
+
+class ConsensusEvalRequest(BaseModel):
+    query: str = Field(..., description="Scientific inquiry query")
+    response_text: str = Field(..., description="Generated or synthesized response text")
+    citations: list[dict[str, Any]] = Field(default_factory=list, description="List of cited NASA investigations")
+    abstention_flag: bool = Field(default=False, description="Whether the platform abstained")
+    si_measurements: Optional[dict[str, Any]] = Field(default=None, description="Optional measurement dictionary")
+
+
+@router.post("/consensus-eval")
+async def evaluate_consensus(payload: ConsensusEvalRequest):
+    """Executes multi-agent consensus audit across 5 specialized NASA evaluator personas."""
+    report = MultiAgentConsensusEvaluator.evaluate(
+        query=payload.query,
+        response_text=payload.response_text,
+        citations=payload.citations,
+        abstention_flag=payload.abstention_flag,
+        si_measurements=payload.si_measurements,
+    )
+    return asdict(report)

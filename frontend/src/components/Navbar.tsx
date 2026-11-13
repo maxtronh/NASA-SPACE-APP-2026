@@ -25,6 +25,7 @@ const NAV_LINKS = [
   { href: "/antigravity", label: "Antigravity", icon: Orbit },
   { href: "/intelligence", label: "SI Chat", icon: Sparkles },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/handbook", label: "Handbook", icon: ShieldCheck },
 ];
 
 export default function Navbar() {
