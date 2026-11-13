@@ -1,10 +1,36 @@
-from fastapi import APIRouter, Depends
+from dataclasses import asdict
+from typing import Optional
+
+from fastapi import APIRouter, Depends, Query, status
+from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from backend.app.db.session import get_db
+from backend.app.ml.vision_tracker import FlameVisionTracker
 from backend.app.schemas.analytics import CorpusAnalyticsResponse
 from backend.app.services.analytics_service import AnalyticsService
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
+
+
+class VisionSimulationRequest(BaseModel):
+    regime: str = Field(default="microgravity", description="Flame regime: 'microgravity' or 'normal_gravity'")
+    num_frames: int = Field(default=10, ge=3, le=50, description="Number of video frames to simulate and track")
+    fps: float = Field(default=30.0, ge=1.0, le=1000.0, description="Camera frame rate in frames/sec")
+
+
+@router.post("/vision/simulate-and-track")
+async def simulate_and_track_flame_vision(payload: VisionSimulationRequest):
+    """Simulates high-speed combustion optical footage and tracks flame edge, sphericity, and regime."""
+    frames = FlameVisionTracker.generate_synthetic_flame_frames(
+        regime=payload.regime,
+        num_frames=payload.num_frames,
+    )
+    result = FlameVisionTracker.track_sequence(
+        frames=frames,
+        fps=payload.fps,
+        droplet_radius_px=4.0,
+    )
+    return asdict(result)
 
 
 @router.get("/corpus", response_model=CorpusAnalyticsResponse)
