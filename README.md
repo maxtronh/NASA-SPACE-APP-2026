@@ -7,7 +7,8 @@
 [![Next.js 15](https://img.shields.io/badge/Next.js-15.1.7-black.svg?logo=next.js&logoColor=white)](https://nextjs.org)
 [![PostgreSQL 16 + pgvector](https://img.shields.io/badge/PostgreSQL-16_+_pgvector-336791.svg?logo=postgresql&logoColor=white)](https://github.com/pgvector/pgvector)
 [![FastEmbed ONNX](https://img.shields.io/badge/AI%2FML-FastEmbed_ONNX-FF6F00.svg)](https://github.com/qdrant/fastembed)
-[![Test Suite Status](https://img.shields.io/badge/Tests-146%2F146_Passing-brightgreen.svg)]()
+[![Test Suite Status](https://img.shields.io/badge/Tests-338%2F338_Passing-brightgreen.svg)]()
+[![25-Upgrade Integration](https://img.shields.io/badge/25--Upgrades-25%2F25_Complete-blueviolet.svg)]()
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](cortexx_flame_in_freefall_demo.ipynb)
 
 **A production-ready Scientific Intelligence (SI) and flight-telemetry analytics platform transforming NASA microgravity combustion flight archives into explainable spacecraft fire safety insights.**
