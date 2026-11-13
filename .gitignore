@@ -71,6 +71,8 @@ Thumbs.db
 *.sqlite
 *.sqlite3
 *.db
+*.db-journal
+*.db-wal
 
 # Temporary and log files
 *.log
