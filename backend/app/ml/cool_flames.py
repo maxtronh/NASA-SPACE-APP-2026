@@ -100,6 +100,8 @@ class CoolFlamesAnalyzer:
         ambient_o2_pct: float = 21.0,
     ) -> bool:
         """Determines if the given droplet combusts with a second-stage cool flame."""
+        if d0_mm <= 0:
+            return False
         clean_fuel = fuel.strip().lower()
         data = COOL_FLAME_FUEL_DATABASE.get(clean_fuel)
         if not data or not data["supports_cool_flames"]:
@@ -124,6 +126,13 @@ class CoolFlamesAnalyzer:
         pressure_kpa: float = 101.325,
     ) -> TwoStageExtinctionProfile:
         """Computes comprehensive two-stage combustion metrics."""
+        if d0_mm <= 0:
+            raise ValueError(f"Initial droplet diameter d0 must be strictly positive (> 0 mm), got {d0_mm} mm.")
+        if ambient_o2_pct <= 0 or ambient_o2_pct > 100.0:
+            raise ValueError(f"Ambient oxygen percentage must be in range (0, 100], got {ambient_o2_pct}%.")
+        if pressure_kpa <= 0:
+            raise ValueError(f"Chamber pressure must be strictly positive (> 0 kPa), got {pressure_kpa} kPa.")
+
         clean_fuel = fuel.strip().lower()
         data = COOL_FLAME_FUEL_DATABASE.get(clean_fuel)
 

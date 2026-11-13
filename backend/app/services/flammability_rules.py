@@ -86,6 +86,9 @@ class FlammabilityRulesEngine:
         rules: List[RuleEvaluation] = []
         recommendations: List[str] = []
 
+        # Safe gravity string handling
+        gravity_clean = (gravity_level or "microgravity (~10^-6 g)").strip().lower()
+
         # Rule 1: Limiting Oxygen Index (LOI / MOC) Margin
         o2_margin = profile.limiting_oxygen_index - oxygen_percentage
         if o2_margin >= 3.0:
@@ -114,8 +117,9 @@ class FlammabilityRulesEngine:
         # Rule 2: Test 1 Upward Flame Propagation
         # Pressure scaling: p_factor = (P / 101.3)^0.3
         p_factor = math.pow(pressure_kpa / 101.325, 0.3)
-        # Thickness factor: (2.0 / t)^0.5
-        t_factor = math.pow(2.0 / max(thickness_mm or 2.0, 0.2), 0.5)
+        # Thickness factor: (2.0 / t)^0.5 with numerical safety floor of 0.05 mm
+        eff_thickness = max(thickness_mm if thickness_mm is not None else 2.0, 0.05)
+        t_factor = math.pow(2.0 / eff_thickness, 0.5)
 
         o2_delta = oxygen_percentage - profile.limiting_oxygen_index
         if o2_delta < -2.0:
@@ -123,7 +127,7 @@ class FlammabilityRulesEngine:
             dripping = False
         elif o2_delta <= 0.0:
             est_burn_len = max(3.0, 8.5 + o2_delta * 2.0)
-            dripping = profile.dripping_propensity == "high" and "micro" not in gravity_level.lower()
+            dripping = profile.dripping_propensity == "high" and "micro" not in gravity_clean
         else:
             est_burn_len = min(30.0, 8.5 + o2_delta * 3.2 * p_factor * t_factor)
             dripping = profile.dripping_propensity in ("high", "low")
