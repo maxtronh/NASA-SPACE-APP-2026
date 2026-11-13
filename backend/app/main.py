@@ -5,13 +5,14 @@ CORTEXX Scientific Intelligence Platform
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import SQLAlchemyError
 
 from backend.app.api.v1.router import api_v1_router
 from backend.app.core.config import settings
 from backend.app.core.logging import logger, setup_logging
+from backend.app.core.telemetry_metrics import MetricsRegistry, TelemetryMetricsMiddleware
 from backend.app.db.session import check_db_health, get_db_engines, init_db
 from backend.app.schemas.health import HealthResponse
 from backend.app.services.seed_data import seed_database_if_empty
@@ -60,12 +61,22 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# OpenTelemetry & Prometheus Metrics Middleware
+app.add_middleware(TelemetryMetricsMiddleware)
 
 
 @app.get("/health", response_model=HealthResponse, tags=["health"])
 async def root_health():
     """Root health endpoint for container healthchecks."""
     return await check_db_health()
+
+
+@app.get("/metrics", tags=["telemetry-metrics"])
+async def prometheus_metrics():
+    """Prometheus text-format metrics exporter for system monitoring and alerting."""
+    reg = MetricsRegistry.get_instance()
+    content = reg.export_prometheus_text()
+    return Response(content=content, media_type="text/plain; version=0.0.4")
 
 
 # Include API v1 routes
