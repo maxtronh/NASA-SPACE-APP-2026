@@ -228,7 +228,9 @@ class PSIS3SyncClient:
             if trunc_el is not None and trunc_el.text:
                 is_truncated = trunc_el.text.strip().lower() == "true"
 
-            token_el = root.find(f"{ns}NextContinuationToken") or root.find(f"{ns}NextMarker")
+            token_el = root.find(f"{ns}NextContinuationToken")
+            if token_el is None:
+                token_el = root.find(f"{ns}NextMarker")
             if token_el is not None and token_el.text:
                 next_continuation_token = token_el.text.strip()
 

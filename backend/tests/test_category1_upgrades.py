@@ -245,3 +245,76 @@ def test_drop_tower_test_runs_null_preservation():
     run_22 = next(r for r in runs if r.facility_id == "grc_2_2s")
     assert run_22.soot_yield_fraction is None
     assert run_22.extinction_observed is False
+
+
+# ===========================================================================
+# SKEPTICAL REVIEWER ROBUSTNESS & BOUNDARY PROBES
+# ===========================================================================
+
+
+def test_flammability_rules_none_gravity_and_thin_sample():
+    """Verify flammability rules withstand None gravity and ultra-thin fuel thickness."""
+    report = FlammabilityRulesEngine.evaluate(
+        material_key="pmma",
+        oxygen_percentage=21.0,
+        pressure_kpa=101.325,
+        thickness_mm=0.08,
+        gravity_level=None,
+    )
+    assert report is not None
+    assert report.gravity_level is None
+    assert len(report.rules_evaluated) == 3
+
+
+def test_cool_flames_boundary_validation():
+    """Verify CoolFlamesAnalyzer raises descriptive ValueError on unphysical boundary inputs."""
+    with pytest.raises(ValueError, match="strictly positive"):
+        CoolFlamesAnalyzer.analyze_droplet_transition(fuel="n-heptane", d0_mm=-1.0)
+
+    with pytest.raises(ValueError, match="strictly positive"):
+        CoolFlamesAnalyzer.analyze_droplet_transition(fuel="n-heptane", d0_mm=0.0)
+
+    with pytest.raises(ValueError, match="Ambient oxygen percentage"):
+        CoolFlamesAnalyzer.analyze_droplet_transition(fuel="n-heptane", d0_mm=2.0, ambient_o2_pct=-5.0)
+
+    with pytest.raises(ValueError, match="Ambient oxygen percentage"):
+        CoolFlamesAnalyzer.analyze_droplet_transition(fuel="n-heptane", d0_mm=2.0, ambient_o2_pct=105.0)
+
+    with pytest.raises(ValueError, match="Chamber pressure"):
+        CoolFlamesAnalyzer.analyze_droplet_transition(fuel="n-heptane", d0_mm=2.0, pressure_kpa=-20.0)
+
+
+def test_psi_sync_s3_xml_continuation_and_prefixes():
+    """Verify S3 XML parser correctly extracts continuation tokens and directory prefixes."""
+    paginated_xml = """<?xml version="1.0" encoding="UTF-8"?>
+    <ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
+        <Name>nasa-psi</Name>
+        <Prefix>combustion/</Prefix>
+        <IsTruncated>true</IsTruncated>
+        <NextContinuationToken>1ueGcxLPRx1Tr/XYgQKEA6uYLPyFVdsPtBGL5JJnvFuZk=</NextContinuationToken>
+        <CommonPrefixes>
+            <Prefix>combustion/flex-2/</Prefix>
+        </CommonPrefixes>
+        <CommonPrefixes>
+            <Prefix>combustion/bass-ii/</Prefix>
+        </CommonPrefixes>
+        <Contents>
+            <Key>combustion/index.json</Key>
+            <LastModified>2023-01-01T00:00:00.000Z</LastModified>
+            <ETag>&quot;5d41402abc4b2a76b9719d911017c592&quot;</ETag>
+            <Size>2048</Size>
+        </Contents>
+    </ListBucketResult>"""
+
+    client = PSIS3SyncClient(enable_network=False)
+    records = client.parse_s3_xml_listing(paginated_xml)
+    assert len(records) == 1
+    assert records[0].key == "combustion/index.json"
+
+    meta = client.last_metadata
+    assert meta is not None
+    assert meta.is_truncated is True
+    assert meta.next_continuation_token == "1ueGcxLPRx1Tr/XYgQKEA6uYLPyFVdsPtBGL5JJnvFuZk="
+    assert "combustion/flex-2/" in meta.common_prefixes
+    assert "combustion/bass-ii/" in meta.common_prefixes
+
