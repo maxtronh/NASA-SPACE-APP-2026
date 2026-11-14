@@ -285,6 +285,7 @@ Flame in Freefall is an advanced Scientific Intelligence (SI) platform leveragin
 | M5 | Frontend and UI/UX | Next.js 15 App Router, 6 views, Plotly d² burning curves, comparison, chat | M1, M3 | **DONE** | `frontend/src/app/`, `npm run build` exit 0 (8 routes) |
 | M6 | Full System Integration & Validation | Full-stack live test, Tier 5 adversarial hardening, Forensic Audit | M4, M5 | **DONE** | 83/83 E2E passed, 63/63 backend passed, Forensic Audit CLEAN |
 | M7 | Deployment & Showcase Materials | Docker Compose multi-stage build, demo runbook, presentation materials | M6 | **DONE** | `docker-compose.yml`, `backend/Dockerfile`, `frontend/Dockerfile`, `README.md` |
+| M8 | Flow 3 (E-07, E-08) & Flow 4 (E-10) | Schlieren RAG, Bayesian OED, Artemis Gateway EAFHI full-stack & UI | M7 | **DONE** | 378/378 tests passed, Next.js build clean (13 routes), Forensic Audit CLEAN |
 
 ---
 
@@ -345,6 +346,16 @@ Flame in Freefall is an advanced Scientific Intelligence (SI) platform leveragin
   }
   ```
 - `GET /api/v1/analytics/corpus`: Returns `{"total_investigations": int, "combustion_regimes": dict, "missing_data_matrix": dict}`.
+- `POST /api/v1/multimodal/extract-keyframes`: Keyframe extraction at 10 Hz from camera video streams.
+- `POST /api/v1/multimodal/pyrometry`: Two-color Planck Wien soot pyrometry temperature mapping [800K, 2400K] and boundary contour analysis.
+- `POST /api/v1/multimodal/index-frame`: Index visual frames with 512-dim multimodal embeddings in pgvector/SQLite.
+- `POST /api/v1/multimodal/search`: Multimodal semantic cosine vector search for diagnostic frames.
+- `POST /api/v1/active-learning/optimize`: Gaussian Process ARD regression with UCB acquisition for optimal flight test parameters.
+- `POST /api/v1/active-learning/surrogate/predict`: Query GP surrogate posterior mean and epistemic uncertainty.
+- `GET /api/v1/active-learning/parameter-bounds` & `/facilities`: Microgravity facility operational envelopes and bounds.
+- `POST /api/v1/safety/eafhi/calculate`: Exploration Atmosphere Fire Hazard Index deterministic score [0.0, 1.0] and hypobaric MOC.
+- `GET /api/v1/safety/eafhi/gateway-profile`: Artemis Lunar Gateway comparative flammability evaluation across standard aerospace materials.
+- `POST /api/v1/safety/eafhi/sensitivity`: Environmental sensitivity sweeps over oxygen, pressure, and gravity.
 
 ---
 
