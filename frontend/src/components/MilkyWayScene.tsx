@@ -183,14 +183,13 @@ export default function MilkyWayScene({ autoRotate }: MilkyWaySceneProps) {
     resize();
 
     let frame = 0;
-    const clock = new THREE.Clock();
-    const animate = () => {
+    const animate = (time: number) => {
       frame = window.requestAnimationFrame(animate);
-      glow.material.opacity = 0.18 + Math.sin(clock.getElapsedTime() * 1.2) * 0.035;
+      glow.material.opacity = 0.18 + Math.sin(time * 0.0012) * 0.035;
       controls.update();
       renderer.render(scene, camera);
     };
-    animate();
+    frame = window.requestAnimationFrame(animate);
 
     return () => {
       window.cancelAnimationFrame(frame);

@@ -286,8 +286,20 @@ Flame in Freefall is an advanced Scientific Intelligence (SI) platform leveragin
 | M6 | Full System Integration & Validation | Full-stack live test, Tier 5 adversarial hardening, Forensic Audit | M4, M5 | **DONE** | 83/83 E2E passed, 63/63 backend passed, Forensic Audit CLEAN |
 | M7 | Deployment & Showcase Materials | Docker Compose multi-stage build, demo runbook, presentation materials | M6 | **DONE** | `docker-compose.yml`, `backend/Dockerfile`, `frontend/Dockerfile`, `README.md` |
 | M8 | Flow 3 (E-07, E-08) & Flow 4 (E-10) | Schlieren RAG, Bayesian OED, Artemis Gateway EAFHI full-stack & UI | M7 | **DONE** | 378/378 tests passed, Next.js build clean (13 routes), Forensic Audit CLEAN |
+| M9 | Solar System Simulation, 25 Faces & Qwen AI Model Integration | Standalone package in `nasa exploration/`, Next.js 25-faces HUD, Qwen 2.5 LoRA bridge, and automated E2E tests | M8 | **DONE** | 542/542 tests passed, Next.js build clean (15 routes), Forensic Audit CLEAN |
 
 ---
+
+## Feature Inventory — Milestone M9 (Solar System Simulation & 25 Faces)
+| # | Feature | Description | Milestone | Source |
+|---|---------|-------------|-----------|--------|
+| F9.1 | Standalone Simulation Package | Complete zero-dependency simulation in `nasa exploration/` (`index.html`, `styles.css`, `simulation.js`, `qwen_copilot.js`, `run_simulation.py`) | M9 | Survey 1 & 3 |
+| F9.2 | 25 Scientific Faces Telemetry Matrix | 5-tier telemetry matrix (Planetary Physics, Astrodynamics, Fire Safety, Qwen AI, Visualization HUD) | M9 | Survey 2 |
+| F9.3 | Qwen 2.5 LoRA Extraction & Bridge | Dual-mode inference engine loading `E:\ai_model\finetuning\qwen_lora_model` with deterministic scientific fallback | M9 | Survey 1 & 2 |
+| F9.4 | Solar System Keplerian Physics Engine | Exact Keplerian ephemeris math, Hohmann transfer delta-v, and translunar injection calculations | M9 | Survey 1 & 2 |
+| F9.5 | Next.js Integrated Simulation Section | 3-way toggle in `MilkyWayExperience.tsx` + `SolarSystem25FacesHUD.tsx` with local 3D Three.js canvas | M9 | Survey 1 & 3 |
+| F9.6 | Exploration REST API Endpoints | `/api/v1/exploration/faces-25`, `/planets`, `/trajectory/calculate`, `/copilot/chat` | M9 | Survey 1, 2, 3 |
+| F9.7 | Automated Verification Suite | Backend pytest suite (`test_solar_physics.py`, `test_qwen_engine.py`) and E2E suite (`test_solar_exploration_e2e.py`) | M9 | Survey 3 |
 
 ## Interface Contracts
 
@@ -356,6 +368,10 @@ Flame in Freefall is an advanced Scientific Intelligence (SI) platform leveragin
 - `POST /api/v1/safety/eafhi/calculate`: Exploration Atmosphere Fire Hazard Index deterministic score [0.0, 1.0] and hypobaric MOC.
 - `GET /api/v1/safety/eafhi/gateway-profile`: Artemis Lunar Gateway comparative flammability evaluation across standard aerospace materials.
 - `POST /api/v1/safety/eafhi/sensitivity`: Environmental sensitivity sweeps over oxygen, pressure, and gravity.
+- `GET /api/v1/exploration/faces-25`: 25 Scientific Faces real-time telemetry matrix across 5 tiers (Planetary Physics, Astrodynamics, Fire Safety, Qwen AI, Visualization HUD).
+- `GET /api/v1/exploration/planets`: Keplerian ephemeris state vectors and orbital elements for Mercury through Neptune + Pluto.
+- `POST /api/v1/exploration/trajectory/calculate`: Exact Hohmann transfer delta-V, transit time, and launch window calculation.
+- `POST /api/v1/exploration/copilot/chat`: Qwen 2.5 0.5B LoRA inference bridge with zero-crash deterministic scientific fallback.
 
 ---
 

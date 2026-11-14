@@ -6,6 +6,7 @@ from backend.app.api.v1.endpoints import (
     auth,
     citations,
     compare,
+    exploration,
     graph,
     health,
     ingest,
@@ -40,3 +41,4 @@ api_v1_router.include_router(telemetry.router)
 api_v1_router.include_router(ws_telemetry.router)
 api_v1_router.include_router(multimodal.router)
 api_v1_router.include_router(active_learning.router)
+api_v1_router.include_router(exploration.router)

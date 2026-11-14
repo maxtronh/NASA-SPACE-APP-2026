@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NASA Solar System Exploration & 25 Faces Simulation</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="app-header">
+      <div>
+        <div class="header-meta">
+          <span class="pulse-dot"></span>
+          <span>NASA Deep Space Exploration &bull; 25 Faces Matrix</span>
+        </div>
+        <h1 class="header-title">Solar System Simulation &amp; Qwen 2.5 AI Model</h1>
+        <p class="header-subtitle">
+          Unified Astrodynamics, Microgravity Combustion Kinetics, and Edge AI Copilot
+        </p>
+      </div>
+      <div class="header-badges">
+        <span class="badge badge-green">M9 Architecture Active</span>
+        <span class="badge badge-cyan">Qwen 2.5 (0.5B LoRA) Ready</span>
+        <span class="badge badge-purple">Keplerian Ephemeris Online</span>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="tabs-nav" role="tablist">
+      <button class="tab-btn active" id="tab-btn-faces" onclick="switchTab('faces')">1. The 25 Scientific Faces</button>
+      <button class="tab-btn" id="tab-btn-orbit" onclick="switchTab('orbit')">2. Orbit Simulator Canvas</button>
+      <button class="tab-btn" id="tab-btn-qwen" onclick="switchTab('qwen')">3. Qwen 2.5 Copilot HUD</button>
+      <button class="tab-btn" id="tab-btn-trajectory" onclick="switchTab('trajectory')">4. &Delta;v Trajectory Planner</button>
+    </nav>
+
+    <!-- Tab 1: The 25 Scientific Faces Matrix -->
+    <section id="view-faces" class="tab-view active">
+      <div class="matrix-grid">
+        <!-- Tier 1 -->
+        <div class="tier-column">
+          <div class="tier-header tier-1">
+            <span>Tier 1: Planetary Physics</span>
+            <span>Faces 01-05</span>
+          </div>
+          <ul class="faces-list">
+            <li><button class="face-card-btn" onclick="selectFace(1)"><span>01. Heliosphere &amp; Solar Wind</span> &rarr;</button></li>
+            <li><button class="face-card-btn" onclick="selectFace(2)"><span>02. Terrestrial Atmospheres</span> &rarr;</button></li>
+            <li><button class="face-card-btn" onclick="selectFace(3)"><span>03. Gas Giant Magnetospheres</span> &rarr;</button></li>
+            <li><button class="face-card-btn" onclick="selectFace(4)"><span>04. Ocean Worlds &amp; Plumes</span> &rarr;</button></li>
+            <li><button class="face-card-btn" onclick="selectFace(5)"><span>05. Kuiper Belt &amp; Glaciers</span> &rarr;</button></li>
+          </ul>
+        </div>
+
+        <!-- Tier 2 -->
+        <div class="tier-column">
+          <div class="tier-header tier-2">
+            <span>Tier 2: Astrodynamics</span>
+            <span>Faces 06-10</span>
+          </div>
+          <ul class="faces-list">
+            <li><button class="face-card-btn" onclick="selectFace(6)"><span>06. N-Body Ephemeris &amp; J2</span> &rarr;</button></li>
+            <li><button class="face-card-btn" onclick="selectFace(7)"><span>07. Gravity-Assist Slingshot</span> &rarr;</button></li>
+            <li><button class="face-card-btn" onclick="selectFace(8)"><span>08. Electric &amp; Ion Propulsion</span> &rarr;</button></li>
+            <li><button class="face-card-btn" onclick="selectFace(9)"><span>09. Solar Radiation Pressure</span> &rarr;</button></li>
+            <li><button class="face-card-btn" onclick="selectFace(10)"><span>10. Hypersonic Entry (EDL)</span> &rarr;</button></li>
+          </ul>
+        </div>
+
+        <!-- Tier 3 -->
+        <div class="tier-column">
+          <div class="tier-header tier-3">
+            <span>Tier 3: Extreme Fire Safety</span>
+            <span>Faces 11-15</span>
+          </div>
+          <ul class="faces-list">
+            <li><button class="face-card-btn" onclick="selectFace(11)"><span>11. Spherical Droplet Burning</span> &rarr;</button></li>
+            <li><button class="face-card-btn" onclick="selectFace(12)"><span>12. Silent Cool-Flame Rekindling</span> &rarr;</button></li>
+            <li><button class="face-card-btn" onclick="selectFace(13)"><span>13. Gateway EAFHI Safety</span> &rarr;</button></li>
+            <li><button class="face-card-btn" onclick="selectFace(14)"><span>14. Micro-G Jitter Wavelet</span> &rarr;</button></li>
+            <li><button class="face-card-btn" onclick="selectFace(15)"><span>15. Deep Space Suppression</span> &rarr;</button></li>
+          </ul>
+        </div>
+
+        <!-- Tier 4 -->
+        <div class="tier-column">
+          <div class="tier-header tier-4">
+            <span>Tier 4: Qwen AI Intelligence</span>
+            <span>Faces 16-20</span>
+          </div>
+          <ul class="faces-list">
+            <li><button class="face-card-btn selected" onclick="selectFace(16)"><span>16. Qwen 2.5 LoRA Extraction</span> &rarr;</button></li>
+            <li><button class="face-card-btn" onclick="selectFace(17)"><span>17. Space Domain Tokenizer</span> &rarr;</button></li>
+            <li><button class="face-card-btn" onclick="selectFace(18)"><span>18. Anomaly Engine Detection</span> &rarr;</button></li>
+            <li><button class="face-card-btn" onclick="selectFace(19)"><span>19. Astrobiology RAG Memory</span> &rarr;</button></li>
+            <li><button class="face-card-btn" onclick="selectFace(20)"><span>20. Edge INT8 WASM Model</span> &rarr;</button></li>
+          </ul>
+        </div>
+
+        <!-- Tier 5 -->
+        <div class="tier-column">
+          <div class="tier-header tier-5">
+            <span>Tier 5: Visualization HUD</span>
+            <span>Faces 21-25</span>
+          </div>
+          <ul class="faces-list">
+            <li><button class="face-card-btn" onclick="selectFace(21)"><span>21. WebGL 3D Solar Canvas</span> &rarr;</button></li>
+            <li><button class="face-card-btn" onclick="selectFace(22)"><span>22. NASA Eyes Live Sync</span> &rarr;</button></li>
+            <li><button class="face-card-btn" onclick="selectFace(23)"><span>23. 25-Face Telemetry Grid</span> &rarr;</button></li>
+            <li><button class="face-card-btn" onclick="selectFace(24)"><span>24. Mission Control Bridge</span> &rarr;</button></li>
+            <li><button class="face-card-btn" onclick="selectFace(25)"><span>25. &Delta;v Transfer Planner</span> &rarr;</button></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Active Face Detail Box -->
+      <div class="face-detail-box">
+        <div class="detail-top">
+          <span id="face-badge" class="detail-badge">Face 16</span>
+          <h2 id="face-title" class="detail-title">Qwen 2.5 LoRA Model Extraction</h2>
+        </div>
+        <p id="face-desc" class="detail-desc">
+          Adapter weights and causal self-attention extracted from E:/ai_model/finetuning/qwen_lora_model.
+          Tuned with low-rank adaptation (r=16, &alpha;=32) on solar system simulation ephemeris and microgravity combustion physics.
+        </p>
+        <div class="detail-props-grid">
+          <div class="prop-card">
+            <span class="prop-label">Mathematical Formulation</span>
+            <span id="face-formula" class="prop-val tier-2">&Delta;W = (&alpha; / r) &middot; (B &middot; A)</span>
+          </div>
+          <div class="prop-card">
+            <span class="prop-label">Key Constant / Parameter</span>
+            <span id="face-const" class="prop-val tier-1">0.5B params, Rank=16, &alpha;=32</span>
+          </div>
+          <div class="prop-card">
+            <span class="prop-label">Flight Operations Application</span>
+            <span id="face-flight" class="prop-val tier-4">Autonomous Onboard Copilot</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 2: High-DPI Orbit Simulator Canvas -->
+    <section id="view-orbit" class="tab-view">
+      <div class="canvas-wrapper">
+        <canvas id="orbitCanvas"></canvas>
+        <div class="canvas-overlay-top">
+          <h3>Keplerian Planetary Orbits (Real Time)</h3>
+          <p>Sun, Mercury, Venus, Earth (with Moon), Mars, Jupiter, Saturn (with rings), Uranus, Neptune, Pluto</p>
+        </div>
+        <div class="canvas-controls-bottom">
+          <button class="control-btn" onclick="SolarSimulation.setSpeed(0)">Pause</button>
+          <button class="control-btn" onclick="SolarSimulation.setSpeed(1)">1x</button>
+          <button class="control-btn" onclick="SolarSimulation.setSpeed(5)">5x</button>
+          <button class="control-btn" onclick="SolarSimulation.setSpeed(25)">25x</button>
+          <button class="control-btn" onclick="SolarSimulation.setZoom(0.2)">Zoom +</button>
+          <button class="control-btn" onclick="SolarSimulation.setZoom(-0.2)">Zoom -</button>
+          <button class="control-btn" onclick="SolarSimulation.resetView()">Reset</button>
+          <button class="control-btn" onclick="toggleArcBtn(this)">Show Transfer Arc</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 3: Qwen 2.5 AI Copilot HUD -->
+    <section id="view-qwen" class="tab-view">
+      <div class="qwen-layout">
+        <!-- Sidebar Info -->
+        <div class="qwen-sidebar">
+          <div>
+            <h3 style="font-size: 0.95rem; font-weight: 700; color: #fff;">Extracted Qwen Spec</h3>
+            <p style="font-size: 0.725rem; color: var(--text-muted); margin-top: 0.2rem;">
+              Local PEFT LoRA adapter loaded from E:/ai_model/finetuning
+            </p>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 0.5rem; font-family: var(--font-mono); font-size: 0.75rem;">
+            <div class="prop-card">
+              <span class="prop-label">Foundation Model</span>
+              <span class="prop-val tier-4">Qwen2.5-0.5B-Instruct</span>
+            </div>
+            <div class="prop-card">
+              <span class="prop-label">PEFT Method</span>
+              <span class="prop-val tier-2">LoRA (r=16, &alpha;=32)</span>
+            </div>
+            <div class="prop-card">
+              <span class="prop-label">Vocabulary Size</span>
+              <span class="prop-val tier-1">151,643 tokens (ChatML)</span>
+            </div>
+            <div class="prop-card">
+              <span class="prop-label">Inference Mode</span>
+              <span class="prop-val tier-5">Dual-Mode (PyTorch / Oracle)</span>
+            </div>
+          </div>
+          <div>
+            <span class="prop-label">Quick Flight Queries:</span>
+            <div class="quick-prompts">
+              <button class="prompt-chip" onclick="QwenCopilot.sendPreset('Calculate Earth to Mars delta-V')">Earth &rarr; Mars &Delta;v</button>
+              <button class="prompt-chip" onclick="QwenCopilot.sendPreset('Calculate Earth to Lunar Gateway TLI delta-V')">Earth &rarr; Moon TLI</button>
+              <button class="prompt-chip" onclick="QwenCopilot.sendPreset('Explain cool-flame Damkohler number')">Cool-Flame Damk&ouml;hler</button>
+              <button class="prompt-chip" onclick="QwenCopilot.sendPreset('Explain Artemis Gateway EAFHI flammability')">Gateway EAFHI Safety</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Console -->
+        <div class="qwen-chat-panel">
+          <div class="chat-header">
+            <span class="chat-header-title">Qwen Flight Science Copilot (Interactive Console)</span>
+            <span class="badge badge-cyan" style="font-size: 0.65rem;">TELEMETRY LINK: ACTIVE</span>
+          </div>
+          <div id="chat-messages" class="chat-messages">
+            <div class="chat-bubble chat-bubble-copilot">
+              <strong style="color: #c084fc;">Qwen Copilot:</strong> Greetings Flight Controller.
+              I am calibrated with all 25 scientific faces of solar system simulation, Keplerian orbital mechanics,
+              and microgravity combustion kinetics. Ask me about Hohmann transfers, translunar injection,
+              or silent cool-flame Damk&ouml;hler limits.
+            </div>
+          </div>
+          <div class="chat-input-row">
+            <input id="chat-input" type="text" class="chat-input" placeholder="e.g., Calculate Earth to Mars delta-V or explain silent cool-flames..." onkeydown="if(event.key==='Enter') QwenCopilot.send()">
+            <button class="chat-send-btn" onclick="QwenCopilot.send()">Send</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 4: Delta-V Trajectory Planner -->
+    <section id="view-trajectory" class="tab-view">
+      <div class="traj-card">
+        <div>
+          <h2 style="font-size: 1.15rem; font-weight: 700; color: #fff;">Interplanetary &amp; Translunar Hohmann Transfer Calculator</h2>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">
+            Calculates exact Keplerian transfer orbits, delta-V budgets, and transit durations.
+          </p>
+        </div>
+        <div class="traj-inputs-grid">
+          <div class="input-group">
+            <label for="dep-body">Departure Body</label>
+            <select id="dep-body" class="input-select" onchange="runTrajectoryCalc()">
+              <option value="Earth">Earth (1.00 AU)</option>
+              <option value="Mars">Mars (1.52 AU)</option>
+              <option value="Moon">Lunar Gateway / Moon</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="arr-body">Destination Target</label>
+            <select id="arr-body" class="input-select" onchange="runTrajectoryCalc()">
+              <option value="Mars">Mars (1.52 AU)</option>
+              <option value="Moon">Lunar Gateway / Moon</option>
+              <option value="Venus">Venus (0.72 AU)</option>
+              <option value="Jupiter">Jupiter (5.20 AU)</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="craft-mass">Spacecraft Dry Mass (kg)</label>
+            <input id="craft-mass" type="number" class="input-text" value="1200" oninput="runTrajectoryCalc()">
+          </div>
+        </div>
+
+        <div class="traj-results-grid">
+          <div class="res-card">
+            <div class="res-label">Total &Delta;v Required</div>
+            <div id="res-deltav" class="res-val val-cyan">5.59 km/s</div>
+          </div>
+          <div class="res-card">
+            <div class="res-label">Transit Duration</div>
+            <div id="res-duration" class="res-val val-emerald">259 days</div>
+          </div>
+          <div class="res-card">
+            <div class="res-label">Departure Burn (&Delta;v1)</div>
+            <div id="res-dv1" class="res-val val-amber">2.94 km/s</div>
+          </div>
+          <div class="res-card">
+            <div class="res-label">Arrival Insertion (&Delta;v2)</div>
+            <div id="res-dv2" class="res-val val-rose">2.65 km/s</div>
+          </div>
+        </div>
+
+        <div id="traj-summary" style="font-size: 0.8rem; color: var(--text-slate); font-family: var(--font-mono); background: var(--bg-inset); padding: 0.85rem; border-radius: 8px; border: 1px solid var(--border-dim);">
+          Heliocentric transfer from Earth to Mars. Departure burn Δv1 = 2.94 km/s, arrival capture Δv2 = 2.65 km/s. Total Δv = 5.59 km/s, transit duration = 259 days.
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="simulation.js"></script>
+  <script src="qwen_copilot.js"></script>
+  <script>
+    const FACES_DATA = {
+      1: { title: "Solar Heliosphere & Dynamic Stellar Wind", badge: "Face 01", desc: "Coronal mass ejection dynamics and Parker spiral magnetic field propagation affecting spacecraft sensor bias.", formula: "B(r) = B_0 * (r_0 / r)^2", const: "v_sw ~ 450 km/s, B_0 = 5 nT", flight: "Radiation shielding alert" },
+      2: { title: "Inner Terrestrial Atmospheres & Hypobaric Limits", badge: "Face 02", desc: "Atmospheric density and pressure modeling across Mercury, Venus, Earth, and Mars.", formula: "P(h) = P_0 * exp(-Mgh / RT)", const: "Venus: 92 bar, Mars: 6.1 mbar", flight: "EDL descent profile" },
+      3: { title: "Gas Giant Magnetospheres & Belts", badge: "Face 03", desc: "Jupiter synchrotron radiation belts, Ganymede intrinsic dipole moment, and radiation hardening thresholds.", formula: "Phi_rad = integral(j(E) dE)", const: "Jupiter: 100 krad/day", flight: "Flyby corridor selection" },
+      4: { title: "Outer Ocean Worlds & Cryovolcanism", badge: "Face 04", desc: "Tidal dissipation heating and tiger-stripe supersonic plume kinetics on Europa and Enceladus.", formula: "Q_tidal = Im(k_2) * (G M^2 / R)", const: "Ice thickness: 15-25 km", flight: "Astrobiology sampling" },
+      5: { title: "Deep Kuiper Belt & Interstellar Glaciers", badge: "Face 05", desc: "Nitrogen and methane glacier sublimations on Pluto and termination shock boundary physics.", formula: "dm/dt = alpha_v P_sat (2 pi M R T)^-0.5", const: "Pluto T = 44 K, Shock ~ 122 AU", flight: "Deep space telemetry" },
+      6: { title: "N-Body Gravitational Ephemeris & J2", badge: "Face 06", desc: "JPL Horizons SPICE kernel orbital mechanics with planetary oblateness J2 harmonics.", formula: "d2r/dt2 = -mu r / r^3 + nabla U_pert", const: "J2_Earth = 1.0826e-3", flight: "Trajectory propagation" },
+      7: { title: "Interplanetary Trajectory & Gravity-Assist", badge: "Face 07", desc: "Oberth effect delta-v magnification and Tisserand parameter invariance for outer planet transit.", formula: "Delta_v_hyp = sqrt(v_inf^2 + 2 mu / r_p)", const: "Delta-V bonus: up to 10 km/s", flight: "Outer planet flybys" },
+      8: { title: "Deep Space Electric & Ion Propulsion", badge: "Face 08", desc: "Continuous low-thrust NEXT-C gridded ion engine with high specific impulse.", formula: "F = 2 P_jet / (g_0 I_sp)", const: "I_sp ~ 4100 s", flight: "Continuous spiral cruise" },
+      9: { title: "Solar Radiation Pressure & Sails", badge: "Face 09", desc: "Photon momentum transfer on large solar sails and spacecraft solar panels.", formula: "P_rad = (1 + R) I_solar / c", const: "P_rad = 9.08 uN/m2 at 1 AU", flight: "Attitude momentum desat" },
+      10: { title: "Hypersonic Entry, Descent & Landing (EDL)", badge: "Face 10", desc: "Aerothermodynamic radiative and convective heat flux during planetary atmospheric entry.", formula: "q_dot = k_f (rho / R_n)^0.5 v^3", const: "Peak heat: 1200 W/cm2", flight: "Heatshield sizing" },
+      11: { title: "Zero-Gravity Spherical Flame Kinetics", badge: "Face 11", desc: "Quasi-steady d2-law burning with 1D spherical symmetry in 10^-6 g quiescent conditions.", formula: "d(t)^2 = d_0^2 - K t", const: "Burning rate K ~ 0.428 mm2/s", flight: "ISS CIR experiments" },
+      12: { title: "Silent Cool-Flame Rekindling Early Warning", badge: "Face 12", desc: "Low-temperature peroxy chemistry predicting reignition risks post-visible flame extinction.", formula: "Da_cool = tau_res / tau_chem_cool", const: "Da_crit = 1.0, Flash Pt cutoff", flight: "Cabin safety monitor" },
+      13: { title: "Artemis Gateway EAFHI Exploration Atmosphere", badge: "Face 13", desc: "Enriched hypoxic exploration atmosphere (34% O2, 56.5 kPa) flammability indices.", formula: "EAFHI = alpha (P_O2 / P_tot) + beta (g / g_0)", const: "P_tot = 56.5 kPa, 0.166 g", flight: "Lunar Gateway compliance" },
+      14: { title: "Orbital Micro-G Jitter Wavelet Coupling", badge: "Face 14", desc: "Daubechies-4 discrete wavelet filter isolating 1-3 Hz astronaut exercise vibrations.", formula: "W_db4 = [H | G]^T", const: "SNR gain > 34 dB", flight: "Telemetry noise rejection" },
+      15: { title: "Deep Space Extinguishment & Suppression", badge: "Face 15", desc: "Halon replacement FK-5-1-12 gas diffusion and thermal heat-sink suppression in lunar/martian gravity.", formula: "C_ext = C_min / (1 - exp(-k t))", const: "Design conc: 5.8 vol%", flight: "Automated fire suppression" },
+      16: { title: "Qwen 2.5 LoRA Model Extraction", badge: "Face 16", desc: "Adapter weights and causal attention extracted from E:/ai_model/finetuning/qwen_lora_model. Tuned with low-rank adaptation on solar physics.", formula: "Delta_W = (alpha / r) (B @ A)", const: "0.5B params, Rank=16, alpha=32", flight: "Autonomous Copilot" },
+      17: { title: "Space Domain Tokenizer Calibration", badge: "Face 17", desc: "Specialized vocabulary tokenizing telemetry streams, Damköhler numbers, and orbital state vectors.", formula: "H(T) = -sum p(t) log2 p(t)", const: "Vocab: 151,643 tokens", flight: "Streaming LLM downlink" },
+      18: { title: "Multimodal Physical Anomaly Engine", badge: "Face 18", desc: "Real-time Bayesian detection of sensor drift and off-nominal combustion rekindling.", formula: "Score_anomaly = ||x - x_pred||_Sigma", const: "p < 0.001 trigger", flight: "Flight warning annunciator" },
+      19: { title: "Scientific In-Context Astrobiology RAG", badge: "Face 19", desc: "Vector retrieval over NASA Planetary Data System (PDS) and CIR flight experiment logs.", formula: "Sim(q, d) = (q . d) / (||q|| ||d||)", const: "FastEmbed 384-dim ONNX", flight: "On-demand science lookup" },
+      20: { title: "Edge INT8 WASM Model Deployment", badge: "Face 20", desc: "Quantized offline inference running directly in client browser and spacecraft flight controllers.", formula: "q = round(S * x + Z)", const: "Latency < 45 ms", flight: "Zero-latency edge execution" },
+      21: { title: "WebGL 3D Interactive Solar Canvas", badge: "Face 21", desc: "Three.js procedural renderer visualizing real relative Keplerian planetary orbits and rotation.", formula: "r(theta) = a (1 - e^2) / (1 + e cos theta)", const: "8 Planets + Pluto + Moons", flight: "Mission visualizer" },
+      22: { title: "NASA Eyes on the Solar System Sync", badge: "Face 22", desc: "Direct deep-linking and state synchronization with JPL's interactive solar system web app.", formula: "JPL_URL = eyes.nasa.gov/apps/...", const: "Live JPL Horizons Ephemeris", flight: "Scientific inspection" },
+      23: { title: "25-Face Real-Time Telemetry Matrix", badge: "Face 23", desc: "Unified HUD providing flight controllers with synchronized physical coefficients across all 25 faces.", formula: "T_matrix = [F_1, F_2, ..., F_25]", const: "50 Hz update rate", flight: "Cockpit HUD" },
+      24: { title: "Flight Controller Mission Control Bridge", badge: "Face 24", desc: "Integration with the verified Milestone 9 Mission Control cockpit (/mission-control).", formula: "Sync(ISS_telemetry, Orbit_state)", const: "Dual-trace SSE stream", flight: "Ground control operations" },
+      25: { title: "Delta-V Transfer Trajectory Planner", badge: "Face 25", desc: "Interactive mission delta-v budget calculator with launch window evaluation.", formula: "Delta-V = v_c1 (sqrt(2 r_2 / (r_1 + r_2)) - 1)", const: "Hohmann + Translunar TLI", flight: "Mission trajectory design" }
+    };
+
+    function selectFace(id) {
+      const data = FACES_DATA[id];
+      if (!data) return;
+
+      document.querySelectorAll('.face-card-btn').forEach(btn => btn.classList.remove('selected'));
+      event.currentTarget.classList.add('selected');
+
+      document.getElementById('face-badge').innerText = data.badge;
+      document.getElementById('face-title').innerText = data.title;
+      document.getElementById('face-desc').innerText = data.desc;
+      document.getElementById('face-formula').innerText = data.formula;
+      document.getElementById('face-const').innerText = data.const;
+      document.getElementById('face-flight').innerText = data.flight;
+
+      if (window.QwenCopilot) {
+        window.QwenCopilot.setActiveFace(id);
+      }
+    }
+
+    function switchTab(tabKey) {
+      ['faces', 'orbit', 'qwen', 'trajectory'].forEach(t => {
+        const btn = document.getElementById('tab-btn-' + t);
+        const view = document.getElementById('view-' + t);
+        if (t === tabKey) {
+          btn.classList.add('active');
+          view.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+          view.classList.remove('active');
+        }
+      });
+
+      if (tabKey === 'orbit') {
+        setTimeout(() => {
+          SolarSimulation.init('orbitCanvas');
+        }, 50);
+      }
+    }
+
+    let arcActive = false;
+    function toggleArcBtn(btn) {
+      arcActive = !arcActive;
+      SolarSimulation.toggleTransferArc(arcActive);
+      btn.innerText = arcActive ? 'Hide Transfer Arc' : 'Show Transfer Arc';
+    }
+
+    function runTrajectoryCalc() {
+      const dep = document.getElementById('dep-body').value;
+      const arr = document.getElementById('arr-body').value;
+
+      if (dep === arr) {
+        document.getElementById('res-deltav').innerText = '0.00 km/s';
+        document.getElementById('res-duration').innerText = '0 days';
+        document.getElementById('res-dv1').innerText = '0.00 km/s';
+        document.getElementById('res-dv2').innerText = '0.00 km/s';
+        document.getElementById('traj-summary').innerText = 'Origin and destination are identical co-orbital bodies. Delta-V budget is zero.';
+        return;
+      }
+
+      // Geocentric Translunar Transfer
+      if ((dep === 'Earth' && arr === 'Moon') || (dep === 'Moon' && arr === 'Earth')) {
+        const dv_tli = 3.14;
+        const dv_loi = 0.83;
+        const total = dv_tli + dv_loi;
+        const dur = 3.2;
+
+        document.getElementById('res-deltav').innerText = total.toFixed(2) + ' km/s';
+        document.getElementById('res-duration').innerText = dur.toFixed(1) + ' days';
+        document.getElementById('res-dv1').innerText = dv_tli.toFixed(2) + ' km/s';
+        document.getElementById('res-dv2').innerText = dv_loi.toFixed(2) + ' km/s';
+        document.getElementById('traj-summary').innerText =
+          `Geocentric Translunar Injection (TLI) from LEO (300 km) to Artemis Lunar Gateway/Moon orbit. ` +
+          `Departure burn Δv1 = ${dv_tli.toFixed(2)} km/s, arrival LOI = ${dv_loi.toFixed(2)} km/s (Total: ${total.toFixed(2)} km/s). Flight transit duration = 3.2 days.`;
+        return;
+      }
+
+      // Heliocentric Interplanetary Transfer
+      const orbitsAu = { Earth: 1.0, Mars: 1.5237, Venus: 0.7233, Jupiter: 5.2044, Moon: 1.0 };
+      const r1_au = orbitsAu[dep] || 1.0;
+      const r2_au = orbitsAu[arr] || 1.5237;
+
+      const mu = 1.3271244e11; // km3/s2
+      const au_km = 1.4959787e8; // km
+      const R1 = r1_au * au_km;
+      const R2 = r2_au * au_km;
+
+      const a_trans = (R1 + R2) / 2;
+      const v_circ1 = Math.sqrt(mu / R1);
+      const v_circ2 = Math.sqrt(mu / R2);
+
+      const v_dep = Math.sqrt(mu * (2 / R1 - 1 / a_trans));
+      const v_arr = Math.sqrt(mu * (2 / R2 - 1 / a_trans));
+
+      const dv1 = Math.abs(v_dep - v_circ1);
+      const dv2 = Math.abs(v_circ2 - v_arr);
+      const totalDv = dv1 + dv2;
+
+      const periodSec = Math.PI * Math.sqrt(Math.pow(a_trans, 3) / mu);
+      const durationDays = Math.round(periodSec / 86400);
+
+      document.getElementById('res-deltav').innerText = totalDv.toFixed(2) + ' km/s';
+      document.getElementById('res-duration').innerText = durationDays + ' days';
+      document.getElementById('res-dv1').innerText = dv1.toFixed(2) + ' km/s';
+      document.getElementById('res-dv2').innerText = dv2.toFixed(2) + ' km/s';
+      document.getElementById('traj-summary').innerText =
+        `Heliocentric transfer from ${dep} (${r1_au.toFixed(2)} AU) to ${arr} (${r2_au.toFixed(2)} AU). ` +
+        `Departure burn Δv1 = ${dv1.toFixed(2)} km/s, arrival capture Δv2 = ${dv2.toFixed(2)} km/s. Total Δv = ${totalDv.toFixed(2)} km/s, transit duration = ${durationDays} days.`;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      runTrajectoryCalc();
+    });
+  </script>
+</body>
+</html>
