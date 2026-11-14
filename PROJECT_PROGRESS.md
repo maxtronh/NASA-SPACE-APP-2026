@@ -1,7 +1,7 @@
 # Flame in Freefall — Project Progress & Milestone Tracking
 **Project**: CORTEXX Scientific Intelligence Platform ("Flame in Freefall")  
-**Current Phase**: Phase 1 — NASA Research & Foundation Complete  
-**Last Updated**: 2026-11-12T18:10:00Z  
+**Current Phase**: Phase 6 — Post-25 Next-Generation Evolutions & M8 Backlog  
+**Last Updated**: 2026-11-14T18:40:00Z  
 
 ---
 
@@ -15,6 +15,7 @@
 | **Phase 3** | **Frontend and Scientific Intelligence** | Next.js dashboard, investigation explorer, comparison workspace, FastEmbed ONNX hybrid retrieval, citation-grounded SI chat | **COMPLETED** | 100% |
 | **Phase 4** | **Integration and validation** | Connect frontend to backend, test citations and ingestion, run independent 4-tier E2E tests, zero-fabrication verification | **COMPLETED** | 100% |
 | **Phase 5** | **25-Upgrade Integration Matrix** | PSI S3 Sync, Cool Flames, Drop Tower, Merkle Trees, HNSW Vector, WebSockets, GraphRAG, 3D Flames, Generative UI Artifacts, PWA, Consensus Evaluator | **COMPLETED** | 100% (25/25) |
+| **Phase 6** | **Post-25 Next-Gen Evolutions & Backlog** | 25 Evolutions across 8 Flows, remaining 12 NASA flight campaigns, P2 continuous crawler & transfer learning, rate-limit backoff | **IN PROGRESS** | Specification 100% (M8 Backlog) |
 
 ---
 
@@ -23,14 +24,15 @@
 | Milestone | Scope | Assigned Agent | Status | Notes |
 |---|---|---|---|---|
 | **M0** | Survey & Planning | Orchestrator & Explorers | **DONE** | Workspace inspected, Python/Node/Docker verified, NTRS/PSI live verified. |
-| **M-E2E** | Independent E2E Test Suite | E2E Testing Orchestrator | **DONE** | 338 passed, 0 failed across full test suite. |
-| **M1** | Environment & Research Foundation | 01. Research Architect | **DONE** | Git init, `.gitignore`, `.venv` (Python 3.12), R1 audit docs delivered, task boards live. |
+| **M-E2E** | Independent E2E Test Suite | E2E Testing Orchestrator | **DONE** | 337 passed (248 backend + 89 E2E), 0 failed across full test suite. |
+| **M1** | Environment & Research Foundation | 01. Research Architect | **DONE** | Git init, `.gitignore`, `.venv` (Python 3.12 via uv), R1 audit docs delivered, task boards live. |
 | **M2** | NASA Data Ingestion & SI Normalization | 02. Data Engineer | **DONE** | NTRS, PSI S3 sync, Drop Tower catalog, Merkle hash trees, Pint SI normalizer verified. |
 | **M3** | Database & Backend Core Services | 03. Backend & SI Architect | **DONE** | FastAPI 14-router API, pgvector HNSW index, DuckDB Parquet engine, WebSocket streaming. |
 | **M4** | Scientific Intelligence & ML Engine | 05. AI/ML & Data Science | **DONE** | GraphRAG knowledge graph, two-stage cross-encoder, cool flames kinetics, zero-fabrication. |
 | **M5** | Frontend & Visualization Workspace | 04. Frontend & UI/UX | **DONE** | Next.js 15 (10 static routes), Three.js 3D flame viewer, Generative UI split-canvas artifacts, PWA handbook. |
-| **M6** | End-to-End User Journey Verification | All Specialists & E2E | **DONE** | Tiers 1-4 passing (338 passed, 0 failed in 26s). |
+| **M6** | End-to-End User Journey Verification | All Specialists & E2E | **DONE** | Tiers 1-4 passing (337 passed, 0 failed in 30s). |
 | **M7** | 25-Upgrade Advanced Capabilities | Team CORTEXX Swarm | **COMPLETED** | All 25/25 capabilities fully delivered, verified, and committed. |
+| **M8** | Next-Gen Evolutions & Research Backlog | Team CORTEXX Swarm | **PROPOSED** | 31 backlog tasks codified: E-01 to E-25 (Flows 1-8), un-ingested campaigns, P2 enhancements. |
 
 ---
 
@@ -63,3 +65,6 @@
 - **2026-11-12T18:10:00Z**: Delivered comprehensive NASA Research Log (`docs/NASA_RESEARCH_LOG.md`).
 - **2026-11-12T18:14:30Z**: Delivered System Architecture Blueprint (`docs/PROJECT_ARCHITECTURE.md`) and Phased Implementation Roadmap (`docs/IMPLEMENTATION_ROADMAP.md`).
 - **2026-11-12T18:15:00Z**: Initialized master task board (`PROJECT_TASKS.md`), progress tracker (`PROJECT_PROGRESS.md`), and error log (`ERROR_LOG.md`).
+- **2026-11-13T22:30:00Z**: Verified completion of 25-Upgrade Integration Matrix (M7). All 25 capabilities operational with full test suite passing.
+- **2026-11-14T18:30:00Z**: Codified next-generation upgrades across 5 operational flows; audited 12 un-ingested NASA flight campaigns and operational hardening tasks.
+- **2026-11-14T18:40:00Z**: Forensic upgrade review expanded Post-25 roadmap to all 25 evolutions (E-01 to E-25 across 8 flows), added Milestone M8 task rows (TSK-M8-01 through TSK-M8-31) in `PROJECT_TASKS.md`, synchronized test metrics across documentation to 337 passing tests (248 backend + 89 E2E), and certified Next.js 15 production build.

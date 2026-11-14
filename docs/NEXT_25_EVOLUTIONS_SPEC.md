@@ -14,7 +14,7 @@
 Direct examination of the workspace, documentation, flight records, and codebase yielded the following concrete observations:
 
 1. **Foundational Baseline Completed**:
-   - `docs/IMPLEMENTATION_ROADMAP.md` (lines 43–45, 135–144) records Phase 5 (25-Upgrade Integration Matrix M7) as 100% completed with 338 passing tests and 0 failures.
+   - `docs/IMPLEMENTATION_ROADMAP.md` (lines 43–45, 135–144) records Phase 5 (25-Upgrade Integration Matrix M7) as 100% completed with 337 passing tests and 0 failures.
    - `docs/SPACE_APPS_SUBMISSION.md` (lines 26–47, 80–91) documents the production stack: FastAPI 14-router backend, PostgreSQL 16 + pgvector HNSW, FastEmbed ONNX (`bge-small-en-v1.5`), Pint SI normalizer, Merkle tree RFC 6962 provenance audit, Next.js 15 App Router with Three.js 3D flame viewer, and PWA offline handbook.
    - `PROJECT_PROGRESS.md` (lines 37–51) confirms active enforcement of Mandatory Critical Acceptance Rules, specifically Rule 4: "A missing measurement is NULL, not 0.0" and Rule 3: "Never generate fake measurements to make dashboard charts look populated."
 
@@ -968,7 +968,7 @@ To independently verify the facts, equations, and data models asserted in this r
    ```powershell
    pytest tests/
    ```
-   *Expected Outcome*: All 338 tests pass with 0 failures, verifying that baseline regression guardrails remain intact.
+   *Expected Outcome*: All 337 tests pass with 0 failures, verifying that baseline regression guardrails remain intact.
 
 2. **Inspect Upstream Datasets & Citation References**:
    - Inspect `data/raw/20150023456_fulltext.txt` (Table IX) to confirm authentic FLEX droplet diameters and extinction records.

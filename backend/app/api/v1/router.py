@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from backend.app.api.v1.endpoints import (
+    active_learning,
     analytics,
     antigravity,
     auth,
@@ -10,6 +11,7 @@ from backend.app.api.v1.endpoints import (
     ingest,
     investigations,
     kinetics,
+    multimodal,
     provenance,
     safety,
     si,
@@ -34,3 +36,5 @@ api_v1_router.include_router(kinetics.router)
 api_v1_router.include_router(graph.router)
 api_v1_router.include_router(telemetry.router)
 api_v1_router.include_router(ws_telemetry.router)
+api_v1_router.include_router(multimodal.router)
+api_v1_router.include_router(active_learning.router)

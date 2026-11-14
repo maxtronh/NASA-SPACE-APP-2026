@@ -1,12 +1,20 @@
-"""Safety API endpoints for NASA-STD-6001B spacecraft materials flammability evaluation."""
+"""Safety API endpoints for NASA-STD-6001B materials flammability and EAFHI fire safety evaluation."""
 
 from typing import Any, Optional
 
 from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
+from backend.app.safety.eafhi import EAFHIEngine
 from backend.app.safety.evaluator import FlammabilityEvaluator
 from backend.app.safety.standards import CABIN_ATMOSPHERES, SPACECRAFT_MATERIALS
+from backend.app.schemas.eafhi import (
+    EAFHICalculateRequest,
+    EAFHIResponse,
+    EAFHISensitivityRequest,
+    EAFHISensitivityResponse,
+    GatewayProfileResponse,
+)
 
 router = APIRouter(prefix="/safety", tags=["safety"])
 
@@ -83,3 +91,64 @@ async def list_cabin_atmospheres():
             "description": a.description,
         })
     return {"cabin_atmospheres": atmospheres, "atmospheres": atmospheres}
+
+
+# --- Exploration Atmosphere Fire Hazard Index (EAFHI) Endpoints (Upgrade E-10) ---
+
+@router.post("/eafhi/calculate", response_model=EAFHIResponse)
+async def calculate_eafhi(payload: EAFHICalculateRequest):
+    """Calculates Exploration Atmosphere Fire Hazard Index (EAFHI) for Artemis Lunar Gateway and exploration environments."""
+    try:
+        result = EAFHIEngine.calculate_eafhi(
+            material=payload.material,
+            pressure_kpa=payload.pressure_kpa,
+            oxygen_percentage=payload.oxygen_percentage,
+            gravity_level=payload.gravity_level,
+            characteristic_length_m=payload.characteristic_length_m,
+            ventilation_velocity_cm_s=payload.ventilation_velocity_cm_s,
+            flame_temperature_k=payload.flame_temperature_k,
+        )
+        return EAFHIResponse(**result)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"EAFHI calculation error: {exc}",
+        )
+
+
+@router.get("/eafhi/gateway-profile", response_model=GatewayProfileResponse)
+async def get_gateway_profile():
+    """Evaluates multi-material flammability across all 6 standard aerospace materials under Artemis Lunar Gateway specifications."""
+    try:
+        result = EAFHIEngine.evaluate_gateway_profile()
+        return GatewayProfileResponse(**result)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate Gateway flammability profile: {exc}",
+        )
+
+
+@router.post("/eafhi/sensitivity", response_model=EAFHISensitivityResponse)
+async def sweep_eafhi_sensitivity(payload: EAFHISensitivityRequest):
+    """Sweeps oxygen percentage, pressure, or gravity to evaluate environmental flammability sensitivity."""
+    try:
+        result = EAFHIEngine.sensitivity_sweep(
+            material=payload.material,
+            parameter_to_sweep=payload.parameter_to_sweep,
+            min_value=payload.min_value,
+            max_value=payload.max_value,
+            steps=payload.steps,
+            fixed_conditions=payload.fixed_conditions,
+        )
+        return EAFHISensitivityResponse(**result)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Sensitivity sweep calculation error: {exc}",
+        )

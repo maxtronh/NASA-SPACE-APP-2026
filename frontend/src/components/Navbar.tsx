@@ -14,6 +14,9 @@ import {
   Menu,
   X,
   ShieldCheck,
+  Video,
+  Cpu,
+  ShieldAlert,
 } from "lucide-react";
 import { fetchHealth } from "@/lib/api";
 import { HealthResponse } from "@/types";
@@ -21,8 +24,11 @@ import { HealthResponse } from "@/types";
 const NAV_LINKS = [
   { href: "/", label: "Dashboard", icon: Flame },
   { href: "/investigations", label: "Explorer", icon: Compass },
-  { href: "/compare", label: "Compare", icon: GitCompare },
+  { href: "/diagnostics", label: "Diagnostics", icon: Video },
+  { href: "/optimizer", label: "OED Optimizer", icon: Cpu },
+  { href: "/fire-safety", label: "Fire Safety", icon: ShieldAlert },
   { href: "/antigravity", label: "Antigravity", icon: Orbit },
+  { href: "/compare", label: "Compare", icon: GitCompare },
   { href: "/intelligence", label: "SI Chat", icon: Sparkles },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/handbook", label: "Handbook", icon: ShieldCheck },
@@ -82,7 +88,7 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Nav Links */}
-          <div className="hidden md:flex items-center space-x-1 lg:space-x-2">
+          <div className="hidden xl:flex items-center space-x-1">
             {NAV_LINKS.map((item) => {
               const Icon = item.icon;
               const isActive =
@@ -94,13 +100,13 @@ export default function Navbar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`flex items-center space-x-1.5 px-2 py-1.5 rounded-lg text-xs 2xl:text-sm font-medium transition-all ${
                     isActive
                       ? "bg-space-800 text-nasa-cyan border border-nasa-cyan/40 shadow-sm shadow-cyan-500/10"
                       : "text-slate-300 hover:text-white hover:bg-space-800/60"
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? "text-nasa-cyan" : "text-slate-400"}`} />
+                  <Icon className={`w-3.5 h-3.5 2xl:w-4 2xl:h-4 ${isActive ? "text-nasa-cyan" : "text-slate-400"}`} />
                   <span>{item.label}</span>
                 </Link>
               );
@@ -138,7 +144,7 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="flex md:hidden items-center space-x-2">
+          <div className="flex xl:hidden items-center space-x-2">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-space-800 focus:outline-none"
@@ -152,7 +158,7 @@ export default function Navbar() {
 
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-space-900 border-b border-space-700 px-4 pt-2 pb-4 space-y-2">
+        <div className="xl:hidden bg-space-900 border-b border-space-700 px-4 pt-2 pb-4 space-y-2">
           {NAV_LINKS.map((item) => {
             const Icon = item.icon;
             const isActive =

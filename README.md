@@ -7,7 +7,7 @@
 [![Next.js 15](https://img.shields.io/badge/Next.js-15.1.7-black.svg?logo=next.js&logoColor=white)](https://nextjs.org)
 [![PostgreSQL 16 + pgvector](https://img.shields.io/badge/PostgreSQL-16_+_pgvector-336791.svg?logo=postgresql&logoColor=white)](https://github.com/pgvector/pgvector)
 [![FastEmbed ONNX](https://img.shields.io/badge/AI%2FML-FastEmbed_ONNX-FF6F00.svg)](https://github.com/qdrant/fastembed)
-[![Test Suite Status](https://img.shields.io/badge/Tests-338%2F338_Passing-brightgreen.svg)]()
+[![Test Suite Status](https://img.shields.io/badge/Tests-337%2F337_Passing-brightgreen.svg)]()
 [![25-Upgrade Integration](https://img.shields.io/badge/25--Upgrades-25%2F25_Complete-blueviolet.svg)]()
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](cortexx_flame_in_freefall_demo.ipynb)
 
@@ -224,7 +224,7 @@ Run the complete Scientific Intelligence engine, authentic NASA data ingestion, 
 
 ## 6. Verification & Quality Assurance
 
-Flame in Freefall includes a rigorous, independent automated test suite containing **338 tests (338 passed, 0 failed)** across unit, integration, boundary, and end-to-end user journeys:
+Flame in Freefall includes a rigorous, independent automated test suite containing **337 tests (337 passed, 0 failed)** across unit, integration, boundary, and end-to-end user journeys:
 
 ```bash
 # 1. Run full backend unit, parser, kinetics, and ML pipeline tests (243+ tests)

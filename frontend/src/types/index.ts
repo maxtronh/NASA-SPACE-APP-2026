@@ -174,3 +174,174 @@ export interface SIQueryResponse {
   explainability: SIExplainability;
   artifacts?: import("./artifacts").ScientificArtifact[];
 }
+
+// ==========================================
+// UPGRADE E-07: MULTIMODAL SCHLIEREN & VIDEO RAG
+// ==========================================
+export type DiagnosticModality = "schlieren" | "pyrometry" | "chemiluminescence" | "direct_video";
+
+export interface ContourExtractionResult {
+  flame_centroid_px: [number, number];
+  flame_area_px2: number;
+  equivalent_diameter_mm: number;
+  standoff_ratio: number;
+  aspect_ratio: number;
+  contour_points: [number, number][];
+  soot_shell_contour?: [number, number][];
+}
+
+export interface PyrometryMappingResult {
+  temperature_peak_k: number;
+  temperature_mean_k: number;
+  temperature_min_k: number;
+  radial_profile: { radius_mm: number; temperature_k: number; soot_volume_fraction_ppm: number }[];
+  colormap: "inferno" | "turbo" | "plasma" | "jet";
+  resolution_wh: [number, number];
+}
+
+export interface SchlierenGradientResult {
+  max_density_gradient_kg_m4: number;
+  knife_edge_orientation_deg: number;
+  boundary_layer_thickness_mm: number;
+  gradient_profile: { x_mm: number; density_gradient: number }[];
+}
+
+export interface VideoFrameRAGItem {
+  id: string;
+  investigation_slug: string;
+  run_identifier: string;
+  timestamp_s: number; // 10 Hz keyframe interval
+  modality: DiagnosticModality;
+  thumbnail_url?: string;
+  optical_features: {
+    flame_detected: boolean;
+    soot_present: boolean;
+    cool_flame_halo: boolean;
+    contour?: ContourExtractionResult;
+    pyrometry?: PyrometryMappingResult;
+    schlieren?: SchlierenGradientResult;
+  };
+  embedding_similarity?: number;
+  description: string;
+  ntrs_passage_excerpt?: string;
+  camera_specs: {
+    frame_rate_hz: number;
+    spatial_resolution_um_per_px: number;
+    focal_length_mm: number;
+    exposure_ms: number;
+  };
+}
+
+export interface FrameRAGSearchQuery {
+  query: string;
+  modality?: DiagnosticModality | "all";
+  investigation_slug?: string;
+  min_similarity?: number;
+  limit?: number;
+}
+
+export interface FrameRAGSearchResponse {
+  total: number;
+  query: string;
+  results: VideoFrameRAGItem[];
+}
+
+// ==========================================
+// UPGRADE E-08: ACTIVE LEARNING BAYESIAN OED
+// ==========================================
+export interface GPSurrogatePoint {
+  coordinate: number;
+  mean: number;       // \mu(x)
+  std: number;        // \sigma(x)
+  ucb: number;        // \mu + \kappa * \sigma
+  observed_value?: number | null;
+}
+
+export interface OEDCandidateProposal {
+  rank: number;
+  pressure_kpa: number;
+  oxygen_pct: number;
+  ventilation_velocity_cm_s: number;
+  droplet_diameter_mm: number;
+  predicted_mean: number;
+  epistemic_uncertainty: number;
+  ucb_score: number;
+  expected_information_gain_bits: number;
+  physical_rationale: string;
+}
+
+export interface OEDOptimizationRequest {
+  kappa: number;
+  target_metric: "burning_rate_k" | "extinction_time" | "information_gain";
+  fixed_parameters?: {
+    pressure_kpa?: number;
+    oxygen_pct?: number;
+    ventilation_velocity_cm_s?: number;
+    droplet_diameter_mm?: number;
+  };
+  varying_parameter: "pressure_kpa" | "oxygen_pct" | "ventilation_velocity_cm_s" | "droplet_diameter_mm";
+}
+
+export interface OEDOptimizationResponse {
+  acquisition_function: "UCB";
+  kappa: number;
+  varying_axis: string;
+  curve_points: GPSurrogatePoint[];
+  top_proposals: OEDCandidateProposal[];
+  surrogate_stats: {
+    total_training_runs: number;
+    length_scales: Record<string, number>;
+    variance_reduction_pct: number;
+    r2_score: number;
+  };
+}
+
+// ==========================================
+// UPGRADE E-10: EXPLORATION ATMOSPHERE FIRE HAZARD (EAFHI)
+// ==========================================
+export type FlammabilityRiskClass = "low" | "moderate" | "high" | "critical";
+
+export interface EAFHIEnvironmentInput {
+  gravity_g: number;
+  pressure_kpa: number;
+  oxygen_pct: number;
+  ventilation_velocity_cm_s: number;
+  material_key: string;
+  characteristic_length_m?: number;
+}
+
+export interface EAFHIResult {
+  risk_score: number; // [0.0, 1.0]
+  classification: FlammabilityRiskClass;
+  grashof_number: number;
+  grashof_ratio_to_1g: number;
+  buoyancy_factor_phi: number;
+  minimum_extinguishing_o2_pct: number;
+  oxygen_margin_pct: number;
+  flammability_status: "SELF_EXTINGUISHING" | "MARGINAL_PROPAGATION" | "VIGOROUS_COMBUSTION" | "ACCELERATED_FLASHOVER";
+  risk_contributions: {
+    oxygen_enrichment_pct: number;
+    hypobaric_decompression_pct: number;
+    buoyancy_suppression_pct: number;
+  };
+  operational_protocol: {
+    eva_status: "AUTHORIZED" | "RESTRICTED" | "LOCKDOWN";
+    suppression_recommendation: string;
+    ventilation_adjustment_advice: string;
+  };
+}
+
+export interface SensitivityCurvePoint {
+  parameter_value: number;
+  risk_score: number;
+  moc_pct: number;
+  grashof_ratio: number;
+  classification: FlammabilityRiskClass;
+}
+
+export interface EAFHISensitivityResponse {
+  swept_parameter: "oxygen_pct" | "pressure_kpa" | "gravity_g" | "ventilation_velocity_cm_s";
+  curve: SensitivityCurvePoint[];
+  current_operating_point: EAFHIResult;
+}
+
