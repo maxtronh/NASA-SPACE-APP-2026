@@ -37,11 +37,15 @@ Phase 3: Frontend & Scientific Intelligence [COMPLETED]
    │
    ▼
 Phase 4: Integration & E2E Validation [COMPLETED]
-   │  └── M6: End-to-End User Journey Pass (338/338 tests passing across Tiers 1-4)
+   │  └── M6: End-to-End User Journey Pass (337/337 tests passing across Tiers 1-4)
    │
    ▼
 Phase 5: 25-Upgrade Integration Matrix [COMPLETED]
-      └── M7: Multi-Service Swarm Upgrades (25/25 capabilities delivered & verified)
+   │  └── M7: Multi-Service Swarm Upgrades (25/25 capabilities delivered & verified)
+   │
+   ▼
+Phase 6: Next-Gen Autonomous Scientific Discovery & Artemis Gateways [PLANNED]
+      └── M8: 15-Upgrade Flow Architecture (Upgrades E-01 through E-15)
 ```
 
 ---
@@ -140,7 +144,24 @@ Phase 5: 25-Upgrade Integration Matrix [COMPLETED]
   - Comprehensive documentation, OpenAPI schemas, and full regression test coverage.
 - **Acceptance Gate**:
   - [x] All 25/25 integration matrix upgrades delivered and verified.
-  - [x] Full regression test suite passes cleanly with 338 passing tests.
+  - [x] Full regression test suite passes cleanly with 337 passing tests.
+
+---
+
+### Phase 6: Post-25 Next-Generation Upgrades (M8) — SPECIFIED & PROPOSED
+- **Objective**: Deliver 15 architectural extensions across 5 operational flows to establish an Autonomous Scientific Discovery Co-Pilot and Artemis Exploration Atmosphere fire safety evaluation.
+- **Assigned Roles**: Specialized Swarm (Data Engineer, Backend Architect, AI/ML Specialist, Frontend Specialist, Research Architect).
+- **Key Deliverables**:
+  - Flow 1 (Live Orbital Telemetry & Edge): Ku-band CCSDS streaming, Daubechies-4 micro-g jitter filter, Edge WASM/ONNX runtime.
+  - Flow 2 (Advanced Physics & Kinetics): RAD-SOOT spectral Planck coupling, 3D solid fuel surface regression, droplet cloud array kinetics.
+  - Flow 3 (Autonomous Scientific Discovery): Multimodal Schlieren RAG, Active Learning OED (GP-UCB), microgravity anomaly & contradiction engine.
+  - Flow 4 (Spacecraft Fire Safety & Decision Support): Artemis Exploration Atmosphere Fire Hazard Index (EAFHI), cool-flame rekindling early warning, cabin suppression CFD.
+  - Flow 5 (Global NASA Open Science Ecosystem): NASA OSDR/PSI event webhooks, reproducible JupyterLab Binder hub, Mission Control showcase cockpit.
+  - Full ingestion of remaining flight campaigns: ACME (BRE, E-FIELD, Flame Design, s-Flame, CFI-G), SoFIE (GEL, MIST, SMIRF), SOFBALL, SLICE.
+- **Acceptance Gate**:
+  - [ ] All 15 flow extensions formally specified with mathematical formulations in `docs/NEXT_GEN_UPGRADES_SPEC.md`.
+  - [ ] Tasks codified in `PROJECT_TASKS.md` with priority classifications and role allocations.
+  - [ ] Zero regressions across existing 337 automated unit and E2E tests.
 
 ---
 

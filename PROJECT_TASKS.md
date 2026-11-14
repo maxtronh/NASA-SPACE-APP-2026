@@ -56,3 +56,26 @@ $$\text{NASA Record} \to \text{Verified DB} \to \text{SI Search} \to \text{Evide
 | **TSK-M6-01** | All Specialists & E2E | P0 | M6 | End-to-end integration pass and 100% test verification | Test reports, CI validation | All Prior Tasks | **COMPLETED** |
 | **TSK-M7-01** | 01. Research & 03. Backend | P0 | M7 | Multi-service Docker Compose deployment configuration | `docker-compose.yml`, service Dockerfiles | TSK-M6-01 | **COMPLETED** |
 | **TSK-M7-02** | 01. Research Architect | P0 | M7 | Final project documentation & 5-minute showcase guide | `docs/PROJECT_ARCHITECTURE.md`, `README.md` | TSK-M7-01 | **COMPLETED** |
+
+---
+
+## 3. Phase 6: Post-25 Next-Generation Upgrades Backlog (Milestone M8)
+
+| Task ID | Specialist Role | Priority | Milestone | Task Description | Deliverable Artifacts | Dependencies | Status |
+|---|---|---|---|---|---|---|---|
+| **TSK-M8-01** | 02. Data Engineer | P1 | M8 | Upgrade E-01: ISS CIR Real-Time Ku-band CCSDS telemetry streaming adapter | `backend/app/ingestion/ccsds_stream.py` | TSK-M7-01 | **PROPOSED** |
+| **TSK-M8-02** | 03. Backend Architect | P1 | M8 | Upgrade E-02: Micro-G jitter wavelet decomposition filter (Daubechies-4) | `backend/app/timeseries/wavelet_filter.py` | TSK-M8-01 | **PROPOSED** |
+| **TSK-M8-03** | 04. Frontend & UI/UX | P1 | M8 | Upgrade E-03: Edge WASM / ONNX local inference client runtime | `frontend/src/lib/wasm_infer.ts` | TSK-M5-01 | **PROPOSED** |
+| **TSK-M8-04** | 05. AI/ML Specialist | P1 | M8 | Upgrade E-04: RAD-SOOT spectral Planck absorption coupler | `backend/app/kinetics/rad_soot.py` | TSK-M4-01 | **PROPOSED** |
+| **TSK-M8-05** | 04. Frontend & UI/UX | P2 | M8 | Upgrade E-05: 3D solid fuel surface pyrolysis mesh regression visualizer | `frontend/src/components/ThreeSolidRegression.tsx` | TSK-M5-07 | **PROPOSED** |
+| **TSK-M8-06** | 05. AI/ML Specialist | P2 | M8 | Upgrade E-06: Droplet cloud & spray array interaction kinetics | `backend/app/kinetics/spray_cloud.py` | TSK-M4-01 | **PROPOSED** |
+| **TSK-M8-07** | 05. AI/ML Specialist | P1 | M8 | Upgrade E-07: Multimodal Schlieren & chemiluminescence RAG | `backend/app/ml/multimodal_rag.py` | TSK-M4-02 | **PROPOSED** |
+| **TSK-M8-08** | 05. AI/ML Specialist | P1 | M8 | Upgrade E-08: Active learning optimal experiment design (GP-UCB) | `backend/app/ml/active_learning_oed.py` | TSK-M4-05 | **PROPOSED** |
+| **TSK-M8-09** | 05. AI/ML Specialist | P2 | M8 | Upgrade E-09: Microgravity anomaly & literature contradiction engine | `backend/app/ml/anomaly_engine.py` | TSK-M4-04 | **PROPOSED** |
+| **TSK-M8-10** | 03. Backend Architect | P0 | M8 | Upgrade E-10: Exploration Atmosphere Fire Hazard Index (EAFHI) | `backend/app/safety/eafhi.py` | TSK-M3-01 | **PROPOSED** |
+| **TSK-M8-11** | 05. AI/ML Specialist | P1 | M8 | Upgrade E-11: Silent cool-flame rekindling early warning monitor | `backend/app/ml/rekindle_warning.py` | TSK-M4-01 | **PROPOSED** |
+| **TSK-M8-12** | 03. Backend Architect | P2 | M8 | Upgrade E-12: Cabin ventilation & fire suppressant dispersion simulator | `backend/app/safety/suppression_cfd.py` | TSK-M8-10 | **PROPOSED** |
+| **TSK-M8-13** | 02. Data Engineer | P1 | M8 | Upgrade E-13: NASA OSDR & PSI real-time event webhook subscriptions | `backend/app/api/v1/endpoints/webhooks.py` | TSK-M2-01 | **PROPOSED** |
+| **TSK-M8-14** | 01. Research Architect | P2 | M8 | Upgrade E-14: Hosted interactive JupyterLab Hub with Binder kernels | `Dockerfile.binder`, `notebooks/` | TSK-M7-01 | **PROPOSED** |
+| **TSK-M8-15** | 04. Frontend & UI/UX | P1 | M8 | Upgrade E-15: Flight controller & Space Apps judges mission control cockpit | `frontend/src/app/mission-control/` | TSK-M5-02 | **PROPOSED** |
+| **TSK-M8-16** | 02. Data Engineer | P1 | M8 | Ingest remaining NASA flight campaigns (ACME BRE/E-FIELD/s-Flame, SoFIE GEL/MIST/SMIRF, SOFBALL) | `backend/app/services/seed_data.py` | TSK-M2-03 | **PROPOSED** |
