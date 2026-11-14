@@ -107,6 +107,8 @@ class HybridRetriever:
                 try:
                     with open(p, encoding="utf-8") as f:
                         payload = json.load(f)
+                        if not isinstance(payload, dict):
+                            continue
                         inv = payload.get("investigation")
                         if inv and isinstance(inv, dict):
                             slug = inv.get("slug")

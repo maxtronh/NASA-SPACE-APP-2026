@@ -287,6 +287,22 @@ Flame in Freefall is an advanced Scientific Intelligence (SI) platform leveragin
 | M7 | Deployment & Showcase Materials | Docker Compose multi-stage build, demo runbook, presentation materials | M6 | **DONE** | `docker-compose.yml`, `backend/Dockerfile`, `frontend/Dockerfile`, `README.md` |
 | M8 | Flow 3 (E-07, E-08) & Flow 4 (E-10) | Schlieren RAG, Bayesian OED, Artemis Gateway EAFHI full-stack & UI | M7 | **DONE** | 378/378 tests passed, Next.js build clean (13 routes), Forensic Audit CLEAN |
 | M9 | Solar System Simulation, 25 Faces & Qwen AI Model Integration | Standalone package in `nasa exploration/`, Next.js 25-faces HUD, Qwen 2.5 LoRA bridge, and automated E2E tests | M8 | **DONE** | 542/542 tests passed, Next.js build clean (15 routes), Forensic Audit CLEAN |
+| M10 | Award-Winning Frontend Elevation & Defect Polish | Cinematic UI, 10/10 visual fidelity across 9 core routes, defect remediation, ESLint/TypeScript/Next.js clean build, 542 tests passing | M9 | **IN_PROGRESS** | Survey complete (3 Explorers), Worker implementing |
+
+---
+
+## Feature Inventory — Milestone M10 (Award-Winning Frontend Visual & UX Elevation)
+| # | Feature | Description | Milestone | Source |
+|---|---------|-------------|-----------|--------|
+| F10.1 | Dashboard Cinematic Hero & Micro-Interactions | Particle flame canvas background, animated metric count-ups, quick action CTAs, dynamic analytics fallback | M10 | Survey 1 |
+| F10.2 | Mission Control Aerospace Cockpit Overhaul | MIL-STD-1472 split-legend backlit annunciators, CRT phosphor chart glow, orbital ground track map, terminal log filters | M10 | Survey 1 |
+| F10.3 | Solar Exploration & 25 Faces / Milky Way / NASA Eyes Polish | Camera aspect ratio zero-height guard, Keplerian elliptical orbits, Qwen API bridge, offline fallback | M10 | Survey 1 |
+| F10.4 | Investigations Explorer UX Polish | Restored Fuel Type dropdown, HUD range slider with ticks, interactive column sorting, formatted telemetry null badges | M10 | Survey 2 |
+| F10.5 | Diagnostics Scientific Visualization | High-fidelity Schlieren refractive striations & Planck pyrometry colormaps, keyframe video scrubber, fullscreen modal | M10 | Survey 2 |
+| F10.6 | OED Optimizer Chart Polish & Precision Controls | Clean uncertainty envelope shading without grid occlusion, 2D acquisition surface map, numeric inputs, export batch | M10 | Survey 2 |
+| F10.7 | Fire Safety Environmental Hazard Cockpit | Smooth animated gauge needle, corrected sweep X-axis label, true microgravity slider support, interactive suppression actuators | M10 | Survey 2 |
+| F10.8 | SI Assistant Streaming & Markdown Polish | Progressive typewriter token streaming with animated cursor, full markdown and math parsing, interactive citation drawer | M10 | Survey 2 |
+| F10.9 | Global Design System & Defect Remediation | Responsive categorical Navbar, glassmorphism HUD tokens, ESLint config, favicon.ico, zero lint/tsc/build errors, 542 tests passing | M10 | Survey 1 & 3 |
 
 ---
 
@@ -297,7 +313,7 @@ Flame in Freefall is an advanced Scientific Intelligence (SI) platform leveragin
 | F9.2 | 25 Scientific Faces Telemetry Matrix | 5-tier telemetry matrix (Planetary Physics, Astrodynamics, Fire Safety, Qwen AI, Visualization HUD) | M9 | Survey 2 |
 | F9.3 | Qwen 2.5 LoRA Extraction & Bridge | Dual-mode inference engine loading `E:\ai_model\finetuning\qwen_lora_model` with deterministic scientific fallback | M9 | Survey 1 & 2 |
 | F9.4 | Solar System Keplerian Physics Engine | Exact Keplerian ephemeris math, Hohmann transfer delta-v, and translunar injection calculations | M9 | Survey 1 & 2 |
-| F9.5 | Next.js Integrated Simulation Section | 3-way toggle in `MilkyWayExperience.tsx` + `SolarSystem25FacesHUD.tsx` with local 3D Three.js canvas | M9 | Survey 1 & 3 |
+| F9.5 | NASA Eyes (JPL) Frontend | Dedicated `/nasa-eyes` page embeds the official NASA Eyes experience; `/milky-way` remains a redirect. The former Milky Way and 25-Faces HUD are no longer part of the frontend. | M9 | NASA Eyes integration |
 | F9.6 | Exploration REST API Endpoints | `/api/v1/exploration/faces-25`, `/planets`, `/trajectory/calculate`, `/copilot/chat` | M9 | Survey 1, 2, 3 |
 | F9.7 | Automated Verification Suite | Backend pytest suite (`test_solar_physics.py`, `test_qwen_engine.py`) and E2E suite (`test_solar_exploration_e2e.py`) | M9 | Survey 3 |
 

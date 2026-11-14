@@ -41,6 +41,7 @@ Understanding these dynamics is vital for astronaut safety aboard the Internatio
           │   - Telemetry Dashboard (/)        - Explorer (/investigations)│
           │   - Droplet d² Plotly Chart        - Comparison (/compare)   │
           │   - SI Assistant (/intelligence)   - Heatmap (/analytics)   │
+          │   - NASA Eyes (JPL) (/nasa-eyes)   - External NASA view     │
           └──────────────────────────────┬──────────────────────────────┘
                                          │ HTTP REST (JSON /api/v1)
                                          ▼
@@ -74,7 +75,7 @@ Understanding these dynamics is vital for astronaut safety aboard the Internatio
 
 | Layer | Technologies | Responsibilities |
 |---|---|---|
-| **Frontend Workspace** | Next.js 15.1.7, React 19, TypeScript, Tailwind CSS, Plotly.js, Recharts, Lucide | Scientific dashboards, interactive $d^2(t)$ burning regression plots, parameter grids, live SI chat with NTRS badges. |
+| **Frontend Workspace** | Next.js 15.1.7, React 19, TypeScript, Tailwind CSS, Plotly.js, Recharts, Lucide | Scientific dashboards, interactive $d^2(t)$ burning regression plots, parameter grids, live SI chat with NTRS badges, and an external NASA Eyes (JPL) view. |
 | **API Backend** | FastAPI 0.115, Python 3.12, Pydantic v2, SQLAlchemy 2.0 (asyncio), Uvicorn | High-throughput async REST endpoints, faceted catalog queries, condition equivalence validator. |
 | **SI & AI/ML Engine** | FastEmbed (`bge-small-en-v1.5`), `rank-bm25`, RRF ranker, regex entity extractor | Dual-channel hybrid search, official NASA NTRS citation verification, strict out-of-domain abstention. |
 | **Data Lake & Ingestion** | Python 3.12, `Pint`, `hashlib` SHA-256, `httpx` | Deterministic SI normalization, cryptographically verifiable provenance, flight archive preservation. |
@@ -147,6 +148,11 @@ To evaluate the capabilities of Flame in Freefall, follow this guided scientific
 - Open the analytics workspace.
 - Inspect the interactive Measurement Completeness Heatmap showing exact presence/missingness percentages across physical sensor channels (burning rate, flame spread velocity, soot volume fraction, chamber pressure, ambient temperature).
 - Review regime distributions and data density metrics confirming genuine flight archive coverage.
+
+### NASA Eyes: Solar System (`/nasa-eyes`)
+- Open the dedicated NASA Eyes page from the navigation.
+- Explore the NASA/JPL-hosted Solar System simulation in the embedded view, or open the official experience directly in a new tab.
+- The legacy `/milky-way` URL redirects here; no local galaxy or 25-Faces HUD is presented on this route.
 
 ---
 

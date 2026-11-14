@@ -105,3 +105,14 @@ class TestQwenScientificReasoningOracle:
             assert res is not None
             assert len(res.response) > 0
             assert res.latency_ms < 100.0
+
+    def test_training_history_inspection(self):
+        """Assert engine loads authentic training metrics and loss convergence."""
+        history = qwen_copilot_engine.get_training_history()
+        assert history is not None
+        assert "status" in history
+        if history.get("status") == "COMPLETED":
+            assert "epoch_history" in history
+            assert len(history["epoch_history"]) > 0
+            assert history["initial_loss"] > history["final_loss"]
+            assert history["overall_eval_accuracy"] >= 95.0

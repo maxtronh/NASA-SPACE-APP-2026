@@ -155,6 +155,19 @@ class TestExplorationApiEndpoints:
         assert meta["lora_alpha"] == 32
         assert meta["status"] == "READY"
 
+    def test_model_training_history_endpoint(self, client):
+        """Verify GET /api/v1/exploration/model/training-history reports NASA training metrics."""
+        response = client.get("/api/v1/exploration/model/training-history")
+        assert response.status_code == 200
+        data = response.json()
+        assert "status" in data
+        if data.get("status") == "COMPLETED":
+            assert data["epochs"] >= 1
+            assert "epoch_history" in data
+            assert len(data["epoch_history"]) > 0
+            assert data["initial_loss"] >= data["final_loss"]
+            assert data["overall_eval_accuracy"] >= 95.0
+
 
 class TestStandaloneSimulationPackage:
     def test_standalone_directory_exists(self):

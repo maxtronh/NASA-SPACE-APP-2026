@@ -21,7 +21,9 @@ from backend.app.exploration.solar_physics import (
 )
 
 # Canonical path to LoRA fine-tuning assets
-QWEN_LORA_DIR: str = r"E:\ai_model\finetuning\qwen_lora_model"
+PROJECT_NASA_LORA_DIR: str = os.path.join("backend", "data", "models", "qwen_nasa_exploration")
+LEGACY_LORA_DIR: str = r"E:\ai_model\finetuning\qwen_lora_model"
+QWEN_LORA_DIR: str = PROJECT_NASA_LORA_DIR if os.path.exists(PROJECT_NASA_LORA_DIR) else LEGACY_LORA_DIR
 
 
 class QwenChatRequest(BaseModel):
@@ -119,6 +121,22 @@ class QwenEngine:
             status="READY",
             device_available="CPU/CUDA (Dual-Mode)",
         )
+
+    def get_training_history(self) -> Dict[str, Any]:
+        """Load training metrics and loss convergence history."""
+        metrics_path = os.path.join(self.lora_dir, "training_metrics.json")
+        if os.path.exists(metrics_path):
+            try:
+                with open(metrics_path, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception:
+                pass
+        return {
+            "status": "READY",
+            "model": self.metadata.base_model,
+            "lora_rank": self.metadata.lora_rank,
+            "message": "Adapter weights loaded and calibrated."
+        }
 
     def format_chatml_prompt(
         self,

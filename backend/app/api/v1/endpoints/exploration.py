@@ -126,3 +126,11 @@ async def get_model_metadata() -> QwenModelMetadata:
     Retrieve inspection metadata of extracted Qwen 2.5 LoRA model assets from E:/ai_model.
     """
     return qwen_copilot_engine.metadata
+
+
+@router.get("/model/training-history")
+async def get_training_history() -> Dict[str, Any]:
+    """
+    Retrieve training convergence metrics, loss history, and domain evaluation for the NASA-trained model.
+    """
+    return qwen_copilot_engine.get_training_history()
