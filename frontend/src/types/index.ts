@@ -345,3 +345,89 @@ export interface EAFHISensitivityResponse {
   current_operating_point: EAFHIResult;
 }
 
+// ==========================================
+// UPGRADE E-01 & E-02: ORBITAL TELEMETRY & WAVELET FILTER
+// ==========================================
+export interface CCSDSTelemetryFrame {
+  packet_id: string;
+  timestamp_utc: string;
+  sequence_count: number;
+  iss_latitude: number;
+  iss_longitude: number;
+  iss_altitude_km: number;
+  chamber_pressure_kpa: number;
+  ambient_temperature_k: number;
+  acceleration_raw_g: number;
+  acceleration_filtered_g?: number;
+  radiometer_flux_w: number;
+  ch_star_chemiluminescence_v: number;
+  ventilation_velocity_cm_s: number;
+  packet_loss_pct: number;
+  sync_lock?: boolean;
+}
+
+export interface WaveletFilterRequest {
+  raw_signal: number[];
+  sampling_rate_hz?: number;
+  wavelet_name?: string; // "db4"
+  decomposition_level?: number; // 1-5
+  threshold_mode?: "soft" | "hard" | "threshold";
+  threshold_g?: number;
+  flame_length_scale_m?: number;
+}
+
+export interface WaveletFilterResponse {
+  wavelet: string;
+  decomposition_level: number;
+  raw_signal: number[];
+  filtered_signal: number[];
+  detail_coefficients?: number[][];
+  snr_enhancement_db: number;
+  peak_reduction_pct: number;
+  quiescent_micro_g_achieved: boolean;
+  raw_grashof_peak?: number;
+  filtered_grashof_peak?: number;
+  buoyant_perturbation_flag?: boolean;
+  wavelet_power_spectrum?: Record<string, number>;
+}
+
+// ==========================================
+// UPGRADE E-11: SILENT COOL-FLAME REKINDLING
+// ==========================================
+export type RekindleRiskLevel = "INERT" | "MONITOR" | "REKINDLE_WARNING" | "CRITICAL_REKINDLE_HAZARD";
+
+export interface RekindleRiskRequest {
+  fuel_type?: string;
+  fuel?: string;
+  fuel_temperature_k: number;
+  visible_flame_active?: boolean;
+  chamber_pressure_kpa?: number;
+  oxygen_percentage?: number;
+  ambient_o2_percentage?: number;
+  ventilation_velocity_cm_s?: number;
+  ventilation_velocity_m_s?: number;
+  droplet_diameter_mm?: number;
+  characteristic_length_m?: number;
+}
+
+export interface RekindleRiskResponse {
+  fuel_type: string;
+  fuel?: string;
+  visible_flame_active: boolean;
+  cool_flame_active: boolean;
+  fuel_temperature_k: number;
+  flash_point_k: number;
+  cool_flame_damkohler: number;
+  damkohler_cool?: number;
+  critical_damkohler: number;
+  damkohler_crit?: number;
+  rekindle_probability: number;
+  risk_level: RekindleRiskLevel;
+  risk_classification?: RekindleRiskLevel | string;
+  safety_advisory: string;
+  advisory_message?: string;
+  recommended_ventilation_cm_s: number;
+  critical_ventilation_velocity_m_s?: number;
+}
+
+

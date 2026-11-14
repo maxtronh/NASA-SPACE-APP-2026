@@ -15,6 +15,7 @@ from backend.app.api.v1.endpoints import (
     provenance,
     safety,
     si,
+    stream,
     telemetry,
     ws_telemetry,
 )
@@ -34,6 +35,7 @@ api_v1_router.include_router(provenance.router)
 api_v1_router.include_router(safety.router)
 api_v1_router.include_router(kinetics.router)
 api_v1_router.include_router(graph.router)
+api_v1_router.include_router(stream.router)
 api_v1_router.include_router(telemetry.router)
 api_v1_router.include_router(ws_telemetry.router)
 api_v1_router.include_router(multimodal.router)

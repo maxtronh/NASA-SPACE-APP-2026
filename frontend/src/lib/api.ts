@@ -15,6 +15,12 @@ import {
   EAFHIResult,
   EAFHISensitivityResponse,
   SensitivityCurvePoint,
+  CCSDSTelemetryFrame,
+  WaveletFilterRequest,
+  WaveletFilterResponse,
+  RekindleRiskRequest,
+  RekindleRiskResponse,
+  RekindleRiskLevel,
 } from "@/types";
 import {
   MOCK_CORPUS_ANALYTICS,
@@ -24,6 +30,9 @@ import {
   computeMockOEDResponse,
   calculateMockEAFHI,
   computeMockEAFHISensitivity,
+  computeMockWaveletFilter,
+  computeMockRekindleRisk,
+  generateMockTelemetryFrame,
 } from "./mockData";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
@@ -786,5 +795,177 @@ export async function fetchEAFHISensitivity(
     return computeMockEAFHISensitivity(parameter, current);
   }
 }
+
+/**
+ * Upgrade E-02: Filters orbital g-jitter acceleration using Daubechies-4 wavelet transform.
+ */
+export async function filterWaveletJitter(payload: WaveletFilterRequest): Promise<WaveletFilterResponse> {
+  try {
+    const res = await fetch(`${API_BASE}/telemetry/filter-jitter`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        raw_signal: payload.raw_signal,
+        accelerations: payload.raw_signal,
+        sampling_rate_hz: payload.sampling_rate_hz ?? 50.0,
+        sample_rate_hz: payload.sampling_rate_hz ?? 50.0,
+        decomposition_level: payload.decomposition_level ?? 4,
+        levels: payload.decomposition_level ?? 4,
+        threshold_mode: payload.threshold_mode ?? "soft",
+        mode: payload.threshold_mode ?? "threshold",
+        threshold_g: payload.threshold_g ?? 1.0e-4,
+        wavelet: payload.wavelet_name ?? "db4",
+      }),
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (data.filtered_accelerations && !data.filtered_signal) {
+      data.filtered_signal = data.filtered_accelerations;
+    }
+    if (data.snr_improvement_db !== undefined && data.snr_enhancement_db === undefined) {
+      data.snr_enhancement_db = data.snr_improvement_db;
+    }
+    if (data.peak_acceleration_reduction_percent !== undefined && data.peak_reduction_pct === undefined) {
+      data.peak_reduction_pct = data.peak_acceleration_reduction_percent;
+    }
+    if (data.quiescent_micro_g_achieved === undefined) {
+      const maxF = Math.max(...(data.filtered_signal || [0]).map(Math.abs));
+      data.quiescent_micro_g_achieved = maxF <= 1e-5;
+    }
+    return data;
+  } catch (err) {
+    return computeMockWaveletFilter(payload);
+  }
+}
+
+/**
+ * Upgrade E-11: Computes cool-flame Damköhler number and silent rekindling probability.
+ */
+export async function calculateRekindleRisk(payload: RekindleRiskRequest): Promise<RekindleRiskResponse> {
+  try {
+    const uVentMs =
+      payload.ventilation_velocity_m_s !== undefined
+        ? payload.ventilation_velocity_m_s
+        : payload.ventilation_velocity_cm_s !== undefined
+        ? payload.ventilation_velocity_cm_s / 100
+        : 0.05;
+
+    const charLenM =
+      payload.characteristic_length_m !== undefined
+        ? payload.characteristic_length_m
+        : payload.droplet_diameter_mm !== undefined
+        ? payload.droplet_diameter_mm / 1000
+        : 0.003;
+
+    const res = await fetch(`${API_BASE}/safety/cool-flame/rekindle-risk`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fuel: payload.fuel || payload.fuel_type || "n-heptane",
+        fuel_type: payload.fuel_type || payload.fuel || "n-heptane",
+        fuel_temperature_k: payload.fuel_temperature_k,
+        ventilation_velocity_m_s: uVentMs,
+        ventilation_velocity_cm_s: uVentMs * 100,
+        characteristic_length_m: charLenM,
+        droplet_diameter_mm: charLenM * 1000,
+        ambient_o2_percentage: payload.ambient_o2_percentage || payload.oxygen_percentage || 21.0,
+        oxygen_percentage: payload.oxygen_percentage || payload.ambient_o2_percentage || 21.0,
+        chamber_pressure_kpa: payload.chamber_pressure_kpa || 101.325,
+        visible_flame_active: payload.visible_flame_active ?? false,
+      }),
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    return {
+      fuel_type: data.fuel || data.fuel_type || "n-heptane",
+      fuel: data.fuel || data.fuel_type || "n-heptane",
+      visible_flame_active: data.visible_flame_active ?? payload.visible_flame_active ?? false,
+      cool_flame_active: data.cool_flame_active ?? (data.supports_ltc && data.fuel_temperature_k > 450 && (data.damkohler_cool ?? data.cool_flame_damkohler) > 0.4),
+      fuel_temperature_k: data.fuel_temperature_k,
+      flash_point_k: data.flash_point_k,
+      cool_flame_damkohler: data.cool_flame_damkohler ?? data.damkohler_cool ?? 0,
+      damkohler_cool: data.damkohler_cool ?? data.cool_flame_damkohler ?? 0,
+      critical_damkohler: data.critical_damkohler ?? data.damkohler_crit ?? 1.0,
+      damkohler_crit: data.damkohler_crit ?? data.critical_damkohler ?? 1.0,
+      rekindle_probability: data.rekindle_probability,
+      risk_level: (data.risk_level || data.risk_classification) as RekindleRiskLevel,
+      risk_classification: data.risk_classification || data.risk_level,
+      safety_advisory: data.safety_advisory || data.advisory_message || "",
+      advisory_message: data.advisory_message || data.safety_advisory || "",
+      recommended_ventilation_cm_s:
+        data.recommended_ventilation_cm_s ??
+        (data.critical_ventilation_velocity_m_s
+          ? Number((data.critical_ventilation_velocity_m_s * 100).toFixed(1))
+          : 5.0),
+      critical_ventilation_velocity_m_s: data.critical_ventilation_velocity_m_s,
+    };
+  } catch (err) {
+    return computeMockRekindleRisk(payload);
+  }
+}
+
+/**
+ * Upgrade E-01: Connects to CCSDS live telemetry SSE stream with simulated fallback.
+ */
+export function createCCSDSTelemetryStream(
+  onFrame: (frame: CCSDSTelemetryFrame) => void,
+  onError?: (error: any) => void
+): () => void {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  const url = `${API_BASE}/telemetry/stream/ccsds`;
+  let eventSource: EventSource | null = null;
+  let intervalId: any = null;
+  let sequenceCount = 1000;
+
+  try {
+    eventSource = new EventSource(url);
+    eventSource.onmessage = (event) => {
+      try {
+        const frame = JSON.parse(event.data);
+        onFrame(frame);
+      } catch (e) {
+        if (onError) onError(e);
+      }
+    };
+    eventSource.onerror = (e) => {
+      if (onError) onError(e);
+      if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+      }
+      if (!intervalId) {
+        intervalId = setInterval(() => {
+          sequenceCount++;
+          onFrame(generateMockTelemetryFrame(sequenceCount));
+        }, 300);
+      }
+    };
+  } catch (err) {
+    if (onError) onError(err);
+    if (!intervalId) {
+      intervalId = setInterval(() => {
+        sequenceCount++;
+        onFrame(generateMockTelemetryFrame(sequenceCount));
+      }, 300);
+    }
+  }
+
+  return () => {
+    if (eventSource) {
+      eventSource.close();
+      eventSource = null;
+    }
+    if (intervalId) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+  };
+}
+
 
 

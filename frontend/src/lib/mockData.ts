@@ -14,6 +14,12 @@ import {
   GPSurrogatePoint,
   OEDCandidateProposal,
   FlammabilityRiskClass,
+  CCSDSTelemetryFrame,
+  WaveletFilterRequest,
+  WaveletFilterResponse,
+  RekindleRiskRequest,
+  RekindleRiskResponse,
+  RekindleRiskLevel,
 } from "@/types";
 
 export const MOCK_INVESTIGATIONS: InvestigationSummary[] = [
@@ -1157,4 +1163,294 @@ export function computeMockEAFHISensitivity(
     current_operating_point,
   };
 }
+
+// ==========================================
+// UPGRADE E-02: WAVELET JITTER FILTER SIMULATION
+// ==========================================
+
+const DB4_H = [
+  (1 + Math.sqrt(3)) / (4 * Math.sqrt(2)),
+  (3 + Math.sqrt(3)) / (4 * Math.sqrt(2)),
+  (3 - Math.sqrt(3)) / (4 * Math.sqrt(2)),
+  (1 - Math.sqrt(3)) / (4 * Math.sqrt(2)),
+];
+const DB4_G = [DB4_H[3], -DB4_H[2], DB4_H[1], -DB4_H[0]];
+
+export function computeMockWaveletFilter(req: WaveletFilterRequest): WaveletFilterResponse {
+  const raw = req.raw_signal || [];
+  const level = req.decomposition_level ?? 4;
+  const thresholdG = req.threshold_g ?? 1.0e-4;
+  const mode = req.threshold_mode || "soft";
+
+  if (raw.length === 0) {
+    return {
+      wavelet: "db4",
+      decomposition_level: level,
+      raw_signal: [],
+      filtered_signal: [],
+      detail_coefficients: [],
+      snr_enhancement_db: 0.0,
+      peak_reduction_pct: 0.0,
+      quiescent_micro_g_achieved: true,
+      raw_grashof_peak: 0.0,
+      filtered_grashof_peak: 0.0,
+      buoyant_perturbation_flag: false,
+    };
+  }
+
+  // Ensure even length for dyadic decomposition
+  const n = raw.length % 2 === 0 ? raw.length : raw.length - 1;
+  const currentSignal = raw.slice(0, n);
+
+  // Multi-level forward DWT
+  let approx = [...currentSignal];
+  const detailLevels: number[][] = [];
+
+  for (let l = 0; l < level; l++) {
+    const len = approx.length;
+    if (len < 4) break;
+    const half = Math.floor(len / 2);
+    const nextApprox: number[] = new Array(half);
+    const detail: number[] = new Array(half);
+
+    for (let i = 0; i < half; i++) {
+      let a = 0;
+      let d = 0;
+      for (let k = 0; k < 4; k++) {
+        const idx = (2 * i + k) % len;
+        a += approx[idx] * DB4_H[k];
+        d += approx[idx] * DB4_G[k];
+      }
+      nextApprox[i] = a;
+      // Soft or hard thresholding on detail
+      if (mode === "hard") {
+        detail[i] = Math.abs(d) > thresholdG ? d : 0;
+      } else {
+        const sign = d >= 0 ? 1 : -1;
+        detail[i] = Math.abs(d) > thresholdG ? sign * (Math.abs(d) - thresholdG) : 0;
+      }
+    }
+    detailLevels.push(detail);
+    approx = nextApprox;
+  }
+
+  // Multi-level inverse DWT (IDWT)
+  let recon = [...approx];
+  for (let l = detailLevels.length - 1; l >= 0; l--) {
+    const detail = detailLevels[l];
+    const half = recon.length;
+    const fullLen = half * 2;
+    const reconstructed: number[] = new Array(fullLen).fill(0);
+
+    for (let i = 0; i < half; i++) {
+      for (let k = 0; k < 4; k++) {
+        const idx = (2 * i + k) % fullLen;
+        reconstructed[idx] += recon[i] * DB4_H[k] + detail[i] * DB4_G[k];
+      }
+    }
+    recon = reconstructed;
+  }
+
+  const filtered = [...recon];
+  if (raw.length > n) {
+    filtered.push(filtered[filtered.length - 1] ?? 0);
+  }
+
+  // Calculate metrics
+  let rawPower = 0;
+  let noisePower = 0;
+  let rawPeak = 0;
+  let filteredPeak = 0;
+
+  for (let i = 0; i < raw.length; i++) {
+    const r = raw[i];
+    const f = filtered[i] ?? 0;
+    const err = r - f;
+    rawPower += r * r;
+    noisePower += err * err;
+    if (Math.abs(r) > rawPeak) rawPeak = Math.abs(r);
+    if (Math.abs(f) > filteredPeak) filteredPeak = Math.abs(f);
+  }
+
+  const snr = noisePower > 1e-18 ? 10 * Math.log10(rawPower / noisePower) : 21.4;
+  const peakRed = rawPeak > 0 ? Math.max(0, ((rawPeak - filteredPeak) / rawPeak) * 100) : 98.7;
+
+  const grFactor = (9.81 * (1 / 300) * 1500 * Math.pow(0.003, 3)) / Math.pow(1.5e-5, 2);
+  const rawGrashof = rawPeak * grFactor;
+  const filteredGrashof = filteredPeak * grFactor;
+
+  return {
+    wavelet: "db4",
+    decomposition_level: level,
+    raw_signal: raw,
+    filtered_signal: filtered,
+    detail_coefficients: detailLevels,
+    snr_enhancement_db: Number(snr.toFixed(2)),
+    peak_reduction_pct: Number(peakRed.toFixed(1)),
+    quiescent_micro_g_achieved: filteredPeak <= 1e-5,
+    raw_grashof_peak: Number(rawGrashof.toFixed(4)),
+    filtered_grashof_peak: Number(filteredGrashof.toFixed(6)),
+    buoyant_perturbation_flag: rawGrashof > 0.1,
+    wavelet_power_spectrum: {
+      "d1_high_freq": 0.42,
+      "d2_harmonics": 0.31,
+      "d3_exercise": 0.22,
+      "d4_structural": 0.04,
+      "a4_quiescent": 0.01,
+    },
+  };
+}
+
+// ==========================================
+// UPGRADE E-11: SILENT COOL-FLAME REKINDLING SIMULATION
+// ==========================================
+
+interface LTCFuelInfo {
+  formula: string;
+  supports_ltc: boolean;
+  flash_k: number;
+  A: number;
+  E: number;
+}
+
+const LTC_CATALOG: Record<string, LTCFuelInfo> = {
+  "n-heptane": { formula: "C7H16", supports_ltc: true, flash_k: 269.15, A: 8.5e6, E: 65000 },
+  "heptane": { formula: "C7H16", supports_ltc: true, flash_k: 269.15, A: 8.5e6, E: 65000 },
+  "n-octane": { formula: "C8H18", supports_ltc: true, flash_k: 286.15, A: 9.1e6, E: 67000 },
+  "octane": { formula: "C8H18", supports_ltc: true, flash_k: 286.15, A: 9.1e6, E: 67000 },
+  "n-decane": { formula: "C10H22", supports_ltc: true, flash_k: 319.15, A: 1.05e7, E: 70000 },
+  "decane": { formula: "C10H22", supports_ltc: true, flash_k: 319.15, A: 1.05e7, E: 70000 },
+  "methanol": { formula: "CH3OH", supports_ltc: false, flash_k: 284.15, A: 0, E: 0 },
+  "ethanol": { formula: "C2H5OH", supports_ltc: false, flash_k: 286.15, A: 0, E: 0 },
+};
+
+export function computeMockRekindleRisk(req: RekindleRiskRequest): RekindleRiskResponse {
+  const fuelName = (req.fuel_type || req.fuel || "n-heptane").toLowerCase().trim();
+  const fuelInfo = LTC_CATALOG[fuelName] || {
+    formula: "Hydrocarbon",
+    supports_ltc: true,
+    flash_k: 270.0,
+    A: 8.0e6,
+    E: 66000,
+  };
+
+  const tempK = req.fuel_temperature_k;
+  const isFlameActive = req.visible_flame_active ?? false;
+  const pressureKpa = req.chamber_pressure_kpa ?? 101.325;
+  const o2Pct = req.oxygen_percentage ?? req.ambient_o2_percentage ?? 21.0;
+
+  let uVent = 0.05;
+  if (req.ventilation_velocity_m_s !== undefined) {
+    uVent = req.ventilation_velocity_m_s;
+  } else if (req.ventilation_velocity_cm_s !== undefined) {
+    uVent = req.ventilation_velocity_cm_s / 100.0;
+  }
+
+  let charLen = 0.003;
+  if (req.characteristic_length_m !== undefined) {
+    charLen = req.characteristic_length_m;
+  } else if (req.droplet_diameter_mm !== undefined) {
+    charLen = req.droplet_diameter_mm / 1000.0;
+  }
+
+  const tauRes = charLen / Math.max(0.0001, uVent);
+  let kLtc = 0;
+  let daCool = 0;
+
+  if (fuelInfo.supports_ltc && tempK > 350) {
+    const R = 8.314;
+    kLtc = fuelInfo.A * Math.exp(-fuelInfo.E / (R * tempK)) * (pressureKpa / 101.325) * (o2Pct / 21.0);
+    daCool = tauRes * kLtc;
+  }
+
+  const daCrit = 1.0;
+  const theta = 0.20;
+  let pRekindle = 0.0;
+  let riskLevel: RekindleRiskLevel = "INERT";
+
+  if (!fuelInfo.supports_ltc || tempK <= fuelInfo.flash_k) {
+    pRekindle = 0.0;
+    riskLevel = "INERT";
+  } else {
+    const exponent = -(daCool - daCrit) / theta;
+    pRekindle = 1.0 / (1.0 + Math.exp(Math.max(-50, Math.min(50, exponent))));
+    if (pRekindle < 0.15 || daCool < 0.5) {
+      riskLevel = "MONITOR";
+    } else if (pRekindle < 0.70 || daCool < 1.0) {
+      riskLevel = "REKINDLE_WARNING";
+    } else {
+      riskLevel = "CRITICAL_REKINDLE_HAZARD";
+    }
+  }
+
+  const critVent = (charLen * kLtc) / daCrit;
+  const recVentCmS = Number((critVent * 100.0).toFixed(1));
+
+  let advisory = "";
+  switch (riskLevel) {
+    case "INERT":
+      advisory = "Droplet temperature below flash point or fuel does not support low-temperature chain branching. Zero rekindle hazard.";
+      break;
+    case "MONITOR":
+      advisory = "Droplet temperature above flash point but convective cooling suppresses cool-flame radical accumulation (Da_cool < 0.5). Maintain photodiode telemetry.";
+      break;
+    case "REKINDLE_WARNING":
+      advisory = "Cool flame active with elevated peroxy radical concentrations (0.5 <= Da_cool < 1.0). Prepare chamber isolation damper.";
+      break;
+    case "CRITICAL_REKINDLE_HAZARD":
+      advisory = "CRITICAL: Silent cool-flame self-heating exceeds convective heat removal (Da_cool >= 1.0, P_rekindle >= 85%). Immediate cabin ventilation damper isolation recommended.";
+      break;
+  }
+
+  return {
+    fuel_type: fuelName,
+    fuel: fuelName,
+    visible_flame_active: isFlameActive,
+    cool_flame_active: fuelInfo.supports_ltc && tempK > 450 && daCool > 0.4,
+    fuel_temperature_k: Number(tempK.toFixed(1)),
+    flash_point_k: fuelInfo.flash_k,
+    cool_flame_damkohler: Number(daCool.toFixed(3)),
+    damkohler_cool: Number(daCool.toFixed(3)),
+    critical_damkohler: daCrit,
+    damkohler_crit: daCrit,
+    rekindle_probability: Number(pRekindle.toFixed(4)),
+    risk_level: riskLevel,
+    risk_classification: riskLevel,
+    safety_advisory: advisory,
+    advisory_message: advisory,
+    recommended_ventilation_cm_s: recVentCmS,
+    critical_ventilation_velocity_m_s: Number(critVent.toFixed(3)),
+  };
+}
+
+export function generateMockTelemetryFrame(
+  sequence: number,
+  override?: Partial<CCSDSTelemetryFrame>
+): CCSDSTelemetryFrame {
+  const t = sequence * 0.05;
+  const lat = Number((51.6 * Math.sin(t * 0.005)).toFixed(4));
+  const lon = Number((((t * 0.04) % 360) - 180).toFixed(4));
+  const altitude = Number((418.4 + 0.35 * Math.cos(t * 0.002)).toFixed(2));
+  const rawJitter = 1.2e-6 + 0.8e-6 * Math.sin(t * 12.0) + (Math.random() - 0.5) * 0.4e-6;
+
+  return {
+    packet_id: `CCSDS-ISS-CIR-${String(sequence).padStart(6, "0")}`,
+    timestamp_utc: new Date().toISOString(),
+    sequence_count: sequence % 16384,
+    iss_latitude: lat,
+    iss_longitude: lon,
+    iss_altitude_km: altitude,
+    chamber_pressure_kpa: 101.32,
+    ambient_temperature_k: 298.15,
+    acceleration_raw_g: rawJitter,
+    acceleration_filtered_g: 1.2e-6,
+    radiometer_flux_w: 0.0,
+    ch_star_chemiluminescence_v: 0.04,
+    ventilation_velocity_cm_s: 3.0,
+    packet_loss_pct: 0.0,
+    sync_lock: true,
+    ...override,
+  };
+}
+
 

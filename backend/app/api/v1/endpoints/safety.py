@@ -5,6 +5,7 @@ from typing import Any, Optional
 from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
+from backend.app.kinetics.rekindle_warning import RekindleWarningEngine
 from backend.app.safety.eafhi import EAFHIEngine
 from backend.app.safety.evaluator import FlammabilityEvaluator
 from backend.app.safety.standards import CABIN_ATMOSPHERES, SPACECRAFT_MATERIALS
@@ -14,6 +15,12 @@ from backend.app.schemas.eafhi import (
     EAFHISensitivityRequest,
     EAFHISensitivityResponse,
     GatewayProfileResponse,
+)
+from backend.app.schemas.rekindle import (
+    CoolFlameStreamMonitorRequest,
+    CoolFlameStreamMonitorResponse,
+    RekindleWarningRequest,
+    RekindleWarningResponse,
 )
 
 router = APIRouter(prefix="/safety", tags=["safety"])
@@ -152,3 +159,40 @@ async def sweep_eafhi_sensitivity(payload: EAFHISensitivityRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Sensitivity sweep calculation error: {exc}",
         )
+
+
+# --- Silent Cool-Flame Rekindling Early Warning Endpoints (Upgrade E-11) ---
+
+@router.post("/cool-flame/rekindle-risk", response_model=RekindleWarningResponse)
+async def assess_cool_flame_rekindle_risk(payload: RekindleWarningRequest):
+    """Assesses instantaneous cool-flame Damköhler number (Da_cool) and rekindling probability (P_rekindle)."""
+    try:
+        return RekindleWarningEngine.evaluate_rekindle_risk(payload)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Rekindle risk assessment error: {exc}",
+        )
+
+
+@router.post("/cool-flame/stream-monitor", response_model=CoolFlameStreamMonitorResponse)
+async def monitor_cool_flame_stream(payload: CoolFlameStreamMonitorRequest):
+    """Monitors telemetry timeseries for radiative hot-flame extinction and silent cool-flame persistence."""
+    try:
+        return RekindleWarningEngine.analyze_stream(payload)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Stream monitor error: {exc}",
+        )
+

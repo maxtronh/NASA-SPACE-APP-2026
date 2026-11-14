@@ -17,6 +17,7 @@ import {
   Video,
   Cpu,
   ShieldAlert,
+  Radio,
 } from "lucide-react";
 import { fetchHealth } from "@/lib/api";
 import { HealthResponse } from "@/types";
@@ -24,10 +25,12 @@ import { HealthResponse } from "@/types";
 const NAV_LINKS = [
   { href: "/", label: "Dashboard", icon: Flame },
   { href: "/investigations", label: "Explorer", icon: Compass },
+  { href: "/mission-control", label: "Mission Control", icon: Radio },
   { href: "/diagnostics", label: "Diagnostics", icon: Video },
   { href: "/optimizer", label: "OED Optimizer", icon: Cpu },
   { href: "/fire-safety", label: "Fire Safety", icon: ShieldAlert },
   { href: "/antigravity", label: "Antigravity", icon: Orbit },
+  { href: "/milky-way", label: "Galaxy", icon: Orbit },
   { href: "/compare", label: "Compare", icon: GitCompare },
   { href: "/intelligence", label: "SI Chat", icon: Sparkles },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
