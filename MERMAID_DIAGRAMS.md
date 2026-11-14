@@ -1,8 +1,9 @@
 # NASA SPACE APP 2026 - System Architecture & Pipeline Flow Diagrams
 
-This document contains Mermaid diagrams capturing the project task workflows, architecture components, and scientific pipelines for **Flame in Freefall**.
+This document contains Mermaid diagrams capturing the project task workflows, architecture components, and scientific pipelines for **Flame in Freefall** (CORTEXX NASA Space Apps Challenge 2026).
 
-For the detailed pipeline specifications, refer to [PIPELINE_FLOW_DIAGRAMS.md](docs/PIPELINE_FLOW_DIAGRAMS.md).
+For the exhaustive pipeline specifications, refer to [PIPELINE_FLOW_DIAGRAMS.md](docs/PIPELINE_FLOW_DIAGRAMS.md).  
+For the CodeRabbit commit audit and architectural scorecard, refer to [CODERABBIT_REVIEW.md](docs/CODERABBIT_REVIEW.md).
 
 ---
 
@@ -57,7 +58,7 @@ graph TD
 
 ---
 
-## Diagram 2: Backend Architecture
+## Diagram 2: Backend Architecture & Services
 
 ```mermaid
 graph TB
@@ -75,31 +76,42 @@ graph TB
     antigravity[Antigravity Service]:::service
     seed[Seed Data Service]:::service
     entity[ML Entity Extractor]:::service
+    multi_service[Multimodal RAG & Wien Pyrometry]:::service
+    oed_service[Active Learning Bayesian OED]:::service
+    eafhi_service[EAFHI Fire Safety Service]:::service
     
     antigw_endpoint[API: /api/v1/antigravity/compare]:::api
     cmp_endpoint[API: /api/v1/compare]:::api
+    multi_endpoint[API: /api/v1/multimodal]:::api
+    oed_endpoint[API: /api/v1/optimizer]:::api
+    safe_endpoint[API: /api/v1/safety/eafhi]:::api
     
     inv_model[Investigation Model]:::model
     cmp_model[Comparison Model]:::model
     ant_model[Antigravity Model]:::model
+    multi_model[SchlierenFrame Model]:::model
     
     pg_db[(PostgreSQL + pgvector)]:::db
     
-    app --> config & gravity & session & compare & antigravity & seed & entity
+    app --> config & gravity & session & compare & antigravity & seed & entity & multi_service & oed_service & eafhi_service
     config --> pg_db
     session --> pg_db
     
     compare --> inv_model & pg_db
     antigravity --> inv_model & cmp_model & pg_db
     entity --> inv_model
+    multi_service --> multi_model & pg_db
     
     antigw_endpoint --> app
     cmp_endpoint --> app
+    multi_endpoint --> app
+    oed_endpoint --> app
+    safe_endpoint --> app
 ```
 
 ---
 
-## Diagram 3: Frontend Architecture
+## Diagram 3: Frontend Architecture (13 Next.js Routes)
 
 ```mermaid
 graph TD
@@ -108,12 +120,17 @@ graph TD
     classDef lib fill:#085d7e,color:#f1f1f1,stroke:#e94560;
     classDef type fill:#7f9cf5,color:#1a1a2e,stroke:#e94560;
     
-    home[Home Page /]:::page
-    investigations[Investigations /investigations]:::page
+    home[Home Dashboard /]:::page
+    investigations[Explorer /investigations]:::page
+    inv_detail[Investigation Detail /investigations/[id]]:::page
+    diagnostics[Diagnostics Schlieren /diagnostics]:::page
+    optimizer[OED Optimizer /optimizer]:::page
+    fire_safety[Fire Safety /fire-safety]:::page
     compare[Compare /compare]:::page
     antigravity[Antigravity /antigravity]:::page
     analytics[Analytics /analytics]:::page
     intelligence[Intelligence /intelligence]:::page
+    handbook[Offline Handbook /handbook]:::page
     
     navbar[Navbar components/Navbar.tsx]:::component
     scientific_chart[ScientificChart]:::component
@@ -127,13 +144,21 @@ graph TD
     
     home --> navbar & scientific_chart
     investigations --> navbar & provenance
+    inv_detail --> navbar
+    diagnostics --> navbar
+    optimizer --> navbar
+    fire_safety --> navbar
     compare --> navbar & gravity_badge & antigravity_warning
     antigravity --> navbar & gravity_badge & antigravity_warning
     analytics --> navbar
     intelligence --> navbar
+    handbook --> navbar
     
     navbar --> api_client
     scientific_chart --> api_client
+    diagnostics --> api_client
+    optimizer --> api_client
+    fire_safety --> api_client
     antigravity --> api_client
     gravity_badge --> api_client
     antigravity_warning --> api_client

@@ -154,6 +154,21 @@ class SootPyrometryProcessor:
     ) -> dict[str, Any]:
         """Calculates flame boundary geometry and 2D soot temperature map in Kelvin [800, 2400]."""
         img = np.array(frame_matrix, dtype=float)
+        if img.ndim < 2 or img.size == 0 or img.shape[0] == 0 or img.shape[1] == 0:
+            return {
+                "peak_temperature_k": None,
+                "mean_temperature_k": None,
+                "flame_area_px2": 0.0,
+                "perimeter_px": 0.0,
+                "equivalent_diameter_px": None,
+                "sphericity_index": None,
+                "soot_standoff_ratio": None,
+                "centroid_x_px": 0.0,
+                "centroid_y_px": 0.0,
+                "contour_points": None,
+                "temperature_map_sample": None,
+            }
+
         if img.ndim == 3:
             # Multi-channel image: extract Red and Green channels
             red = img[:, :, 0]

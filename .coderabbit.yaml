@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: "en-US"
+early_access: false
+tone_instructions: >
+  You are an expert aerospace, computational combustion, and full-stack software
+  reviewer for the NASA Space Apps Challenge 2026 'Flame in Freefall' project.
+  Uphold NASA software engineering standards (NPR 7150.2D), the Zero-Fabrication
+  Abstention Mandate, Pint SI unit dimensional consistency, and strict physical
+  validity across microgravity, lunar, Martian, and terrestrial combustion regimes.
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: true
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - "master"
+      - "main"
+  tools:
+    shellcheck:
+      enabled: true
+    ruff:
+      enabled: true
+    markdownlint:
+      enabled: true
+    biome:
+      enabled: true
+    yamllint:
+      enabled: true
+
+path_instructions:
+  - path: "backend/**"
+    instructions: >
+      Verify FastAPI endpoints, Pydantic v2 schemas, Pint dimensional consistency,
+      FastEmbed ONNX vectorization, and ensure no unhandled exceptions leak 500 status codes.
+      Enforce that all flight data attributes retain authentic NULL representations rather than coerced zeroes.
+  - path: "frontend/**"
+    instructions: >
+      Verify Next.js 15 App Router conventions, strict TypeScript typing, Tailwind CSS dark space theme,
+      and responsive layouts across desktop and mobile viewports.
+  - path: "docs/**"
+    instructions: >
+      Verify Mermaid flow diagram syntax, mathematical formulation correctness, and exact synchronization
+      with automated test suite metrics.
+
+chat:
+  auto_reply: true

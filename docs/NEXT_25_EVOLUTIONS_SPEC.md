@@ -968,7 +968,7 @@ To independently verify the facts, equations, and data models asserted in this r
    ```powershell
    pytest tests/
    ```
-   *Expected Outcome*: All 375 tests pass with 0 failures, verifying that baseline regression guardrails remain intact.
+   *Expected Outcome*: All 378 tests pass with 0 failures, verifying that baseline regression guardrails remain intact.
 
 2. **Inspect Upstream Datasets & Citation References**:
    - Inspect `data/raw/20150023456_fulltext.txt` (Table IX) to confirm authentic FLEX droplet diameters and extinction records.

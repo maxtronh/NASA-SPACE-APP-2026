@@ -24,13 +24,13 @@
 | Milestone | Scope | Assigned Agent | Status | Notes |
 |---|---|---|---|---|
 | **M0** | Survey & Planning | Orchestrator & Explorers | **DONE** | Workspace inspected, Python/Node/Docker verified, NTRS/PSI live verified. |
-| **M-E2E** | Independent E2E Test Suite | E2E Testing Orchestrator | **DONE** | 375 passed (286 backend + 89 E2E), 0 failed across full test suite. |
+| **M-E2E** | Independent E2E Test Suite | E2E Testing Orchestrator | **DONE** | 378 passed (289 backend + 89 E2E), 0 failed across full test suite. |
 | **M1** | Environment & Research Foundation | 01. Research Architect | **DONE** | Git init, `.gitignore`, `.venv` (Python 3.12 via uv), R1 audit docs delivered, task boards live. |
 | **M2** | NASA Data Ingestion & SI Normalization | 02. Data Engineer | **DONE** | NTRS, PSI S3 sync, Drop Tower catalog, Merkle hash trees, Pint SI normalizer verified. |
 | **M3** | Database & Backend Core Services | 03. Backend & SI Architect | **DONE** | FastAPI 16-router API, pgvector HNSW index, DuckDB Parquet engine, WebSocket streaming. |
 | **M4** | Scientific Intelligence & ML Engine | 05. AI/ML & Data Science | **DONE** | GraphRAG knowledge graph, two-stage cross-encoder, cool flames kinetics, zero-fabrication. |
 | **M5** | Frontend & Visualization Workspace | 04. Frontend & UI/UX | **DONE** | Next.js 15 (13 static routes), Three.js 3D flame viewer, Generative UI split-canvas artifacts, PWA handbook. |
-| **M6** | End-to-End User Journey Verification | All Specialists & E2E | **DONE** | Tiers 1-4 passing (375 passed, 0 failed in 34.8s). |
+| **M6** | End-to-End User Journey Verification | All Specialists & E2E | **DONE** | Tiers 1-4 passing (378 passed, 0 failed in 24.5s). |
 | **M7** | 25-Upgrade Advanced Capabilities | Team CORTEXX Swarm | **COMPLETED** | All 25/25 capabilities fully delivered, verified, and committed. |
 | **M8** | Next-Gen Evolutions & Research Backlog | Team CORTEXX Swarm | **PROPOSED** | 31 backlog tasks codified: E-01 to E-25 (Flows 1-8), un-ingested campaigns, P2 enhancements. |
 

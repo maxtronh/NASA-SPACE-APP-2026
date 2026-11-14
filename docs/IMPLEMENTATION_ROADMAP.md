@@ -165,7 +165,7 @@ Phase 6: Next-Gen Autonomous Scientific Discovery & Spacecraft Safety [PLANNED]
 - **Acceptance Gate**:
   - [ ] All 25 evolutions across 8 flows formally specified with mathematical formulations in `docs/NEXT_25_EVOLUTIONS_SPEC.md` and `docs/NEXT_GEN_UPGRADES_SPEC.md`.
   - [ ] All 31 M8 tasks codified in `PROJECT_TASKS.md` (`TSK-M8-01` through `TSK-M8-31`) with priority classifications, deliverables, and role allocations.
-  - [ ] Zero regressions across existing 375 automated unit and E2E tests (`uv run pytest`).
+  - [ ] Zero regressions across existing 378 automated unit and E2E tests (`uv run pytest`).
 
 ---
 

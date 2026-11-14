@@ -90,7 +90,18 @@ async def extract_keyframes(payload: KeyframeExtractionRequest):
 async def analyze_pyrometry(payload: PyrometryRequest):
     """Performs flame contour extraction and two-color Planck Wien soot pyrometry."""
     if payload.frame_matrix is not None:
-        matrix = np.array(payload.frame_matrix, dtype=float)
+        try:
+            matrix = np.array(payload.frame_matrix, dtype=float)
+            if matrix.ndim != 2 or matrix.size == 0 or matrix.shape[0] == 0 or matrix.shape[1] == 0:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="frame_matrix must be a non-empty 2D rectangular matrix of pixel intensities.",
+                )
+        except (ValueError, TypeError) as exc:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Invalid frame_matrix structure: {str(exc)}",
+            )
     else:
         # Synthesize an authentic microgravity spherical flame frame
         stream = KeyframeExtractor.generate_synthetic_stream(

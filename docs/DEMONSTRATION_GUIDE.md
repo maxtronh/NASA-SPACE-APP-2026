@@ -94,6 +94,6 @@ curl -s -X POST http://127.0.0.1:8000/api/v1/kinetics/pinn-surrogate/predict \
 
 ## 4. Verification Attestation
 
-- **Total Unit & E2E Tests:** `375 passed, 0 failed in 34.86s`
+- **Total Unit & E2E Tests:** `378 passed, 0 failed in 24.46s`
 - **Next.js 15 Static Compilation:** 13 routes compiled cleanly with 0 errors.
 - **Zero Fabrication Compliance:** 100% verified across 368 missing measurement fields preserved as `NULL`.

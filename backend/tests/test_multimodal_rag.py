@@ -198,3 +198,30 @@ def test_api_get_frame_not_found(client: TestClient):
     random_id = str(uuid.uuid4())
     res = client.get(f"/api/v1/multimodal/frames/{random_id}")
     assert res.status_code == 404
+
+
+def test_api_pyrometry_rejects_empty_matrix(client: TestClient):
+    res = client.post("/api/v1/multimodal/pyrometry", json={"frame_matrix": []})
+    assert res.status_code == 422
+    assert "frame_matrix must be a non-empty 2D rectangular matrix" in res.json()["detail"]
+
+
+def test_api_pyrometry_rejects_jagged_matrix(client: TestClient):
+    res = client.post("/api/v1/multimodal/pyrometry", json={"frame_matrix": [[0.5, 0.5], [0.5]]})
+    assert res.status_code == 422
+    assert "Invalid frame_matrix structure" in res.json()["detail"]
+
+
+def test_soot_pyrometry_processor_empty_or_degenerate_matrix():
+    # 0-length matrix
+    res_empty = SootPyrometryProcessor.analyze_frame(frame_matrix=[])
+    assert res_empty["peak_temperature_k"] is None
+    assert res_empty["flame_area_px2"] == 0.0
+    assert res_empty["centroid_x_px"] == 0.0
+    assert res_empty["centroid_y_px"] == 0.0
+
+    # 1D matrix
+    res_1d = SootPyrometryProcessor.analyze_frame(frame_matrix=[0.5, 0.6])
+    assert res_1d["peak_temperature_k"] is None
+    assert res_1d["flame_area_px2"] == 0.0
+
