@@ -130,7 +130,7 @@ Phase 6: Next-Gen Autonomous Scientific Discovery & Artemis Gateways [PLANNED]
   - Automated E2E test report (`tests/e2e/`).
   - Zero-fabrication audit attestation.
 - **Acceptance Gate**:
-  - [x] 100% of Independent E2E tests pass across Tiers 1–4 (338 passed, 0 failed).
+  - [x] 100% of Independent E2E tests pass across Tiers 1–4 (337 passed, 0 failed).
   - [x] No mocked or hardcoded data returns in the production pipeline.
   - [x] Citation links in SI chat resolve to valid upstream NASA NTRS publications.
 
