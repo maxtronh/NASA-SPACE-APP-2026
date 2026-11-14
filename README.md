@@ -7,7 +7,7 @@
 [![Next.js 15](https://img.shields.io/badge/Next.js-15.1.7-black.svg?logo=next.js&logoColor=white)](https://nextjs.org)
 [![PostgreSQL 16 + pgvector](https://img.shields.io/badge/PostgreSQL-16_+_pgvector-336791.svg?logo=postgresql&logoColor=white)](https://github.com/pgvector/pgvector)
 [![FastEmbed ONNX](https://img.shields.io/badge/AI%2FML-FastEmbed_ONNX-FF6F00.svg)](https://github.com/qdrant/fastembed)
-[![Test Suite Status](https://img.shields.io/badge/Tests-337%2F337_Passing-brightgreen.svg)]()
+[![Test Suite Status](https://img.shields.io/badge/Tests-375%2F375_Passing-brightgreen.svg)]()
 [![25-Upgrade Integration](https://img.shields.io/badge/25--Upgrades-25%2F25_Complete-blueviolet.svg)]()
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](cortexx_flame_in_freefall_demo.ipynb)
 
@@ -224,32 +224,33 @@ Run the complete Scientific Intelligence engine, authentic NASA data ingestion, 
 
 ## 6. Verification & Quality Assurance
 
-Flame in Freefall includes a rigorous, independent automated test suite containing **337 tests (337 passed, 0 failed)** across unit, integration, boundary, and end-to-end user journeys:
+Flame in Freefall includes a rigorous, independent automated test suite containing **375 tests (375 passed, 0 failed)** across unit, integration, boundary, and end-to-end user journeys:
 
 ```bash
-# 1. Run full backend unit, parser, kinetics, and ML pipeline tests (243+ tests)
+# 1. Run full backend unit, parser, kinetics, and ML pipeline tests (286 passed tests)
 .venv\Scripts\python.exe -m pytest backend/tests -v
 
-# 2. Run independent 4-tier opaque-box E2E suites (91 tests)
+# 2. Run independent 4-tier opaque-box E2E suites (89 passed tests)
 .venv\Scripts\python.exe -m pytest tests/e2e -v
 
-# 3. Verify Next.js production build (10 routes compiled)
+# 3. Verify Next.js production build (13 routes compiled)
 cd frontend && npm run build
 ```
 
 ### Verified Test Results Summary:
-- **`backend/tests`**: **243+ passed, 0 failed** in ~15.2s
+- **`backend/tests`**: **286 passed, 0 failed** in ~24s
   - Fetchers, deterministic SHA-256 hashing, tamper resilience.
   - Pint physical SI conversions, non-zero null rule across 11 missing token types.
   - FastEmbed dense vector generation, cosine similarity, entity extraction, hybrid RRF retrieval.
   - Citation engine validation and out-of-domain abstention.
   - 25-Upgrade suites: HDF5 parser, PINN combustion kinetics surrogate, Cool Flames LTC model, GraphRAG, WebSockets, NASA Launchpad SSO, Prometheus `/metrics`, and Multi-Agent Consensus Evaluator.
-- **`tests/e2e`**: **91 passed, 0 failed** in ~8.2s
+  - Next-Gen Evolution suites: Active Learning Bayesian OED (GP-UCB), Multimodal Schlieren & Wien Pyrometry RAG, and Artemis Exploration Atmosphere Fire Hazard Index (EAFHI).
+- **`tests/e2e`**: **89 passed, 0 failed** in ~10s
   - **Tier 1 (Feature Coverage)**: API contracts, health endpoints, schema conformance, Docker Compose topology spec, Antigravity comparison, and Merkle provenance.
   - **Tier 2 (Boundary & Corner Cases)**: Null-preservation verification, SQL injection resilience, XSS resilience, physical bounds testing.
   - **Tier 3 (Cross-Feature Integrations)**: Faceted search pipelined to multi-condition comparison, citation verification, and flame kinetics.
   - **Tier 4 (End-to-End User Journeys)**: Full user journeys from NTRS flight record ingestion to interactive visual analytics and Antigravity multi-gravity workflows.
-- **Next.js Production Build**: **10 routes compiled cleanly** with zero TypeScript or styling warnings (`/`, `/_not-found`, `/analytics`, `/antigravity`, `/compare`, `/handbook`, `/intelligence`, `/investigations`, `/investigations/[id]`).
+- **Next.js Production Build**: **13 routes compiled cleanly** with zero TypeScript or styling warnings (`/`, `/_not-found`, `/analytics`, `/antigravity`, `/compare`, `/diagnostics`, `/fire-safety`, `/handbook`, `/intelligence`, `/investigations`, `/investigations/[id]`, `/optimizer`).
 
 ---
 

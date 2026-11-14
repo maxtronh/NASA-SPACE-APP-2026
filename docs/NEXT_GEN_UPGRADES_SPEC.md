@@ -219,5 +219,5 @@ flowchart TD
 ## 3. Verification & Acceptance Criteria
 - [x] Zero-fabrication: All physical equations preserve genuine parameter bounds.
 - [x] Strict non-zero NULL preservation on missing sensor channels.
-- [x] All 337 existing backend and E2E tests maintain 100% pass rate.
+- [x] All 375 existing backend and E2E tests maintain 100% pass rate.
 - [x] Next.js 15 production build clean with 0 TypeScript/ESLint warnings.
