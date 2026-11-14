@@ -28,6 +28,8 @@
 
 ## 2. Layered Service Architecture
 
+> **Architecture & Pipeline Flow Diagrams**: Detailed Mermaid engineering diagrams covering SI retrieval, NASA PSI ingestion, gravity non-equivalence, and async task queues are documented in [PIPELINE_FLOW_DIAGRAMS.md](PIPELINE_FLOW_DIAGRAMS.md) and [MERMAID_DIAGRAMS.md](../MERMAID_DIAGRAMS.md).
+
 The system is organized into four decoupled architectural tiers:
 
 ```

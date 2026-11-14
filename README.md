@@ -32,6 +32,8 @@ Understanding these dynamics is vital for astronaut safety aboard the Internatio
 
 ## 2. System Architecture & Component Flow
 
+> Detailed interactive Mermaid flow diagrams of the end-to-end data pipelines and architectural subsystems are available in [docs/PIPELINE_FLOW_DIAGRAMS.md](docs/PIPELINE_FLOW_DIAGRAMS.md) and [MERMAID_DIAGRAMS.md](MERMAID_DIAGRAMS.md).
+
 ```
                                   USER INTERFACE
           ┌─────────────────────────────────────────────────────────────┐
