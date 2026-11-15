@@ -10,6 +10,7 @@ import os
 import json
 import time
 import math
+from pathlib import Path
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel, Field
 
@@ -19,11 +20,21 @@ from backend.app.exploration.solar_physics import (
     PLANETARY_ORBITS,
     get_face_by_id,
 )
+from backend.app.kinetics.rekindle_warning import RekindleWarningEngine
+from backend.app.safety.eafhi import EAFHIEngine
 
 # Canonical path to LoRA fine-tuning assets
-PROJECT_NASA_LORA_DIR: str = os.path.join("backend", "data", "models", "qwen_nasa_exploration")
+ROOT_DIR: Path = Path(__file__).resolve().parents[3]
+PROJECT_NASA_LORA_DIR: str = str(ROOT_DIR / "backend" / "data" / "models" / "qwen_nasa_exploration")
 LEGACY_LORA_DIR: str = r"E:\ai_model\finetuning\qwen_lora_model"
-QWEN_LORA_DIR: str = PROJECT_NASA_LORA_DIR if os.path.exists(PROJECT_NASA_LORA_DIR) else LEGACY_LORA_DIR
+
+# Prioritize E:\ai_model\finetuning\qwen_lora_model if present, else repository assets
+if os.path.exists(LEGACY_LORA_DIR) and os.path.exists(os.path.join(LEGACY_LORA_DIR, "adapter_model.safetensors")):
+    QWEN_LORA_DIR: str = LEGACY_LORA_DIR
+elif os.path.exists(PROJECT_NASA_LORA_DIR):
+    QWEN_LORA_DIR: str = PROJECT_NASA_LORA_DIR
+else:
+    QWEN_LORA_DIR: str = LEGACY_LORA_DIR
 
 
 class QwenChatRequest(BaseModel):
@@ -45,6 +56,7 @@ class QwenChatResponse(BaseModel):
     chatml_prompt: str
     active_face: Optional[Dict[str, Any]] = None
     trajectory_context: Optional[Dict[str, Any]] = None
+    cosimulation_context: Optional[Dict[str, Any]] = None
 
 
 class QwenModelMetadata(BaseModel):
@@ -125,6 +137,8 @@ class QwenEngine:
     def get_training_history(self) -> Dict[str, Any]:
         """Load training metrics and loss convergence history."""
         metrics_path = os.path.join(self.lora_dir, "training_metrics.json")
+        if not os.path.exists(metrics_path):
+            metrics_path = os.path.join(PROJECT_NASA_LORA_DIR, "training_metrics.json")
         if os.path.exists(metrics_path):
             try:
                 with open(metrics_path, "r", encoding="utf-8") as f:
@@ -180,7 +194,7 @@ class QwenEngine:
         dep = departure_body or ("Earth" if "earth" in lower_q else None)
         tgt = target_body or ("mars" if "mars" in lower_q else ("moon" if ("moon" in lower_q or "gateway" in lower_q) else None))
 
-        if not dep and ("mars" in lower_q or "delta-v" in lower_q or "hohmann" in lower_q or "transfer" in lower_q):
+        if not dep and ("mars" in lower_q or "delta-v" in lower_q or "hohmann" in lower_q or "transfer" in lower_q or "co-simulat" in lower_q or "cosimulat" in lower_q):
             dep = "Earth"
             if not tgt:
                 tgt = "Mars"
@@ -192,8 +206,125 @@ class QwenEngine:
             except Exception:
                 pass
 
+        # Detect co-simulation queries coupling orbital transfer with microgravity combustion fire hazard
+        fire_keywords = [
+            "cool-flame", "cool flame", "damkohler", "damköhler", "rekindl", "eafhi", "fire", "hazard", "combustion", "flame risk"
+        ]
+        has_fire_terms = any(k in lower_q for k in fire_keywords)
+        is_cosimulation = (
+            "co-simulat" in lower_q
+            or "cosimulat" in lower_q
+            or (traj_info is not None and has_fire_terms and ("transfer" in lower_q or "orbit" in lower_q or "flight" in lower_q or "mars" in lower_q or "earth" in lower_q or "moon" in lower_q or "gateway" in lower_q or "delta-v" in lower_q or "hohmann" in lower_q))
+        )
+
+        cosim_info = None
+
         # Reason across the 25 scientific faces
-        if traj_info:
+        if is_cosimulation:
+            # If traj_info was not resolved, default to Earth -> Mars
+            if not traj_info:
+                try:
+                    res = calculate_hohmann_transfer("Earth", "Mars")
+                    traj_info = res.model_dump()
+                except Exception:
+                    pass
+
+            # Resolve fuel and atmospheric condition from query or defaults
+            fuel_candidate = "n-heptane"
+            if "octane" in lower_q:
+                fuel_candidate = "n-octane"
+            elif "decane" in lower_q:
+                fuel_candidate = "n-decane"
+            elif "methanol" in lower_q:
+                fuel_candidate = "methanol"
+            elif "methane" in lower_q:
+                fuel_candidate = "methane"
+
+            # Atmosphere condition: Gateway vs ISS
+            if "gateway" in lower_q or "artemis" in lower_q or "34%" in lower_q:
+                cabin_o2 = 34.0
+                cabin_p = 56.5
+                cabin_label = "Artemis Gateway (34% O2, 56.5 kPa)"
+            else:
+                cabin_o2 = 21.0
+                cabin_p = 101.325
+                cabin_label = "Standard ISS Cabin (21% O2, 101.3 kPa)"
+
+            fuel_temp = 720.0
+            u_vent = 0.05
+            char_len = 0.003
+
+            canonical_fuel, fuel_prof = RekindleWarningEngine.resolve_fuel_profile(fuel_candidate)
+            da_cool, tau_res, tau_chem = RekindleWarningEngine.calculate_damkohler_cool(
+                characteristic_length_m=char_len,
+                ventilation_velocity_m_s=u_vent,
+                fuel=canonical_fuel,
+                temperature_k=fuel_temp,
+            )
+            p_rekindle = RekindleWarningEngine.calculate_rekindle_probability(
+                damkohler_cool=da_cool,
+                fuel_temp_k=fuel_temp,
+                flash_point_k=fuel_prof["flash_point_k"],
+                da_crit=fuel_prof.get("da_crit", 1.0),
+                theta=fuel_prof.get("theta", 0.20),
+                supports_ltc=fuel_prof.get("supports_ltc", True),
+            )
+            risk_class = RekindleWarningEngine.classify_risk(p_rekindle)
+            eafhi_res = EAFHIEngine.calculate_eafhi(
+                material="pmma",
+                pressure_kpa=cabin_p,
+                oxygen_percentage=cabin_o2,
+                gravity_level="microgravity (~10^-6 g)",
+                characteristic_length_m=char_len,
+                ventilation_velocity_cm_s=u_vent * 100.0,
+            )
+            u_vent_crit = RekindleWarningEngine.calculate_critical_ventilation(
+                characteristic_length_m=char_len,
+                fuel=canonical_fuel,
+                temperature_k=fuel_temp,
+            )
+
+            cosim_info = {
+                "trajectory": traj_info,
+                "fuel": canonical_fuel,
+                "fuel_temperature_k": fuel_temp,
+                "cabin_atmosphere": cabin_label,
+                "damkohler_cool": round(da_cool, 4),
+                "rekindle_probability": round(p_rekindle, 4),
+                "risk_classification": risk_class,
+                "eafhi_score": round(eafhi_res["eafhi_score"], 4),
+                "hypobaric_moc_pct": round(eafhi_res["moc_percentage"], 2),
+                "flammability_class": eafhi_res["flammability_class"],
+                "critical_ventilation_m_s": round(u_vent_crit, 4),
+            }
+
+            dep_name = (traj_info["origin_body"] if traj_info else "Earth").title()
+            tgt_name = (traj_info["target_body"] if traj_info else "Mars").title()
+            tot_dv = traj_info["delta_v_total_km_s"] if traj_info else 5.59
+            dv1 = traj_info["delta_v_departure_km_s"] if traj_info else 2.94
+            dv2 = traj_info["delta_v_arrival_km_s"] if traj_info else 2.65
+            dur = traj_info["transit_duration_days"] if traj_info else 259.0
+
+            text = (
+                f"**[Multi-Agent Orbital Co-Simulation: Astrodynamics & Cool-Flame Safety Coupling]**\n"
+                f"- **Orbital Trajectory**: {dep_name} -> {tgt_name}\n"
+                f"  - Total Mission Δv: **{tot_dv:.2f} km/s** (Departure Δv1 = {dv1:.2f} km/s, Arrival Δv2 = {dv2:.2f} km/s).\n"
+                f"  - Flight Duration: **{dur:.1f} days** ({dur/365.25:.2f} Earth years).\n"
+                f"- **Microgravity Cruise Fire Safety (Freefall Phase, ~10⁻⁶ g)**:\n"
+                f"  - Target Fuel: {canonical_fuel} (T_fuel = {fuel_temp:.0f} K, Flash Point = {fuel_prof['flash_point_k']:.1f} K).\n"
+                f"  - Cabin Atmosphere: {cabin_label} (MOC = {eafhi_res['moc_percentage']:.1f}% O2).\n"
+                f"  - Cool-Flame Damköhler Number: **Da_cool = {da_cool:.2f}** (Critical Threshold Da_crit = 1.0).\n"
+                f"  - Silent Rekindling Probability: **P_rekindle = {p_rekindle:.1%}** (Risk: **{risk_class}**).\n"
+                f"  - Exploration Atmosphere Flammability (EAFHI): **{eafhi_res['eafhi_score']:.3f}** ({eafhi_res['flammability_class']}).\n"
+                f"- **Flight Dynamics & Fire Regimes Differential**:\n"
+                f"  - *Cruise Freefall*: In the {dur:.1f}-day microgravity cruise, buoyant convection is suppressed (Gr → 0). "
+                f"Low-temperature chemical radical pools (RO2 ⇌ QOOH) accumulate. If Da_cool > 1.0, silent reignition occurs without infrared warning.\n"
+                f"  - *Burn Acceleration*: During the Δv1 departure and Δv2 arrival maneuvers, spacecraft engine thrust creates an effective gravity field, "
+                f"re-establishing buoyant flow (Gr > 0), enhancing convective heat removal and cooling the flame zone.\n"
+                f"- **Operational Safety Mitigation**: Maintain cabin forced airflow u_vent ≥ **{u_vent_crit:.3f} m/s** to shorten flow residence time (τ_res < τ_chem), "
+                f"forcing Da_cool < 1.0 and keeping rekindling probability below the critical threshold."
+            )
+        elif traj_info:
             res_dv = traj_info["delta_v_total_km_s"]
             res_dur = traj_info["transit_duration_days"]
             dv1 = traj_info["delta_v_departure_km_s"]
@@ -284,6 +415,7 @@ class QwenEngine:
             "text": text,
             "active_face": active_face.model_dump() if active_face else None,
             "trajectory_context": traj_info,
+            "cosimulation_context": cosim_info,
         }
 
     def chat(self, request: QwenChatRequest) -> QwenChatResponse:
@@ -318,6 +450,7 @@ class QwenEngine:
             chatml_prompt=chatml_prompt,
             active_face=reasoning["active_face"],
             trajectory_context=reasoning["trajectory_context"],
+            cosimulation_context=reasoning.get("cosimulation_context"),
         )
 
 

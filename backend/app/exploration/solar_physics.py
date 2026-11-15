@@ -77,6 +77,26 @@ class PlanetaryState(BaseModel):
     kepler_law_ratio: float  # T^2 / a^3 (must equal 1.0 within bounds)
 
 
+class CombustionHazardResult(BaseModel):
+    fuel: str
+    fuel_temperature_k: float
+    cabin_oxygen_pct: float
+    cabin_pressure_kpa: float
+    ventilation_velocity_m_s: float
+    characteristic_length_m: float
+    damkohler_cool: float
+    da_cool: float
+    rekindle_probability: float
+    risk_classification: str
+    eafhi_score: float
+    hypobaric_moc_pct: float
+    hypobaric_moc: float
+    flammability_class: str
+    tau_res_s: float
+    tau_chem_s: Optional[float] = None
+    flight_phase_notes: Dict[str, str]
+
+
 class HohmannTransferResult(BaseModel):
     origin_body: str
     target_body: str
@@ -90,6 +110,7 @@ class HohmannTransferResult(BaseModel):
     phase_angle_departure_deg: float
     synodic_period_days: Optional[float] = None
     scientific_summary: str
+    combustion_hazard: Optional[CombustionHazardResult] = None
 
 
 class FaceTelemetry(BaseModel):

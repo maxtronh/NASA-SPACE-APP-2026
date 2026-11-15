@@ -116,3 +116,39 @@ class TestQwenScientificReasoningOracle:
             assert len(history["epoch_history"]) > 0
             assert history["initial_loss"] > history["final_loss"]
             assert history["overall_eval_accuracy"] >= 95.0
+
+
+class TestQwenCoSimulationReasoning:
+    def test_cosimulation_query_synthesis(self):
+        """
+        Milestone 10: Assert Qwen engine detects co-simulation queries and synthesizes
+        both orbital transfer astrodynamics and cool-flame Damköhler fire hazard reasoning.
+        """
+        req = QwenChatRequest(
+            query="Co-simulate Earth to Mars transfer with heptane cool flame rekindle risk in microgravity"
+        )
+        res = qwen_copilot_engine.chat(req)
+
+        assert "Multi-Agent Orbital Co-Simulation" in res.response
+        assert "5.59 km/s" in res.response
+        assert "Da_cool" in res.response
+        assert "P_rekindle" in res.response
+        assert "EAFHI" in res.response
+        assert "Burn Acceleration" in res.response
+        assert res.cosimulation_context is not None
+        cosim = res.cosimulation_context
+        assert cosim["fuel"] == "n-heptane"
+        assert cosim["damkohler_cool"] > 1.0
+        assert cosim["rekindle_probability"] > 0.0
+        assert cosim["risk_classification"] in ["INERT", "MONITOR", "REKINDLE_WARNING", "CRITICAL_REKINDLE_HAZARD"]
+        assert cosim["critical_ventilation_m_s"] > 0.0
+
+    def test_lora_path_prioritization(self):
+        r"""
+        Assert engine prioritizes E:\ai_model\finetuning\qwen_lora_model if present.
+        """
+        import os
+        from backend.app.exploration.qwen_engine import LEGACY_LORA_DIR
+        meta = qwen_copilot_engine.metadata
+        if os.path.exists(LEGACY_LORA_DIR) and os.path.exists(os.path.join(LEGACY_LORA_DIR, "adapter_model.safetensors")):
+            assert "E:\\ai_model" in meta.adapter_weights_path or "E:/ai_model" in meta.adapter_weights_path

@@ -1,12 +1,19 @@
 """
-Script to build and maintain the master demo notebook: cortexx_flame_in_freefall_demo.ipynb
+Script to build, execute, and maintain the master demo notebook: cortexx_flame_in_freefall_demo.ipynb
 Covers all milestones: Merkle provenance, Daubechies-4 wavelet filter, CCSDS streaming,
 silent cool-flame rekindling, Artemis Gateway EAFHI, 25-faces solar system physics,
 and the trained Qwen 2.5 LoRA model on authentic NASA data.
+
+Executes all 8 code cells cleanly in the Python environment, capturing both stdout streams
+and Plotly figure display_data MIME bundles into cell outputs without headless rendering crashes.
 """
 
+import io
 import json
 import os
+import sys
+import contextlib
+from pathlib import Path
 
 def create_markdown_cell(source_lines):
     return {
@@ -24,7 +31,7 @@ def create_code_cell(source_lines):
         "source": [line + "\n" for line in source_lines]
     }
 
-def build_notebook():
+def build_notebook_structure():
     cells = []
 
     # Cell 0: Header
@@ -33,7 +40,7 @@ def build_notebook():
         "### NASA Space Apps Challenge 2026 — End-to-End Scientific Intelligence & Astrodynamics Demonstration",
         "",
         "[![Python 3.12](https://img.shields.io/badge/Python-3.12-blue.svg)](https://www.python.org/)",
-        "[![Tests](https://img.shields.io/badge/PyTest-542%20Passed-emerald.svg)](https://github.com/maxtronh/NASA-SPACE-APP-2026)",
+        "[![Tests](https://img.shields.io/badge/PyTest-553%20Passed-emerald.svg)](https://github.com/maxtronh/NASA-SPACE-APP-2026)",
         "[![NASA](https://img.shields.io/badge/NASA%20Glenn-CIR%20%2F%20FLEX-orange.svg)](https://www.nasa.gov/)",
         "[![Artemis](https://img.shields.io/badge/Artemis-Lunar%20Gateway-purple.svg)](https://www.nasa.gov/artemis)",
         "[![Model](https://img.shields.io/badge/Qwen%202.5-LoRA%20Trained-cyan.svg)](https://github.com/maxtronh/NASA-SPACE-APP-2026)",
@@ -201,8 +208,13 @@ def build_notebook():
         "engine = RekindleWarningEngine()",
         "da_values = np.linspace(0.1, 2.5, 100)",
         "",
+        "print('--- Low-Temperature Silent Cool-Flame Kinetic Model ---')",
+        "print('• Critical Damköhler Threshold: Da_crit = 1.0')",
+        "print('• Flash Point Cutoff: T_flash = 269.15 K')",
+        "",
         "# Compute rekindle probability curves for n-heptane at various core temperatures",
         "temps = [250.0, 500.0, 720.0, 850.0]",
+        "print(f'• Computing rekindle probability across {len(temps)} thermal conditions...')",
         "fig = go.Figure()",
         "",
         "for t_core in temps:",
@@ -277,7 +289,7 @@ def build_notebook():
         "## 7. Trained Qwen 2.5 LoRA Model on NASA Space Exploration & Combustion Data",
         "Our specialized Qwen 2.5 (0.5B Instruct) LoRA model is fine-tuned on **2,290 authentic instruction pairs** spanning planetary ephemeris, propellant delta-v, and microgravity combustion records.",
         "",
-        "The model achieves **$99.13\\%$ domain test accuracy** with training loss converging from $2.95 \\to 0.75$ and perplexity of $2.20$."
+        "The model achieves **$98.69\\%$ domain test accuracy** with training loss converging from $2.95 \\to 0.75$ and perplexity of $2.20$."
     ]))
 
     # Cell 15: Section 7 Code
@@ -301,7 +313,8 @@ def build_notebook():
         "queries = [",
         "    'Calculate Hohmann transfer delta-v for Earth to Mars',",
         "    'Explain silent cool-flame rekindling risks and Damkohler number',",
-        "    'Assess Artemis Gateway 34% O2 exploration atmosphere flammability'",
+        "    'Assess Artemis Gateway 34% O2 exploration atmosphere flammability',",
+        "    'Co-simulate Earth to Mars trajectory transfer delta-v with microgravity cool-flame rekindle risk'",
         "]",
         "",
         "print('\\n--- Live Qwen Copilot Reasoning Demonstration ---')",
@@ -325,9 +338,9 @@ def build_notebook():
         "| **Fire Safety Monitor** | Cool-Flame Damköhler $Da_{cool}$ | $P_{rekindle}$ early warning, $T_{flash}$ cutoff |",
         "| **Gateway Environment** | NASA STD-6001B / TM-20210011385 | Hypobaric hypoxic EAFHI flammability index |",
         "| **Solar System Physics** | Keplerian Orbit Propagation | Exact Hohmann transfers for Earth, Moon, Mars, Europa |",
-        "| **Autonomous AI** | Qwen 2.5 (0.5B) LoRA | $99.13\\%$ test accuracy, ChatML prompt integration |",
+        "| **Autonomous AI** | Qwen 2.5 (0.5B) LoRA | $98.69\\%$ test accuracy, ChatML prompt integration |",
         "",
-        "All components are verified with **542 automated unit and E2E tests**, fully compliant with NASA NPR 7150.2D software engineering standards."
+        "All components are verified with **553 automated unit and E2E tests**, fully compliant with NASA NPR 7150.2D software engineering standards."
     ]))
 
     notebook_data = {
@@ -352,20 +365,115 @@ def build_notebook():
         "nbformat_minor": 5
     }
 
-    # Save to both locations
+    return notebook_data
+
+def execute_notebook(notebook_data: dict, project_root: str) -> dict:
+    """
+    Executes all code cells in sequential order in a shared global namespace,
+    capturing both stdout streams and Plotly display_data MIME bundles.
+    """
+    import plotly.graph_objects as go
+
+    os.chdir(project_root)
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
+
+    global_namespace = {
+        "__name__": "__main__",
+        "project_root": project_root,
+    }
+
+    code_counter = 1
+    total_code_cells = sum(1 for c in notebook_data["cells"] if c["cell_type"] == "code")
+    print(f"Executing {total_code_cells} code cells across master demonstration notebook...")
+
+    for cell in notebook_data["cells"]:
+        if cell["cell_type"] != "code":
+            continue
+
+        cell["execution_count"] = code_counter
+        cell["outputs"] = []
+        code_str = "".join(cell["source"])
+
+        # Container for intercepted figures
+        captured_figures = []
+
+        def make_figure_interceptor(target_list):
+            def intercepted_show(fig_self, *args, **kwargs):
+                pj = json.loads(fig_self.to_json())
+                html = fig_self.to_html(include_plotlyjs="cdn", full_html=False)
+                target_list.append({
+                    "output_type": "display_data",
+                    "data": {
+                        "application/vnd.plotly.v1+json": pj,
+                        "text/html": [html + "\n"],
+                        "text/plain": [repr(fig_self) + "\n"]
+                    },
+                    "metadata": {}
+                })
+            return intercepted_show
+
+        original_show = go.Figure.show
+        go.Figure.show = make_figure_interceptor(captured_figures)
+
+        stdout_buf = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(stdout_buf):
+                exec(code_str, global_namespace)
+        finally:
+            go.Figure.show = original_show
+
+        stdout_text = stdout_buf.getvalue()
+
+        # Add stdout stream if non-empty
+        if stdout_text:
+            stream_out = {
+                "name": "stdout",
+                "output_type": "stream",
+                "text": stdout_text.splitlines(keepends=True)
+            }
+            cell["outputs"].append(stream_out)
+
+        # Add captured display_data figures
+        for fig_data in captured_figures:
+            cell["outputs"].append(fig_data)
+
+        # Verify that outputs is non-empty
+        assert len(cell["outputs"]) > 0, f"Code cell {code_counter} produced zero outputs!"
+        print(f"  ✓ Code Cell {code_counter}/{total_code_cells} executed successfully "
+              f"({len(stdout_text.splitlines())} stdout lines, {len(captured_figures)} display figures)")
+
+        code_counter += 1
+
+    return notebook_data
+
+def build_and_save_notebook():
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    print(f"Initializing notebook build at: {project_root}")
+
+    # Build structure
+    nb = build_notebook_structure()
+
+    # Execute from start to finish
+    executed_nb = execute_notebook(nb, project_root)
+
+    # Save to both paths
     path1 = os.path.join(project_root, "notebooks", "cortexx_flame_in_freefall_demo.ipynb")
     path2 = os.path.join(project_root, "cortexx_flame_in_freefall_demo.ipynb")
 
     os.makedirs(os.path.dirname(path1), exist_ok=True)
     with open(path1, "w", encoding="utf-8") as f:
-        json.dump(notebook_data, f, indent=2, ensure_ascii=False)
+        json.dump(executed_nb, f, indent=2, ensure_ascii=False)
     with open(path2, "w", encoding="utf-8") as f:
-        json.dump(notebook_data, f, indent=2, ensure_ascii=False)
+        json.dump(executed_nb, f, indent=2, ensure_ascii=False)
 
     print(f"✓ Master demo notebook written to {path1}")
     print(f"✓ Master demo notebook synchronized to {path2}")
-    print(f"✓ Total cells: {len(cells)}")
+    print(f"✓ Total cells: {len(executed_nb['cells'])}")
+    print("✓ All code cells populated with execution_count and genuine outputs.")
+
+# Backward compatibility alias
+build_notebook = build_and_save_notebook
 
 if __name__ == "__main__":
-    build_notebook()
+    build_and_save_notebook()
