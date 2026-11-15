@@ -30,7 +30,7 @@ const NAV_LINKS = [
   { href: "/optimizer", label: "OED Optimizer", icon: Cpu },
   { href: "/fire-safety", label: "Fire Safety", icon: ShieldAlert },
   { href: "/antigravity", label: "Antigravity", icon: Orbit },
-  { href: "/milky-way", label: "Galaxy", icon: Orbit },
+  { href: "/mission-lab", label: "Mission Lab", icon: Compass },
   { href: "/compare", label: "Compare", icon: GitCompare },
   { href: "/intelligence", label: "SI Chat", icon: Sparkles },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },

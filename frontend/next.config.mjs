@@ -1,6 +1,20 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  async redirects() {
+    return [
+      {
+        source: "/milky-way",
+        destination: "/mission-lab",
+        permanent: true,
+      },
+      {
+        source: "/nasa-eyes",
+        destination: "/mission-lab",
+        permanent: true,
+      },
+    ];
+  },
   async rewrites() {
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
     return [

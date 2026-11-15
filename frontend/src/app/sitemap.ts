@@ -13,8 +13,7 @@ const ROUTES = [
   "/diagnostics",
   "/optimizer",
   "/antigravity",
-  "/milky-way",
-  "/nasa-eyes",
+  "/mission-lab",
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {

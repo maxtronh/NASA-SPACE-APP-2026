@@ -18,15 +18,13 @@
     "react-dom": "^19.0.0",
     "react-plotly.js": "^2.6.0",
     "recharts": "^2.15.1",
-    "tailwind-merge": "^2.6.0",
-    "three": "^0.185.1"
+    "tailwind-merge": "^2.6.0"
   },
   "devDependencies": {
     "@types/node": "^20.17.19",
     "@types/plotly.js-dist-min": "^2.3.4",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
-    "@types/three": "^0.185.0",
     "autoprefixer": "^10.4.20",
     "eslint": "^8.57.1",
     "eslint-config-next": "^15.1.7",
