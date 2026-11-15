@@ -88,8 +88,10 @@ function CompareWorkspaceContent() {
     }
   };
 
-  const isGravityMismatch = comparison?.equivalence_assessment.reasons.some((r) =>
-    r.toLowerCase().includes("gravity")
+  const isGravityMismatch = Boolean(
+    comparison?.equivalence_assessment?.reasons?.some((r) =>
+      r.toLowerCase().includes("gravity")
+    )
   );
 
   return (
@@ -158,7 +160,7 @@ function CompareWorkspaceContent() {
       {comparison && (
         <div
           className={`border rounded-xl p-5 shadow-lg relative overflow-hidden transition-all ${
-            comparison.equivalence_assessment.equivalent
+            comparison.equivalence_assessment?.equivalent
               ? "bg-emerald-950/30 border-emerald-500/60 text-emerald-200"
               : isGravityMismatch
               ? "bg-amber-950/40 border-amber-500/80 text-amber-200"
@@ -167,7 +169,7 @@ function CompareWorkspaceContent() {
         >
           <div className="flex items-start space-x-3.5">
             <div className="p-2 rounded-lg bg-space-950/80 flex-shrink-0 mt-0.5">
-              {comparison.equivalence_assessment.equivalent ? (
+              {comparison.equivalence_assessment?.equivalent ? (
                 <CheckCircle2 className="w-6 h-6 text-emerald-400" />
               ) : isGravityMismatch ? (
                 <AlertTriangle className="w-6 h-6 text-amber-400 animate-pulse" />
@@ -179,23 +181,23 @@ function CompareWorkspaceContent() {
             <div className="space-y-2 flex-1">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="font-bold text-white text-base">
-                  {comparison.equivalence_assessment.equivalent
+                  {comparison.equivalence_assessment?.equivalent
                     ? "Equivalence Assessment: EXPERIMENTAL CONDITIONS COMPARABLE"
                     : "Equivalence Assessment: NON-EQUIVALENT SCIENTIFIC CONDITIONS"}
                 </h3>
                 <span
                   className={`px-2.5 py-0.5 rounded text-xs font-mono font-bold uppercase tracking-wider ${
-                    comparison.equivalence_assessment.equivalent
+                    comparison.equivalence_assessment?.equivalent
                       ? "bg-emerald-900 border border-emerald-400 text-emerald-200"
                       : "bg-amber-900/90 border border-amber-400 text-amber-200"
                   }`}
                 >
-                  {comparison.equivalence_assessment.equivalent ? "EQUIVALENT" : "DIVERGENT"}
+                  {comparison.equivalence_assessment?.equivalent ? "EQUIVALENT" : "DIVERGENT"}
                 </span>
               </div>
 
               <div className="text-xs sm:text-sm space-y-1">
-                {comparison.equivalence_assessment.reasons.map((reason, idx) => (
+                {(comparison.equivalence_assessment?.reasons || []).map((reason, idx) => (
                   <p key={idx} className="flex items-center space-x-2">
                     <span className="font-mono text-nasa-cyan">•</span>
                     <span>{reason}</span>
@@ -203,7 +205,7 @@ function CompareWorkspaceContent() {
                 ))}
               </div>
 
-              {comparison.equivalence_assessment.buoyancy_warning ? (
+              {comparison.equivalence_assessment?.buoyancy_warning ? (
                 <div className="mt-3">
                   <AntigravityWarning warning={comparison.equivalence_assessment.buoyancy_warning} />
                 </div>
@@ -230,7 +232,7 @@ function CompareWorkspaceContent() {
               <span>Side-by-Side Parameter Matrix</span>
             </h3>
             <span className="text-xs font-mono text-slate-400">
-              Comparing {Object.keys(comparison.comparison_grid).length} Investigations
+              Comparing {Object.keys(comparison.comparison_grid || {}).length} Investigations
             </span>
           </div>
 
@@ -239,7 +241,7 @@ function CompareWorkspaceContent() {
               <thead className="bg-space-950 text-slate-400 uppercase text-[11px] border-b border-space-800">
                 <tr>
                   <th className="py-3 px-4 w-44 font-sans font-semibold">Parameter</th>
-                  {Object.entries(comparison.comparison_grid).map(([slug, item]) => (
+                  {Object.entries(comparison.comparison_grid || {}).map(([slug, item]) => (
                     <th key={slug} className="py-3 px-4 min-w-[220px]">
                       <div className="text-white font-sans font-bold text-sm">{item.acronym}</div>
                       <div className="text-[10px] text-slate-400 truncate font-mono">{slug}</div>

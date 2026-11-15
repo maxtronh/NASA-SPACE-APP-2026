@@ -169,3 +169,94 @@ class TestSolarDatasetGeneration:
             assert "instruction" in sample and len(sample["instruction"]) > 10
             assert "input" in sample and len(sample["input"]) > 5
             assert "output" in sample and len(sample["output"]) > 20
+
+
+class TestCoSimulationTrajectory:
+    @pytest.mark.asyncio
+    async def test_trajectory_co_simulation_hazard_calculation(self):
+        """
+        Milestone 10: Verify trajectory calculation returns co-simulated
+        Damköhler cool-flame hazard, rekindle risk, and EAFHI cabin score.
+        """
+        from backend.app.api.v1.endpoints.exploration import (
+            calculate_trajectory,
+            TrajectoryCalculateRequest,
+        )
+
+        req = TrajectoryCalculateRequest(
+            origin_body="Earth",
+            target_body="Mars",
+            fuel="n-heptane",
+            fuel_temperature_k=720.0,
+            cabin_oxygen_pct=21.0,
+            cabin_pressure_kpa=101.325,
+            ventilation_velocity_m_s=0.05,
+            characteristic_length_m=0.003,
+        )
+        res = await calculate_trajectory(req)
+
+        assert res.delta_v_total_km_s > 5.0
+        assert res.combustion_hazard is not None
+        hazard = res.combustion_hazard
+
+        assert hazard.fuel == "n-heptane"
+        assert hazard.damkohler_cool > 1.0
+        assert hazard.da_cool > 1.0
+        assert 0.0 <= hazard.rekindle_probability <= 1.0
+        assert hazard.risk_classification in ["INERT", "MONITOR", "REKINDLE_WARNING", "CRITICAL_REKINDLE_HAZARD"]
+        assert 0.0 <= hazard.eafhi_score <= 1.0
+        assert hazard.hypobaric_moc_pct > 15.0
+        assert "cruise_phase" in hazard.flight_phase_notes
+        assert "burn_phase" in hazard.flight_phase_notes
+
+    @pytest.mark.asyncio
+    async def test_gateway_vs_iss_atmosphere_differential(self):
+        """
+        Verify that Artemis Gateway atmosphere (34% O2, 56.5 kPa) exhibits higher
+        flammability hazard than ISS baseline (21% O2, 101.3 kPa).
+        """
+        from backend.app.api.v1.endpoints.exploration import (
+            calculate_trajectory,
+            TrajectoryCalculateRequest,
+        )
+
+        req_iss = TrajectoryCalculateRequest(
+            origin_body="Earth",
+            target_body="Moon",
+            cabin_oxygen_pct=21.0,
+            cabin_pressure_kpa=101.325,
+        )
+        res_iss = await calculate_trajectory(req_iss)
+
+        req_gw = TrajectoryCalculateRequest(
+            origin_body="Earth",
+            target_body="Lunar Gateway",
+            cabin_oxygen_pct=34.0,
+            cabin_pressure_kpa=56.5,
+        )
+        res_gw = await calculate_trajectory(req_gw)
+
+        assert res_iss.combustion_hazard is not None
+        assert res_gw.combustion_hazard is not None
+        assert res_gw.combustion_hazard.eafhi_score > res_iss.combustion_hazard.eafhi_score
+
+    @pytest.mark.asyncio
+    async def test_non_ltc_fuel_co_simulation(self):
+        """
+        Verify that non-LTC fuels (e.g. methanol) yield zero cool-flame Damköhler and zero rekindle hazard.
+        """
+        from backend.app.api.v1.endpoints.exploration import (
+            calculate_trajectory,
+            TrajectoryCalculateRequest,
+        )
+
+        req = TrajectoryCalculateRequest(
+            origin_body="Earth",
+            target_body="Mars",
+            fuel="methanol",
+        )
+        res = await calculate_trajectory(req)
+        assert res.combustion_hazard is not None
+        assert res.combustion_hazard.damkohler_cool == 0.0
+        assert res.combustion_hazard.rekindle_probability == 0.0
+        assert res.combustion_hazard.risk_classification == "INERT"

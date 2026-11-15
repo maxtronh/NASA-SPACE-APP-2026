@@ -43,9 +43,13 @@ export default function IntelligenceChatPage() {
       id: "welcome",
       sender: "si",
       text: "Welcome to the Flame in Freefall Scientific Intelligence Assistant. I provide evidence-grounded answers derived strictly from authentic NASA microgravity combustion archives (FLEX, BASS-II, ACME). If evidence is lacking or questions fall outside the domain, I explicitly abstain rather than fabricate assertions.",
+<<<<<<< HEAD
       // No timestamp: this message is static, and rendering a clock value here
       // would mismatch between the server and client render (hydration error).
       timestamp: "",
+=======
+      timestamp: "12:00 UTC",
+>>>>>>> origin/master
     },
   ]);
   const [inputQuery, setInputQuery] = useState("");
@@ -56,11 +60,12 @@ export default function IntelligenceChatPage() {
     const q = queryText.trim();
     if (!q || loading) return;
 
+    const timeStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     const userMsg: ChatMessage = {
       id: `user-${Date.now()}`,
       sender: "user",
       text: q,
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      timestamp: timeStr,
     };
 
     setMessages((prev) => [...prev, userMsg]);
@@ -74,7 +79,7 @@ export default function IntelligenceChatPage() {
         sender: "si",
         text: res.answer,
         response: res,
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        timestamp: timeStr,
       };
       setMessages((prev) => [...prev, siMsg]);
     } catch (err) {
@@ -82,7 +87,7 @@ export default function IntelligenceChatPage() {
         id: `si-err-${Date.now()}`,
         sender: "si",
         text: "An error occurred while executing hybrid scientific intelligence retrieval.",
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        timestamp: timeStr,
       };
       setMessages((prev) => [...prev, errorMsg]);
     } finally {

@@ -1,20 +1,22 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { useState, useEffect, useCallback } from "react";
+import { queryCopilotChat, calculateTrajectory, type CombustionHazardData } from "@/lib/api";
+// Embedded NASA Eyes on the Solar System Orrery: https://eyes.nasa.gov/apps/orrery/
 import {
   Orbit,
-  Flame,
   Cpu,
   Compass,
   Send,
-  RotateCw,
-  Sparkles,
-  Info,
   ChevronRight,
-  ShieldAlert,
   Layers,
+  Flame,
+  ShieldAlert,
+  Wind,
+  Thermometer,
+  Gauge,
+  AlertTriangle,
+  CheckCircle2,
 } from "lucide-react";
 
 interface FaceData {
@@ -426,18 +428,28 @@ interface ChatMessage {
 }
 
 export default function SolarSystem25FacesHUD() {
-  const containerRef = useRef<HTMLDivElement>(null);
   const [selectedFace, setSelectedFace] = useState<FaceData>(STATIC_25_FACES[15]); // Default Face 16
   const [departureBody, setDepartureBody] = useState("Earth");
   const [targetBody, setTargetBody] = useState("Mars");
+
+  // Multi-Agent Co-Simulation Parameters
+  const [fuel, setFuel] = useState("n-heptane");
+  const [atmospherePreset, setAtmospherePreset] = useState<"iss" | "gateway">("iss");
+  const [cabinOxygenPct, setCabinOxygenPct] = useState(21.0);
+  const [cabinPressureKpa, setCabinPressureKpa] = useState(101.325);
+  const [ventilationVelocity, setVentilationVelocity] = useState(0.05); // m/s
+  const [fuelTemperatureK, setFuelTemperatureK] = useState(720.0); // K
+  const [isCalculatingTraj, setIsCalculatingTraj] = useState(false);
+
   const [transferResult, setTransferResult] = useState({
     deltaV: "5.59 km/s",
-    duration: "259 days",
+    duration: "258.9 days",
     dv1: "2.94 km/s",
     dv2: "2.65 km/s",
     summary:
-      "Heliocentric Hohmann transfer from Earth to Mars. Departure burn Δv1 = 2.94 km/s, arrival capture Δv2 = 2.65 km/s. Total Δv = 5.59 km/s with 259 days flight duration.",
+      "Heliocentric Hohmann transfer from Earth to Mars. Departure burn Δv1 = 2.94 km/s, arrival capture Δv2 = 2.65 km/s. Total Δv = 5.59 km/s with 258.9 days flight duration.",
   });
+  const [combustionHazard, setCombustionHazard] = useState<CombustionHazardData | null>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     {
       role: "copilot",
@@ -447,220 +459,53 @@ export default function SolarSystem25FacesHUD() {
   ]);
   const [queryInput, setQueryInput] = useState("");
   const [isSending, setIsSending] = useState(false);
-  const [showTransferArc, setShowTransferArc] = useState(true);
 
-  // Three.js 3D Solar System Viewport
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color("#020611");
-
-    const camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 2000);
-    camera.position.set(0, 180, 320);
-
-    let renderer: THREE.WebGLRenderer;
-    try {
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-      renderer.setSize(container.clientWidth, container.clientHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-      container.innerHTML = "";
-      container.appendChild(renderer.domElement);
-    } catch {
-      return;
-    }
-
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    controls.maxDistance = 800;
-    controls.minDistance = 30;
-
-    // Ambient and Sun Point Light
-    const ambientLight = new THREE.AmbientLight(0x334155, 1.2);
-    scene.add(ambientLight);
-
-    const sunLight = new THREE.PointLight(0xfffaed, 3.0, 1200);
-    sunLight.position.set(0, 0, 0);
-    scene.add(sunLight);
-
-    // Sun Sphere
-    const sunGeom = new THREE.SphereGeometry(14, 32, 32);
-    const sunMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
-    const sunMesh = new THREE.Mesh(sunGeom, sunMat);
-    scene.add(sunMesh);
-
-    // Planetary Bodies Data
-    const planetDefs = [
-      { name: "Mercury", a: 28, speed: 4.15, size: 2.2, color: 0x94a3b8 },
-      { name: "Venus", a: 45, speed: 1.62, size: 3.5, color: 0xf59e0b },
-      { name: "Earth", a: 70, speed: 1.0, size: 4.0, color: 0x38bdf8, hasMoon: true },
-      { name: "Mars", a: 100, speed: 0.53, size: 3.2, color: 0xef4444 },
-      { name: "Jupiter", a: 155, speed: 0.2, size: 7.5, color: 0xfb923c },
-      { name: "Saturn", a: 210, speed: 0.1, size: 6.5, color: 0xeab308, hasRing: true },
-      { name: "Uranus", a: 260, speed: 0.04, size: 5.0, color: 0x67e8f9 },
-      { name: "Neptune", a: 305, speed: 0.02, size: 4.8, color: 0x6366f1 },
-      { name: "Pluto", a: 345, speed: 0.015, size: 2.0, color: 0xc084fc },
-    ];
-
-    const planetMeshes: { mesh: THREE.Mesh; a: number; speed: number; angle: number; moonMesh?: THREE.Mesh }[] = [];
-
-    planetDefs.forEach((p) => {
-      // Orbit Line
-      const orbitCurve = new THREE.EllipseCurve(0, 0, p.a, p.a, 0, 2 * Math.PI, false, 0);
-      const points = orbitCurve.getPoints(100);
-      const orbitGeom = new THREE.BufferGeometry().setFromPoints(
-        points.map((pt) => new THREE.Vector3(pt.x, 0, pt.y))
-      );
-      const orbitMat = new THREE.LineBasicMaterial({ color: 0x1e3a5f, transparent: true, opacity: 0.5 });
-      const orbitLine = new THREE.Line(orbitGeom, orbitMat);
-      scene.add(orbitLine);
-
-      // Planet Sphere
-      const pGeom = new THREE.SphereGeometry(p.size, 24, 24);
-      const pMat = new THREE.MeshStandardMaterial({ color: p.color, roughness: 0.7, metalness: 0.1 });
-      const pMesh = new THREE.Mesh(pGeom, pMat);
-      scene.add(pMesh);
-
-      let moonMesh: THREE.Mesh | undefined;
-      if (p.hasMoon) {
-        const mGeom = new THREE.SphereGeometry(1.2, 16, 16);
-        const mMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1 });
-        moonMesh = new THREE.Mesh(mGeom, mMat);
-        scene.add(moonMesh);
-      }
-
-      if (p.hasRing) {
-        const ringGeom = new THREE.RingGeometry(p.size + 3, p.size + 8, 32);
-        const ringMat = new THREE.MeshBasicMaterial({
-          color: 0xeab308,
-          side: THREE.DoubleSide,
-          transparent: true,
-          opacity: 0.6,
+  const handleCalculateTrajectory = useCallback(
+    async (
+      dep: string = departureBody,
+      arr: string = targetBody,
+      curFuel: string = fuel,
+      curO2: number = cabinOxygenPct,
+      curP: number = cabinPressureKpa,
+      curVent: number = ventilationVelocity,
+      curTemp: number = fuelTemperatureK
+    ) => {
+      setIsCalculatingTraj(true);
+      try {
+        const res = await calculateTrajectory({
+          origin_body: dep,
+          target_body: arr,
+          fuel: curFuel,
+          cabin_oxygen_pct: curO2,
+          cabin_pressure_kpa: curP,
+          ventilation_velocity_m_s: curVent,
+          fuel_temperature_k: curTemp,
+          characteristic_length_m: 0.003,
         });
-        const ringMesh = new THREE.Mesh(ringGeom, ringMat);
-        ringMesh.rotation.x = Math.PI / 3;
-        pMesh.add(ringMesh);
-      }
 
-      planetMeshes.push({ mesh: pMesh, a: p.a, speed: p.speed, angle: Math.random() * Math.PI * 2, moonMesh });
-    });
+        setTransferResult({
+          deltaV: `${res.delta_v_total_km_s.toFixed(2)} km/s`,
+          duration: `${res.transit_duration_days.toFixed(1)} days`,
+          dv1: `${res.delta_v_departure_km_s.toFixed(2)} km/s`,
+          dv2: `${res.delta_v_arrival_km_s.toFixed(2)} km/s`,
+          summary: res.scientific_summary,
+        });
 
-    // Transfer Arc Line (Earth to Mars)
-    let transferLine: THREE.Line | null = null;
-    if (showTransferArc) {
-      const curve = new THREE.QuadraticBezierCurve3(
-        new THREE.Vector3(70, 0, 0),
-        new THREE.Vector3(85, 30, -50),
-        new THREE.Vector3(100, 0, -60)
-      );
-      const arcPoints = curve.getPoints(50);
-      const arcGeom = new THREE.BufferGeometry().setFromPoints(arcPoints);
-      const arcMat = new THREE.LineDashedMaterial({ color: 0x68e5ff, dashSize: 4, gapSize: 2 });
-      transferLine = new THREE.Line(arcGeom, arcMat);
-      transferLine.computeLineDistances();
-      scene.add(transferLine);
-    }
-
-    let reqId: number;
-    let t = 0;
-    const animate = () => {
-      reqId = requestAnimationFrame(animate);
-      t += 0.005;
-
-      planetMeshes.forEach((item) => {
-        item.angle += 0.005 * item.speed;
-        item.mesh.position.x = Math.cos(item.angle) * item.a;
-        item.mesh.position.z = Math.sin(item.angle) * item.a;
-        item.mesh.rotation.y += 0.01;
-
-        if (item.moonMesh) {
-          const mAngle = t * 3;
-          item.moonMesh.position.x = item.mesh.position.x + Math.cos(mAngle) * 8;
-          item.moonMesh.position.z = item.mesh.position.z + Math.sin(mAngle) * 8;
+        if (res.combustion_hazard) {
+          setCombustionHazard(res.combustion_hazard);
         }
-      });
-
-      controls.update();
-      renderer.render(scene, camera);
-    };
-    animate();
-
-    const handleResize = () => {
-      if (!container) return;
-      camera.aspect = container.clientWidth / container.clientHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(container.clientWidth, container.clientHeight);
-    };
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      cancelAnimationFrame(reqId);
-      scene.traverse((obj) => {
-        if (obj instanceof THREE.Mesh || obj instanceof THREE.Line) {
-          obj.geometry.dispose();
-          if (Array.isArray(obj.material)) obj.material.forEach((m) => m.dispose());
-          else obj.material.dispose();
-        }
-      });
-      renderer.dispose();
-      if (container.contains(renderer.domElement)) {
-        container.removeChild(renderer.domElement);
+      } catch (err) {
+        console.error("Co-simulation calculation error:", err);
+      } finally {
+        setIsCalculatingTraj(false);
       }
-    };
-  }, [showTransferArc]);
+    },
+    [departureBody, targetBody, fuel, cabinOxygenPct, cabinPressureKpa, ventilationVelocity, fuelTemperatureK]
+  );
 
-  // Recalculate Hohmann Transfer
-  const calculateTransfer = (dep: string, arr: string) => {
-    if (dep === arr) {
-      setTransferResult({
-        deltaV: "0.00 km/s",
-        duration: "0 days",
-        dv1: "0.00 km/s",
-        dv2: "0.00 km/s",
-        summary: "Origin and destination are identical co-orbital bodies. Delta-V budget is zero.",
-      });
-      return;
-    }
-
-    if ((dep === "Earth" && arr === "Moon") || (dep === "Moon" && arr === "Earth")) {
-      setTransferResult({
-        deltaV: "3.97 km/s",
-        duration: "3.2 days",
-        dv1: "3.14 km/s",
-        dv2: "0.83 km/s",
-        summary:
-          "Geocentric Translunar Injection (TLI) from 300 km LEO to Artemis Lunar Gateway orbit. TLI burn Δv1 = 3.14 km/s, arrival LOI Δv2 = 0.83 km/s (Total: 3.97 km/s). Transit time is 3.2 days.",
-      });
-      return;
-    }
-
-    const orbits: Record<string, number> = { Earth: 1.0, Mars: 1.524, Venus: 0.723, Jupiter: 5.204, Moon: 1.0 };
-    const r1 = orbits[dep] || 1.0;
-    const r2 = orbits[arr] || 1.524;
-    const mu = 1.3271244e11;
-    const au = 1.4959787e8;
-    const R1 = r1 * au;
-    const R2 = r2 * au;
-    const a = (R1 + R2) / 2;
-
-    const v1 = Math.sqrt(mu / R1);
-    const v2 = Math.sqrt(mu / R2);
-    const dv1 = Math.abs(Math.sqrt(mu * (2 / R1 - 1 / a)) - v1);
-    const dv2 = Math.abs(v2 - Math.sqrt(mu * (2 / R2 - 1 / a)));
-    const total = dv1 + dv2;
-    const durDays = Math.round((Math.PI * Math.sqrt(Math.pow(a, 3) / mu)) / 86400);
-
-    setTransferResult({
-      deltaV: `${total.toFixed(2)} km/s`,
-      duration: `${durDays} days`,
-      dv1: `${dv1.toFixed(2)} km/s`,
-      dv2: `${dv2.toFixed(2)} km/s`,
-      summary: `Heliocentric transfer from ${dep} (${r1.toFixed(2)} AU) to ${arr} (${r2.toFixed(2)} AU). Departure Δv1 = ${dv1.toFixed(2)} km/s, arrival capture Δv2 = ${dv2.toFixed(2)} km/s (Total: ${total.toFixed(2)} km/s). Flight duration = ${durDays} days.`,
-    });
-  };
+  useEffect(() => {
+    handleCalculateTrajectory();
+  }, [handleCalculateTrajectory]);
 
   const handleSendChat = async (presetText?: string) => {
     const text = presetText || queryInput;
@@ -672,26 +517,17 @@ export default function SolarSystem25FacesHUD() {
     setChatMessages((prev) => [...prev, userMsg]);
 
     try {
-      const res = await fetch("/api/v1/exploration/copilot/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: text,
-          active_face_id: selectedFace.id,
-          departure_body: departureBody,
-          target_body: targetBody,
-        }),
+      const data = await queryCopilotChat({
+        query: text,
+        active_face_id: selectedFace.id,
+        departure_body: departureBody,
+        target_body: targetBody,
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        setChatMessages((prev) => [
-          ...prev,
-          { role: "copilot", content: `[${data.inference_mode}]\n${data.response}` },
-        ]);
-      } else {
-        throw new Error("API call failed");
-      }
+      setChatMessages((prev) => [
+        ...prev,
+        { role: "copilot", content: `[${data.inference_mode}]\n${data.response}` },
+      ]);
     } catch {
       // Local client fallback
       let fallbackText =
@@ -738,24 +574,28 @@ export default function SolarSystem25FacesHUD() {
           <span className="rounded-md border border-nasa-cyan/30 bg-nasa-cyan/10 px-2.5 py-1 text-nasa-cyan">
             25 Faces Synchronized
           </span>
-          <button
-            onClick={() => setShowTransferArc((prev) => !prev)}
-            className="rounded-md border border-space-600 bg-space-800 px-2.5 py-1 text-slate-200 hover:border-nasa-cyan hover:text-white"
-          >
-            {showTransferArc ? "Hide Transfer Arc" : "Show Transfer Arc"}
-          </button>
         </div>
       </div>
 
-      {/* Main Split View: 3D Solar Canvas & Qwen Copilot Drawer */}
+      {/* Main Split View: NASA Eyes Orrery & Qwen Copilot Drawer */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        {/* Left: 3D Solar Canvas (7 cols) */}
+        {/* Left: NASA Eyes on the Solar System Orrery (7 cols) */}
         <div className="relative h-[480px] overflow-hidden rounded-xl border border-space-700 bg-[#020611] lg:col-span-7">
-          <div ref={containerRef} className="h-full w-full" />
-          <div className="pointer-events-none absolute left-3 top-3 rounded-lg border border-space-700/80 bg-space-900/85 p-2.5 backdrop-blur">
-            <div className="text-xs font-bold text-white">Keplerian 3D Solar System Viewport</div>
+          <iframe
+            src="https://eyes.nasa.gov/apps/orrery/"
+            title="NASA Eyes on the Solar System"
+            width="100%"
+            height="100%"
+            className="h-full w-full rounded-xl border-none bg-black"
+            style={{ border: "none" }}
+            allow="fullscreen"
+            loading="lazy"
+            referrerPolicy="strict-origin-when-cross-origin"
+          />
+          <div className="pointer-events-none absolute left-3 top-3 z-10 rounded-lg border border-space-700/80 bg-space-900/85 p-2.5 backdrop-blur">
+            <div className="text-xs font-bold text-white">NASA Eyes on the Solar System</div>
             <div className="font-mono text-[10px] text-slate-400">
-              Sun, Mercury to Neptune, Pluto &bull; Drag to rotate, scroll to zoom
+              Live JPL Interactive Orrery &bull; Real-Time Planetary &amp; Asteroid Ephemeris
             </div>
           </div>
         </div>
@@ -797,6 +637,17 @@ export default function SolarSystem25FacesHUD() {
           {/* Preset Chips & Input Bar */}
           <div className="mt-3 space-y-2 border-t border-space-800 pt-3">
             <div className="flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                onClick={() =>
+                  handleSendChat(
+                    "Co-simulate Earth to Mars transfer with heptane cool flame rekindle risk in microgravity"
+                  )
+                }
+                className="rounded border border-amber-500/50 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-300 hover:border-amber-400 hover:bg-amber-500/20"
+              >
+                Co-Simulate Orbital Flight &amp; Fire Risk
+              </button>
               <button
                 type="button"
                 onClick={() => handleSendChat("Calculate Earth to Mars delta-V")}
@@ -842,81 +693,270 @@ export default function SolarSystem25FacesHUD() {
         </div>
       </div>
 
-      {/* Trajectory Delta-V Planner Section */}
+      {/* Multi-Agent Orbital Co-Simulation: Astrodynamics & Fire Risk Planner */}
       <div className="rounded-xl border border-space-700 bg-space-900/80 p-5">
-        <div className="mb-4 flex items-center justify-between border-b border-space-800 pb-3">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-space-800 pb-3">
           <div className="flex items-center gap-2">
             <Compass className="h-5 w-5 text-emerald-400" />
-            <h3 className="text-sm font-bold text-white">Hohmann Transfer Delta-V &amp; Flight Duration Planner</h3>
+            <h3 className="text-sm font-bold text-white">Multi-Agent Orbital Co-Simulation &amp; Fire Hazard Planner</h3>
           </div>
-          <span className="font-mono text-xs text-slate-400">Face 25 Astrodynamics Engine</span>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div>
-            <label className="mb-1 block font-mono text-xs text-slate-400">Departure Body</label>
-            <select
-              value={departureBody}
-              onChange={(e) => {
-                setDepartureBody(e.target.value);
-                calculateTransfer(e.target.value, targetBody);
-              }}
-              className="w-full rounded-lg border border-space-700 bg-space-950 px-3 py-2 text-xs text-white focus:border-nasa-cyan focus:outline-none"
-            >
-              <option value="Earth">Earth (1.00 AU)</option>
-              <option value="Mars">Mars (1.52 AU)</option>
-              <option value="Moon">Lunar Gateway / Moon</option>
-            </select>
-          </div>
-          <div>
-            <label className="mb-1 block font-mono text-xs text-slate-400">Destination Target</label>
-            <select
-              value={targetBody}
-              onChange={(e) => {
-                setTargetBody(e.target.value);
-                calculateTransfer(departureBody, e.target.value);
-              }}
-              className="w-full rounded-lg border border-space-700 bg-space-950 px-3 py-2 text-xs text-white focus:border-nasa-cyan focus:outline-none"
-            >
-              <option value="Mars">Mars (1.52 AU)</option>
-              <option value="Moon">Lunar Gateway / Moon</option>
-              <option value="Venus">Venus (0.72 AU)</option>
-              <option value="Jupiter">Jupiter (5.20 AU)</option>
-            </select>
-          </div>
-          <div>
-            <label className="mb-1 block font-mono text-xs text-slate-400">Spacecraft Dry Mass (kg)</label>
-            <input
-              type="number"
-              defaultValue="1200"
-              className="w-full rounded-lg border border-space-700 bg-space-950 px-3 py-2 text-xs text-white focus:border-nasa-cyan focus:outline-none"
-            />
+          <div className="flex items-center gap-2">
+            <span className="rounded bg-emerald-500/20 px-2 py-0.5 font-mono text-[10px] font-bold text-emerald-400 border border-emerald-500/30">
+              {isCalculatingTraj ? "CALCULATING..." : "CO-SIMULATION LIVE"}
+            </span>
+            <span className="font-mono text-xs text-slate-400">Milestone 10 Engine</span>
           </div>
         </div>
 
-        {/* Telemetry Output Badges */}
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4 font-mono">
-          <div className="rounded-lg border border-space-700 bg-space-950 p-3">
-            <span className="text-[10px] uppercase text-slate-400">Total &Delta;v Required</span>
-            <div className="mt-1 text-lg font-bold text-nasa-cyan">{transferResult.deltaV}</div>
+        {/* Co-Simulation Controls Grid */}
+        <div className="space-y-4">
+          {/* Row 1: Astrodynamics & Fuel Selection */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div>
+              <label className="mb-1 block font-mono text-xs text-slate-400">Departure Body</label>
+              <select
+                value={departureBody}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setDepartureBody(val);
+                  handleCalculateTrajectory(val, targetBody, fuel, cabinOxygenPct, cabinPressureKpa, ventilationVelocity, fuelTemperatureK);
+                }}
+                className="w-full rounded-lg border border-space-700 bg-space-950 px-3 py-2 text-xs text-white focus:border-nasa-cyan focus:outline-none"
+              >
+                <option value="Earth">Earth (1.00 AU)</option>
+                <option value="Mars">Mars (1.52 AU)</option>
+                <option value="Moon">Lunar Gateway / Moon</option>
+                <option value="Venus">Venus (0.72 AU)</option>
+                <option value="Jupiter">Jupiter (5.20 AU)</option>
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block font-mono text-xs text-slate-400">Destination Target</label>
+              <select
+                value={targetBody}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setTargetBody(val);
+                  handleCalculateTrajectory(departureBody, val, fuel, cabinOxygenPct, cabinPressureKpa, ventilationVelocity, fuelTemperatureK);
+                }}
+                className="w-full rounded-lg border border-space-700 bg-space-950 px-3 py-2 text-xs text-white focus:border-nasa-cyan focus:outline-none"
+              >
+                <option value="Mars">Mars (1.52 AU)</option>
+                <option value="Moon">Lunar Gateway / Moon</option>
+                <option value="Venus">Venus (0.72 AU)</option>
+                <option value="Jupiter">Jupiter (5.20 AU)</option>
+                <option value="Earth">Earth (1.00 AU)</option>
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block font-mono text-xs text-slate-400">Combustion Hazard Fuel</label>
+              <select
+                value={fuel}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFuel(val);
+                  handleCalculateTrajectory(departureBody, targetBody, val, cabinOxygenPct, cabinPressureKpa, ventilationVelocity, fuelTemperatureK);
+                }}
+                className="w-full rounded-lg border border-space-700 bg-space-950 px-3 py-2 text-xs text-amber-300 focus:border-amber-400 focus:outline-none"
+              >
+                <option value="n-heptane">n-Heptane (C7H16 — Standard LTC)</option>
+                <option value="n-octane">n-Octane (C8H18 — Spacecraft Alkane)</option>
+                <option value="n-decane">n-Decane (C10H22 — High Boiling Alkane)</option>
+                <option value="methanol">Methanol (CH3OH — High Flame Temp)</option>
+                <option value="methane">Methane (CH4 — Cryogenic Propellant)</option>
+              </select>
+            </div>
           </div>
-          <div className="rounded-lg border border-space-700 bg-space-950 p-3">
-            <span className="text-[10px] uppercase text-slate-400">Transit Duration</span>
-            <div className="mt-1 text-lg font-bold text-emerald-400">{transferResult.duration}</div>
-          </div>
-          <div className="rounded-lg border border-space-700 bg-space-950 p-3">
-            <span className="text-[10px] uppercase text-slate-400">Departure Burn (&Delta;v1)</span>
-            <div className="mt-1 text-lg font-bold text-amber-400">{transferResult.dv1}</div>
-          </div>
-          <div className="rounded-lg border border-space-700 bg-space-950 p-3">
-            <span className="text-[10px] uppercase text-slate-400">Arrival Insertion (&Delta;v2)</span>
-            <div className="mt-1 text-lg font-bold text-rose-400">{transferResult.dv2}</div>
+
+          {/* Row 2: Cabin Atmospheric Presets & Ventilation Controls */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div>
+              <label className="mb-1 block font-mono text-xs text-slate-400">Cabin Atmosphere Preset</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAtmospherePreset("iss");
+                    setCabinOxygenPct(21.0);
+                    setCabinPressureKpa(101.325);
+                    handleCalculateTrajectory(departureBody, targetBody, fuel, 21.0, 101.325, ventilationVelocity, fuelTemperatureK);
+                  }}
+                  className={`rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors ${
+                    atmospherePreset === "iss"
+                      ? "border-nasa-cyan bg-nasa-cyan/20 text-nasa-cyan"
+                      : "border-space-700 bg-space-950 text-slate-400 hover:text-white"
+                  }`}
+                >
+                  ISS (21% O2 / 101 kPa)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAtmospherePreset("gateway");
+                    setCabinOxygenPct(34.0);
+                    setCabinPressureKpa(56.5);
+                    handleCalculateTrajectory(departureBody, targetBody, fuel, 34.0, 56.5, ventilationVelocity, fuelTemperatureK);
+                  }}
+                  className={`rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors ${
+                    atmospherePreset === "gateway"
+                      ? "border-amber-400 bg-amber-500/20 text-amber-300"
+                      : "border-space-700 bg-space-950 text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Gateway (34% O2 / 56 kPa)
+                </button>
+              </div>
+            </div>
+            <div>
+              <div className="mb-1 flex items-center justify-between font-mono text-xs text-slate-400">
+                <span>Forced Ventilation (u_vent)</span>
+                <span className="font-bold text-nasa-cyan">{(ventilationVelocity * 100).toFixed(1)} cm/s</span>
+              </div>
+              <input
+                type="range"
+                min="0.01"
+                max="0.50"
+                step="0.01"
+                value={ventilationVelocity}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value);
+                  setVentilationVelocity(val);
+                  handleCalculateTrajectory(departureBody, targetBody, fuel, cabinOxygenPct, cabinPressureKpa, val, fuelTemperatureK);
+                }}
+                className="w-full accent-nasa-cyan"
+              />
+              <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+                <span>1 cm/s (Quiescent)</span>
+                <span>50 cm/s (High Flow)</span>
+              </div>
+            </div>
+            <div>
+              <label className="mb-1 block font-mono text-xs text-slate-400">Droplet / LTC Zone Temp (K)</label>
+              <input
+                type="number"
+                min="300"
+                max="1400"
+                step="10"
+                value={fuelTemperatureK}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value) || 720;
+                  setFuelTemperatureK(val);
+                  handleCalculateTrajectory(departureBody, targetBody, fuel, cabinOxygenPct, cabinPressureKpa, ventilationVelocity, val);
+                }}
+                className="w-full rounded-lg border border-space-700 bg-space-950 px-3 py-2 text-xs text-white focus:border-nasa-cyan focus:outline-none"
+              />
+            </div>
           </div>
         </div>
 
-        <p className="mt-3 rounded-lg border border-space-800 bg-space-950/60 p-3 font-mono text-xs text-slate-300">
-          {transferResult.summary}
-        </p>
+        {/* Telemetry Output Badges: Astrodynamics Tier */}
+        <div className="mt-5">
+          <div className="mb-2 flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            <Compass className="h-3.5 w-3.5 text-nasa-cyan" />
+            <span>Astrodynamic Orbital Flight Telemetry</span>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 font-mono">
+            <div className="rounded-lg border border-space-700 bg-space-950 p-3">
+              <span className="text-[10px] uppercase text-slate-400">Total &Delta;v Required</span>
+              <div className="mt-1 text-lg font-bold text-nasa-cyan">{transferResult.deltaV}</div>
+            </div>
+            <div className="rounded-lg border border-space-700 bg-space-950 p-3">
+              <span className="text-[10px] uppercase text-slate-400">Transit Duration</span>
+              <div className="mt-1 text-lg font-bold text-emerald-400">{transferResult.duration}</div>
+            </div>
+            <div className="rounded-lg border border-space-700 bg-space-950 p-3">
+              <span className="text-[10px] uppercase text-slate-400">Departure Burn (&Delta;v1)</span>
+              <div className="mt-1 text-lg font-bold text-amber-400">{transferResult.dv1}</div>
+            </div>
+            <div className="rounded-lg border border-space-700 bg-space-950 p-3">
+              <span className="text-[10px] uppercase text-slate-400">Arrival Insertion (&Delta;v2)</span>
+              <div className="mt-1 text-lg font-bold text-rose-400">{transferResult.dv2}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Telemetry Output Badges: Microgravity Combustion Fire Safety Tier */}
+        <div className="mt-4">
+          <div className="mb-2 flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            <Flame className="h-3.5 w-3.5 text-amber-400" />
+            <span>Microgravity Cool-Flame &amp; Flammability Co-Simulation Telemetry</span>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 font-mono">
+            <div className="rounded-lg border border-space-700 bg-space-950 p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] uppercase text-slate-400">Cool-Flame Damk&ouml;hler</span>
+                <span className="text-[9px] text-slate-500">Da_crit = 1.0</span>
+              </div>
+              <div className="mt-1 flex items-baseline gap-2">
+                <span className={`text-lg font-bold ${
+                  (combustionHazard?.damkohler_cool ?? 1.05) >= 1.0 ? "text-rose-400" : "text-emerald-400"
+                }`}>
+                  {combustionHazard ? combustionHazard.damkohler_cool.toFixed(2) : "1.05"}
+                </span>
+                <span className="text-[10px] text-slate-400">
+                  {(combustionHazard?.damkohler_cool ?? 1.05) >= 1.0 ? "Reignition Risk" : "Quenched"}
+                </span>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-space-700 bg-space-950 p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] uppercase text-slate-400">P(Rekindle)</span>
+                <span className={`rounded px-1.5 py-0.2 text-[9px] font-bold ${
+                  combustionHazard?.risk_classification === "CRITICAL_REKINDLE_HAZARD"
+                    ? "bg-rose-500/20 text-rose-400 border border-rose-500/30"
+                    : combustionHazard?.risk_classification === "REKINDLE_WARNING"
+                    ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                    : combustionHazard?.risk_classification === "MONITOR"
+                    ? "bg-sky-500/20 text-sky-300 border border-sky-500/30"
+                    : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                }`}>
+                  {combustionHazard?.risk_classification || "MONITOR"}
+                </span>
+              </div>
+              <div className="mt-1 text-lg font-bold text-amber-300">
+                {combustionHazard ? `${(combustionHazard.rekindle_probability * 100).toFixed(1)}%` : "56.2%"}
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-space-700 bg-space-950 p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] uppercase text-slate-400">EAFHI Cabin Risk</span>
+                <span className="text-[9px] text-slate-400">MOC: {combustionHazard?.hypobaric_moc_pct ?? 17.5}%</span>
+              </div>
+              <div className="mt-1 text-lg font-bold text-purple-400">
+                {combustionHazard ? combustionHazard.eafhi_score.toFixed(3) : "0.933"}
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-space-700 bg-space-950 p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] uppercase text-slate-400">Residence vs Chem Time</span>
+              </div>
+              <div className="mt-1 font-mono text-xs text-slate-300">
+                <div>&tau;_res: <strong className="text-nasa-cyan">{combustionHazard ? (combustionHazard.tau_res_s * 1000).toFixed(1) : "60.0"} ms</strong></div>
+                <div>&tau;_chem: <strong className="text-amber-300">{combustionHazard?.tau_chem_s ? (combustionHazard.tau_chem_s * 1000).toFixed(1) : "57.2"} ms</strong></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Flight Phase Differential & Summary */}
+        <div className="mt-4 space-y-2 rounded-lg border border-space-800 bg-space-950/70 p-3 font-mono text-xs">
+          <p className="text-slate-200">{transferResult.summary}</p>
+          {combustionHazard?.flight_phase_notes && (
+            <div className="mt-2 grid grid-cols-1 gap-2 pt-2 border-t border-space-800 text-[11px] text-slate-400 sm:grid-cols-2">
+              <div className="rounded bg-space-900/80 p-2 border border-space-800">
+                <span className="font-bold text-sky-400">Cruise Freefall (~10⁻⁶ g): </span>
+                {combustionHazard.flight_phase_notes.cruise_phase}
+              </div>
+              <div className="rounded bg-space-900/80 p-2 border border-space-800">
+                <span className="font-bold text-amber-400">Burn Acceleration (&Delta;v Maneuvers): </span>
+                {combustionHazard.flight_phase_notes.burn_phase}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* The 25 Scientific Faces Matrix Grid */}

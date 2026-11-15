@@ -168,6 +168,49 @@ class TestExplorationApiEndpoints:
             assert data["initial_loss"] >= data["final_loss"]
             assert data["overall_eval_accuracy"] >= 95.0
 
+    def test_calculate_trajectory_with_cosimulation_hazard(self, client):
+        """Verify POST /api/v1/exploration/trajectory/calculate returns co-simulation combustion hazard."""
+        payload = {
+            "origin_body": "Earth",
+            "target_body": "Mars",
+            "fuel": "n-heptane",
+            "fuel_temperature_k": 720.0,
+            "cabin_oxygen_pct": 21.0,
+            "cabin_pressure_kpa": 101.325,
+            "ventilation_velocity_m_s": 0.05,
+        }
+        response = client.post("/api/v1/exploration/trajectory/calculate", json=payload)
+        assert response.status_code == 200
+        data = response.json()
+        assert "combustion_hazard" in data and data["combustion_hazard"] is not None
+        hazard = data["combustion_hazard"]
+        assert hazard["fuel"] == "n-heptane"
+        assert hazard["damkohler_cool"] > 1.0
+        assert hazard["da_cool"] > 1.0
+        assert 0.0 <= hazard["rekindle_probability"] <= 1.0
+        assert hazard["risk_classification"] in ["INERT", "MONITOR", "REKINDLE_WARNING", "CRITICAL_REKINDLE_HAZARD"]
+        assert 0.0 <= hazard["eafhi_score"] <= 1.0
+        assert hazard["hypobaric_moc_pct"] > 15.0
+        assert "cruise_phase" in hazard["flight_phase_notes"]
+        assert "burn_phase" in hazard["flight_phase_notes"]
+
+    def test_copilot_chat_cosimulation_synthesis(self, client):
+        """Verify POST /api/v1/exploration/copilot/chat synthesizes co-simulation reasoning."""
+        payload = {
+            "query": "Co-simulate Earth to Mars transfer with heptane cool flame rekindle risk in microgravity"
+        }
+        response = client.post("/api/v1/exploration/copilot/chat", json=payload)
+        assert response.status_code == 200
+        data = response.json()
+        assert "Multi-Agent Orbital Co-Simulation" in data["response"]
+        assert "5.59 km/s" in data["response"]
+        assert "Da_cool" in data["response"]
+        assert "P_rekindle" in data["response"]
+        assert "cosimulation_context" in data and data["cosimulation_context"] is not None
+        cosim = data["cosimulation_context"]
+        assert cosim["fuel"] == "n-heptane"
+        assert cosim["damkohler_cool"] > 1.0
+
 
 class TestStandaloneSimulationPackage:
     def test_standalone_directory_exists(self):
@@ -265,13 +308,16 @@ class TestFrontendComponentIntegration:
         assert "SolarSystem25FacesHUD" in code
 
     def test_solar_system_hud_component_exists(self):
-        """Assert SolarSystem25FacesHUD.tsx exists and implements vanilla Three.js."""
+        """Assert SolarSystem25FacesHUD.tsx exists and embeds NASA Eyes Orrery."""
         hud_path = os.path.join(WORKSPACE_DIR, "frontend", "src", "components", "SolarSystem25FacesHUD.tsx")
         assert os.path.isfile(hud_path)
         with open(hud_path, "r", encoding="utf-8") as f:
             code = f.read()
 
-        assert "THREE.WebGLRenderer" in code
-        assert "OrbitControls" in code
+        assert "eyes.nasa.gov/apps/orrery" in code
+        assert "<iframe" in code
+        assert "NASA Eyes on the Solar System" in code
+        assert "THREE.WebGLRenderer" not in code
+        assert "OrbitControls" not in code
         assert "STATIC_25_FACES" in code
         assert "Qwen 2.5" in code

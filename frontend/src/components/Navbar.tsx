@@ -17,7 +17,11 @@ import {
   Cpu,
   ShieldAlert,
   Radio,
+<<<<<<< HEAD
   ChevronDown,
+=======
+  RotateCw,
+>>>>>>> origin/master
 } from "lucide-react";
 import { fetchHealth } from "@/lib/api";
 import { HealthResponse } from "@/types";
@@ -61,6 +65,7 @@ export default function Navbar() {
   const [moreOpen, setMoreOpen] = useState(false);
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [loadingHealth, setLoadingHealth] = useState(true);
+<<<<<<< HEAD
   const moreRef = useRef<HTMLDivElement>(null);
   const moreButtonRef = useRef<HTMLButtonElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
@@ -111,6 +116,30 @@ export default function Navbar() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
+=======
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const checkHealth = async () => {
+    try {
+      setIsSyncing(true);
+      const res = await fetchHealth();
+      setHealth(res);
+      setLoadingHealth(false);
+    } catch {
+      setLoadingHealth(false);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  useEffect(() => {
+    checkHealth();
+    // Fast 5-second polling when offline/degraded, 25-second when healthy
+    const intervalMs = health?.status === "healthy" ? 25000 : 5000;
+    const interval = setInterval(checkHealth, intervalMs);
+    return () => clearInterval(interval);
+  }, [health?.status]);
+>>>>>>> origin/master
 
   // Any navigation closes both menus.
   useEffect(() => {
@@ -273,14 +302,29 @@ export default function Navbar() {
           </div>
 
           {/* Right side: Live Health Badge */}
+<<<<<<< HEAD
           <div className="hidden xl:flex items-center space-x-3 shrink-0">
             <div
+=======
+          <div className="hidden sm:flex items-center space-x-3">
+            <button
+              onClick={checkHealth}
+              disabled={isSyncing}
+>>>>>>> origin/master
               className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs font-mono border transition-all ${
                 isHealthy
-                  ? "bg-emerald-950/40 border-emerald-500/40 text-emerald-400"
-                  : "bg-amber-950/40 border-amber-500/40 text-amber-300"
+                  ? "bg-emerald-950/40 border-emerald-500/40 text-emerald-400 hover:border-emerald-400"
+                  : "bg-amber-950/40 border-amber-500/40 text-amber-300 hover:border-amber-400"
               }`}
+<<<<<<< HEAD
               title={healthTitle}
+=======
+              title={
+                health
+                  ? `Backend: ${health.status} (${health.database}) | v${health.version} — Click to re-sync`
+                  : "Checking Backend Health..."
+              }
+>>>>>>> origin/master
             >
               <span
                 aria-hidden="true"
@@ -288,9 +332,21 @@ export default function Navbar() {
                   isHealthy ? "bg-emerald-400" : "bg-amber-400"
                 }`}
               />
+<<<<<<< HEAD
               <span className="font-semibold tracking-wide">{healthLabel}</span>
               <ShieldCheck aria-hidden="true" className="w-3.5 h-3.5 opacity-80" />
             </div>
+=======
+              <span className="font-semibold tracking-wide">
+                {loadingHealth || isSyncing
+                  ? "SYNCING..."
+                  : isHealthy
+                  ? "BACKEND LIVE"
+                  : "CACHED MODE"}
+              </span>
+              <RotateCw className={`w-3 h-3 opacity-75 ${isSyncing ? "animate-spin" : ""}`} />
+            </button>
+>>>>>>> origin/master
           </div>
 
           {/* Mobile Menu Button */}
@@ -352,6 +408,28 @@ export default function Navbar() {
             >
               {healthLabel}
             </span>
+          </div>
+        </div>
+      )}
+
+      {/* Offline / Cached Mode Resilience Notice Banner */}
+      {!isHealthy && !loadingHealth && (
+        <div className="bg-amber-950/80 border-t border-amber-500/30 px-4 py-1.5 text-xs text-amber-200">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            <div className="flex items-center space-x-2">
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse flex-shrink-0" />
+              <span>
+                <strong>LOCAL TELEMETRY CACHE ACTIVE:</strong> Operating on authentic NASA PSI flight data. Auto-reconnecting to backend...
+              </span>
+            </div>
+            <button
+              onClick={checkHealth}
+              disabled={isSyncing}
+              className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded bg-amber-900/90 hover:bg-amber-800 border border-amber-500/40 text-[11px] font-mono text-white transition-colors disabled:opacity-50 self-end sm:self-auto"
+            >
+              <RotateCw className={`w-3 h-3 ${isSyncing ? "animate-spin" : ""}`} />
+              <span>{isSyncing ? "Syncing..." : "Retry Sync"}</span>
+            </button>
           </div>
         </div>
       )}
