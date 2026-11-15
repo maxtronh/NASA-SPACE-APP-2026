@@ -4,9 +4,20 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { BookOpen, ShieldCheck, Cpu, Layers, ArrowLeft } from 'lucide-react';
 import { PageContainer, Card, StatusPill } from '@/components/ui';
+import { handleTabKeyDown } from '@/lib/tabs';
+
+const TABS = [
+  { id: 'standards', label: 'NASA-STD-6001B Standards' },
+  { id: 'equations', label: 'Governing Equations' },
+  { id: 'regimes', label: 'Combustion Regimes' },
+  { id: 'offline', label: 'Offline & PWA Roadmap' },
+] as const;
+
+type HandbookTab = (typeof TABS)[number]['id'];
+const TAB_ORDER = TABS.map((tab) => tab.id);
 
 export default function HandbookPage() {
-  const [activeTab, setActiveTab] = useState<'standards' | 'equations' | 'regimes' | 'offline'>('standards');
+  const [activeTab, setActiveTab] = useState<HandbookTab>('standards');
 
   return (
     <PageContainer>
@@ -26,18 +37,23 @@ export default function HandbookPage() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex flex-wrap gap-2 border-b border-space-800 pb-2" role="tablist">
-          {[
-            { id: 'standards', label: 'NASA-STD-6001B Standards' },
-            { id: 'equations', label: 'Governing Equations' },
-            { id: 'regimes', label: 'Combustion Regimes' },
-            { id: 'offline', label: 'Offline & PWA Roadmap' },
-          ].map((tab) => (
+        <div
+          className="flex flex-wrap gap-2 border-b border-space-800 pb-2"
+          role="tablist"
+          aria-label="Handbook sections"
+        >
+          {TABS.map((tab) => (
             <button
               key={tab.id}
+              type="button"
               role="tab"
+              id={`handbook-tab-${tab.id}`}
               aria-selected={activeTab === tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              aria-controls="handbook-panel"
+              tabIndex={activeTab === tab.id ? 0 : -1}
+              data-tab-value={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              onKeyDown={(event) => handleTabKeyDown(event, TAB_ORDER, activeTab, setActiveTab)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 activeTab === tab.id
                   ? 'bg-nasa-cyan text-space-950 font-semibold shadow-lg shadow-cyan-500/20'
@@ -50,6 +66,11 @@ export default function HandbookPage() {
         </div>
 
         {/* Tab Content */}
+        <div
+          role="tabpanel"
+          id="handbook-panel"
+          aria-labelledby={`handbook-tab-${activeTab}`}
+        >
         {activeTab === 'standards' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card variant="subtle" className="space-y-4">
@@ -157,6 +178,7 @@ export default function HandbookPage() {
             </div>
           </Card>
         )}
+        </div>
 
         {/* Back Link */}
         <div className="pt-4 border-t border-space-800 flex justify-between items-center text-xs text-slate-400">

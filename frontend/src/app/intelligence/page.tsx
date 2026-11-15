@@ -347,6 +347,7 @@ export default function IntelligenceChatPage() {
         >
           <input
             type="text"
+            aria-label="Ask the scientific intelligence assistant"
             value={inputQuery}
             onChange={(e) => setInputQuery(e.target.value)}
             placeholder="Ask a scientific combustion query (e.g., 'What causes cool flames in heptane droplets?')..."

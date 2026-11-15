@@ -99,6 +99,11 @@ export default function MissionControlPage() {
   const [jitterInjected, setJitterInjected] = useState<boolean>(false);
   const [waveletRunning, setWaveletRunning] = useState<boolean>(false);
 
+  // Polite live-region text for state changes that are only conveyed visually
+  // (link loss, injected vibration). Per-frame telemetry values are deliberately
+  // not announced — that would flood a screen reader.
+  const [liveAnnouncement, setLiveAnnouncement] = useState<string>("");
+
   // Time-series array for dual-trace Recharts
   const [jitterChartData, setJitterChartData] = useState<
     Array<{ t: number; raw: number; filtered: number; baseline: number }>
@@ -448,6 +453,9 @@ export default function MissionControlPage() {
 
   return (
     <div className="min-h-screen bg-space-950 text-slate-100 p-4 sm:p-6 lg:p-8 space-y-6">
+      <p role="status" aria-live="polite" className="sr-only">
+        {liveAnnouncement}
+      </p>
       {/* Header Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-space-800 pb-5">
         <div>
@@ -485,7 +493,15 @@ export default function MissionControlPage() {
           </div>
 
           <button
-            onClick={() => setSimulateLOS(!simulateLOS)}
+            onClick={() => {
+              const next = !simulateLOS;
+              setSimulateLOS(next);
+              setLiveAnnouncement(
+                next
+                  ? "Telemetry link lost. Live readouts are frozen and show no data."
+                  : "Telemetry link restored. Live readouts are updating again."
+              );
+            }}
             className={`px-3 py-1.5 rounded-lg border text-xs font-mono transition-all ${
               simulateLOS
                 ? "bg-space-800 border-space-700 text-slate-300 hover:text-white"
@@ -675,6 +691,11 @@ export default function MissionControlPage() {
                   const nextState = !jitterInjected;
                   setJitterInjected(nextState);
                   executeWaveletDecomposition(nextState);
+                  setLiveAnnouncement(
+                    nextState
+                      ? "Injected a 2.2 hertz vibration spike into the wavelet filter input."
+                      : "Vibration spike removed. Quiescent microgravity sensor stream restored."
+                  );
                   if (nextState) {
                     addAuditLog("WARN", "Wavelet Studio: Injected 2.2 Hz astronaut exercise vibration harmonics.");
                   } else {
@@ -805,6 +826,8 @@ export default function MissionControlPage() {
               </div>
               <input
                 type="range"
+                aria-label="Wavelet decomposition levels"
+                aria-valuetext={`${decompLevel} of 5 levels`}
                 min="1"
                 max="5"
                 step="1"
@@ -822,6 +845,8 @@ export default function MissionControlPage() {
               </div>
               <input
                 type="range"
+                aria-label="Donoho VisuShrink threshold"
+                aria-valuetext={`${thresholdG.toExponential(1)} g`}
                 min="0.00001"
                 max="0.001"
                 step="0.00005"
@@ -1025,11 +1050,22 @@ export default function MissionControlPage() {
           {/* Interactive Sliders for Fuel & Parameters */}
           <div className="space-y-3 pt-2">
             <div>
-              <label className="text-xs font-mono text-slate-400 block mb-1.5">Select Droplet Fuel:</label>
-              <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
+              <label
+                id="droplet-fuel-label"
+                className="text-xs font-mono text-slate-400 block mb-1.5"
+              >
+                Select Droplet Fuel:
+              </label>
+              <div
+                role="group"
+                aria-labelledby="droplet-fuel-label"
+                className="grid grid-cols-3 sm:grid-cols-5 gap-1.5"
+              >
                 {PRESET_FUELS.map((f) => (
                   <button
                     key={f.key}
+                    type="button"
+                    aria-pressed={selectedFuel === f.key}
                     onClick={() => setSelectedFuel(f.key)}
                     className={`py-1 px-1.5 rounded text-[11px] font-mono border text-center transition-all ${
                       selectedFuel === f.key
@@ -1050,6 +1086,8 @@ export default function MissionControlPage() {
               </div>
               <input
                 type="range"
+                aria-label="Droplet core temperature"
+                aria-valuetext={`${fuelTempK.toFixed(0)} kelvin`}
                 min="250"
                 max="850"
                 step="5"
@@ -1068,6 +1106,10 @@ export default function MissionControlPage() {
               </div>
               <input
                 type="range"
+                aria-label="Cabin cross-ventilation airspeed"
+                aria-valuetext={
+                  damperIsolated ? "Isolated, zero airspeed" : `${ventilationCmS.toFixed(1)} centimetres per second`
+                }
                 min="0.5"
                 max="25.0"
                 step="0.5"

@@ -94,6 +94,7 @@ export function DropletSensitivityWidget({
           </div>
           <input
             type="range"
+            aria-label="Initial droplet diameter"
             min="1.0"
             max="4.0"
             step="0.05"
@@ -115,6 +116,7 @@ export function DropletSensitivityWidget({
           </div>
           <input
             type="range"
+            aria-label="Ambient oxygen concentration"
             min="15.0"
             max="30.0"
             step="0.5"
@@ -136,6 +138,7 @@ export function DropletSensitivityWidget({
           </div>
           <input
             type="range"
+            aria-label="Chamber pressure"
             min="0.5"
             max="3.0"
             step="0.1"

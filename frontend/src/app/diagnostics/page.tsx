@@ -152,6 +152,7 @@ export default function DiagnosticsPage() {
               <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
               <input
                 type="text"
+                aria-label="Search diagnostic frames"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search flame features, cool flames, soot shells, Schlieren density..."
@@ -159,10 +160,12 @@ export default function DiagnosticsPage() {
               />
               {searchQuery && (
                 <button
+                  type="button"
+                  aria-label="Clear search"
                   onClick={() => setSearchQuery("")}
                   className="absolute right-3 top-2.5 text-slate-500 hover:text-slate-300"
                 >
-                  <X className="w-4 h-4" />
+                  <X aria-hidden="true" className="w-4 h-4" />
                 </button>
               )}
             </div>
@@ -170,6 +173,7 @@ export default function DiagnosticsPage() {
             {/* Modality Filter */}
             <div className="md:col-span-3">
               <select
+                aria-label="Filter by diagnostic modality"
                 value={selectedModality}
                 onChange={(e) => setSelectedModality(e.target.value as any)}
                 className="w-full px-3 py-2 bg-space-850 border border-space-700 rounded-lg text-sm text-slate-300 focus:outline-none focus:border-nasa-cyan"
@@ -185,6 +189,7 @@ export default function DiagnosticsPage() {
             {/* Investigation Filter */}
             <div className="md:col-span-3">
               <select
+                aria-label="Filter by flight investigation"
                 value={selectedInvestigation}
                 onChange={(e) => setSelectedInvestigation(e.target.value)}
                 className="w-full px-3 py-2 bg-space-850 border border-space-700 rounded-lg text-sm text-slate-300 focus:outline-none focus:border-nasa-cyan"

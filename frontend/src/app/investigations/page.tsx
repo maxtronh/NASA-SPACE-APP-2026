@@ -165,6 +165,7 @@ export default function InvestigationsExplorerPage() {
           <Search className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
+            aria-label="Search investigations"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by mission, acronym, fuel, facility, or keyword (e.g. Heptane, FLEX, CIR)..."
@@ -176,10 +177,14 @@ export default function InvestigationsExplorerPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
           {/* Combustion Regime */}
           <div className="space-y-1.5">
-            <label className="text-slate-300 font-mono uppercase text-[11px] block">
+            <label
+              htmlFor="filter-regime"
+              className="text-slate-300 font-mono uppercase text-[11px] block"
+            >
               Combustion Regime
             </label>
             <select
+              id="filter-regime"
               value={selectedRegime}
               onChange={(e) => setSelectedRegime(e.target.value)}
               className="w-full bg-space-950 border border-space-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-nasa-cyan"
@@ -193,10 +198,14 @@ export default function InvestigationsExplorerPage() {
 
           {/* Flight Facility */}
           <div className="space-y-1.5">
-            <label className="text-slate-300 font-mono uppercase text-[11px] block">
+            <label
+              htmlFor="filter-facility"
+              className="text-slate-300 font-mono uppercase text-[11px] block"
+            >
               Facility / Rack
             </label>
             <select
+              id="filter-facility"
               value={selectedFacility}
               onChange={(e) => setSelectedFacility(e.target.value)}
               className="w-full bg-space-950 border border-space-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-nasa-cyan"
@@ -210,10 +219,14 @@ export default function InvestigationsExplorerPage() {
 
           {/* Gravitational Regime */}
           <div className="space-y-1.5">
-            <label className="text-slate-300 font-mono uppercase text-[11px] block">
+            <label
+              htmlFor="filter-gravity"
+              className="text-slate-300 font-mono uppercase text-[11px] block"
+            >
               Gravity Environment
             </label>
             <select
+              id="filter-gravity"
               value={selectedGravity}
               onChange={(e) => setSelectedGravity(e.target.value)}
               className="w-full bg-space-950 border border-space-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-nasa-cyan"
@@ -235,6 +248,8 @@ export default function InvestigationsExplorerPage() {
             </div>
             <input
               type="range"
+              aria-label="Minimum data completeness"
+              aria-valuetext={`${minCompleteness} percent`}
               min="0"
               max="95"
               step="5"

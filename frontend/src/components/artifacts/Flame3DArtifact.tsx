@@ -122,6 +122,7 @@ export default function Flame3DArtifact({ artifact, onExpand }: Props) {
           </div>
           <input
             type="range"
+            aria-label="Initial droplet diameter"
             min="1.0"
             max="4.0"
             step="0.1"
@@ -138,6 +139,7 @@ export default function Flame3DArtifact({ artifact, onExpand }: Props) {
           </div>
           <input
             type="range"
+            aria-label="Ambient oxygen concentration"
             min="12.0"
             max="30.0"
             step="0.5"

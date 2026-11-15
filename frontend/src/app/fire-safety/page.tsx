@@ -456,13 +456,19 @@ export default function FireSafetyPage() {
 
               {/* Material Selector Chips */}
               <div>
-                <label className="text-xs font-mono text-slate-400 block mb-2">
+                <span id="material-label" className="text-xs font-mono text-slate-400 block mb-2">
                   Select Aerospace Cabin Material:
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                </span>
+                <div
+                  role="group"
+                  aria-labelledby="material-label"
+                  className="grid grid-cols-2 sm:grid-cols-3 gap-2"
+                >
                   {MATERIALS.map((m) => (
                     <button
                       key={m.key}
+                      type="button"
+                      aria-pressed={material === m.key}
                       onClick={() => setMaterial(m.key)}
                       className={`p-2 rounded-lg border text-left text-xs transition-all ${
                         material === m.key
@@ -481,13 +487,19 @@ export default function FireSafetyPage() {
 
               {/* Gravity Regime Preset Buttons */}
               <div>
-                <label className="text-xs font-mono text-slate-400 block mb-2">
+                <span id="gravity-label" className="text-xs font-mono text-slate-400 block mb-2">
                   Gravitational Acceleration (g):
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2">
+                </span>
+                <div
+                  role="group"
+                  aria-labelledby="gravity-label"
+                  className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2"
+                >
                   {GRAVITY_PRESETS.map((p) => (
                     <button
                       key={p.label}
+                      type="button"
+                      aria-pressed={Math.abs(gravity - p.g) < 0.001}
                       onClick={() => setGravity(p.g)}
                       className={`px-2.5 py-1.5 rounded-lg border text-xs font-mono transition-all flex items-center gap-1.5 ${
                         Math.abs(gravity - p.g) < 0.001

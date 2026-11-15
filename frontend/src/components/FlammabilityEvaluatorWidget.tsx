@@ -13,6 +13,9 @@ import {
   Sparkles,
 } from "lucide-react";
 import { fetchMerkleRoot } from "@/lib/api";
+import { handleTabKeyDown } from "@/lib/tabs";
+
+const WIDGET_TAB_ORDER = ["flammability", "merkle"] as const;
 
 const MATERIALS = [
   { key: "pmma", name: "PMMA (Acrylic)", loi: 17.5, char: false },
@@ -104,9 +107,23 @@ export default function FlammabilityEvaluatorWidget() {
           </h3>
         </div>
 
-        <div className="flex items-center space-x-1 bg-space-900 p-0.5 rounded-lg border border-space-800 text-xs font-mono">
+        <div
+          role="tablist"
+          aria-label="Verification engine view"
+          className="flex items-center space-x-1 bg-space-900 p-0.5 rounded-lg border border-space-800 text-xs font-mono"
+        >
           <button
+            type="button"
+            role="tab"
+            id="widget-tab-flammability"
+            aria-selected={activeTab === "flammability"}
+            aria-controls="widget-panel"
+            tabIndex={activeTab === "flammability" ? 0 : -1}
+            data-tab-value="flammability"
             onClick={() => setActiveTab("flammability")}
+            onKeyDown={(event) =>
+              handleTabKeyDown(event, WIDGET_TAB_ORDER, activeTab, setActiveTab)
+            }
             className={`px-3 py-1 rounded transition-colors ${
               activeTab === "flammability"
                 ? "bg-amber-500 text-space-950 font-bold"
@@ -116,7 +133,17 @@ export default function FlammabilityEvaluatorWidget() {
             NASA-STD-6001B Flammability
           </button>
           <button
+            type="button"
+            role="tab"
+            id="widget-tab-merkle"
+            aria-selected={activeTab === "merkle"}
+            aria-controls="widget-panel"
+            tabIndex={activeTab === "merkle" ? 0 : -1}
+            data-tab-value="merkle"
             onClick={() => setActiveTab("merkle")}
+            onKeyDown={(event) =>
+              handleTabKeyDown(event, WIDGET_TAB_ORDER, activeTab, setActiveTab)
+            }
             className={`px-3 py-1 rounded transition-colors ${
               activeTab === "merkle"
                 ? "bg-nasa-cyan text-space-950 font-bold"
@@ -128,6 +155,11 @@ export default function FlammabilityEvaluatorWidget() {
         </div>
       </div>
 
+      <div
+        role="tabpanel"
+        id="widget-panel"
+        aria-labelledby={`widget-tab-${activeTab}`}
+      >
       {activeTab === "flammability" ? (
         <div className="p-5 space-y-6">
           {/* Preset Buttons */}
@@ -158,8 +190,14 @@ export default function FlammabilityEvaluatorWidget() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs font-mono">
             {/* Material Dropdown */}
             <div className="bg-space-950 p-3 rounded-lg border border-space-800 space-y-1.5">
-              <label className="text-slate-400 uppercase text-[10px] block">Material Sample</label>
+              <label
+                htmlFor="flammability-material"
+                className="text-slate-400 uppercase text-[10px] block"
+              >
+                Material Sample
+              </label>
               <select
+                id="flammability-material"
                 value={selectedMaterial.key}
                 onChange={(e) => {
                   const m = MATERIALS.find((x) => x.key === e.target.value);
@@ -183,6 +221,8 @@ export default function FlammabilityEvaluatorWidget() {
               </div>
               <input
                 type="range"
+                aria-label="Oxygen level"
+                aria-valuetext={`${oxygenPct.toFixed(1)} percent`}
                 min="15.0"
                 max="40.0"
                 step="0.5"
@@ -200,6 +240,8 @@ export default function FlammabilityEvaluatorWidget() {
               </div>
               <input
                 type="range"
+                aria-label="Cabin pressure"
+                aria-valuetext={`${pressureKpa.toFixed(1)} kilopascals`}
                 min="45.0"
                 max="105.0"
                 step="1.0"
@@ -217,6 +259,8 @@ export default function FlammabilityEvaluatorWidget() {
               </div>
               <input
                 type="range"
+                aria-label="Sample thickness"
+                aria-valuetext={`${thicknessMm.toFixed(1)} millimetres`}
                 min="0.5"
                 max="6.0"
                 step="0.5"
@@ -392,6 +436,7 @@ export default function FlammabilityEvaluatorWidget() {
           </p>
         </div>
       )}
+      </div>
     </div>
   );
 }

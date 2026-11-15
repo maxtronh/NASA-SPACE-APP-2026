@@ -150,6 +150,7 @@ export default function GenerativeUIArtifact({
               </div>
               <input
                 type="range"
+                aria-label="Initial droplet diameter"
                 min="1.0"
                 max="5.0"
                 step="0.1"
@@ -166,6 +167,7 @@ export default function GenerativeUIArtifact({
               </div>
               <input
                 type="range"
+                aria-label="Burning rate constant"
                 min="0.30"
                 max="1.10"
                 step="0.05"
@@ -182,6 +184,7 @@ export default function GenerativeUIArtifact({
               </div>
               <input
                 type="range"
+                aria-label="Ambient oxygen concentration"
                 min="15.0"
                 max="30.0"
                 step="0.5"
@@ -253,6 +256,7 @@ export default function GenerativeUIArtifact({
               </div>
               <input
                 type="range"
+                aria-label="Concurrent airflow velocity"
                 min="0.5"
                 max="9.0"
                 step="0.1"
@@ -269,6 +273,7 @@ export default function GenerativeUIArtifact({
               </div>
               <input
                 type="range"
+                aria-label="Fuel thickness"
                 min="1.0"
                 max="5.0"
                 step="0.5"

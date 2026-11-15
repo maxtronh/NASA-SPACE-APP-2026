@@ -82,6 +82,7 @@ export default function TableArtifact({ artifact, onExpand }: Props) {
         <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" />
         <input
           type="text"
+          aria-label="Filter table rows"
           placeholder="Filter rows..."
           value={filterText}
           onChange={(e) => setFilterText(e.target.value)}

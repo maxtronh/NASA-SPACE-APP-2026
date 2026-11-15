@@ -4,8 +4,11 @@ import { useState } from "react";
 import { ExternalLink, Orbit, RotateCw, Satellite, Sparkles } from "lucide-react";
 import MilkyWayScene from "@/components/MilkyWayScene";
 import SolarSystem25FacesHUD from "@/components/SolarSystem25FacesHUD";
+import { handleTabKeyDown } from "@/lib/tabs";
 
 type View = "milky-way" | "solar-system" | "faces-lab";
+
+const VIEW_ORDER: View[] = ["faces-lab", "milky-way", "solar-system"];
 
 const NASA_EYES_URL =
   "https://eyes.nasa.gov/apps/solar-system/#/home?interactPrompt=true&collapseTimeControls=true&surfaceMapTiling=true&hd=true&minorMoons=true&heliosphere=true&lighting=natural";
@@ -37,7 +40,10 @@ export default function MilkyWayExperience() {
             id="faces-lab-tab"
             aria-selected={view === "faces-lab"}
             aria-controls="space-view-panel"
+            tabIndex={view === "faces-lab" ? 0 : -1}
+            data-tab-value="faces-lab"
             onClick={() => setView("faces-lab")}
+            onKeyDown={(event) => handleTabKeyDown(event, VIEW_ORDER, view, setView)}
             className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nasa-cyan ${
               view === "faces-lab"
                 ? "border-nasa-cyan bg-space-800 text-white font-semibold shadow-[0_0_12px_rgba(104,229,255,0.2)]"
@@ -53,7 +59,10 @@ export default function MilkyWayExperience() {
             id="milky-way-tab"
             aria-selected={view === "milky-way"}
             aria-controls="space-view-panel"
+            tabIndex={view === "milky-way" ? 0 : -1}
+            data-tab-value="milky-way"
             onClick={() => setView("milky-way")}
+            onKeyDown={(event) => handleTabKeyDown(event, VIEW_ORDER, view, setView)}
             className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nasa-cyan ${
               view === "milky-way"
                 ? "border-nasa-cyan bg-space-800 text-white"
@@ -69,7 +78,10 @@ export default function MilkyWayExperience() {
             id="solar-system-tab"
             aria-selected={view === "solar-system"}
             aria-controls="space-view-panel"
+            tabIndex={view === "solar-system" ? 0 : -1}
+            data-tab-value="solar-system"
             onClick={() => setView("solar-system")}
+            onKeyDown={(event) => handleTabKeyDown(event, VIEW_ORDER, view, setView)}
             className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nasa-cyan ${
               view === "solar-system"
                 ? "border-nasa-cyan bg-space-800 text-white"
