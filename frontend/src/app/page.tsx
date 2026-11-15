@@ -22,8 +22,8 @@ export default async function DashboardPage() {
     fetchInvestigations({ limit: 4 }),
   ]);
 
-  const totalRuns = 300;
-  const totalMeasurements = 1208;
+  const totalRuns = analytics?.total_test_runs ?? (investigationsData?.items?.reduce((acc, i) => acc + (i.test_runs_count ?? 0), 0) || 0);
+  const totalMeasurements = analytics?.total_measurements ?? (investigationsData?.items?.reduce((acc, i) => acc + (i.measurements_count ?? 0), 0) || 0);
 
   return (
     <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">

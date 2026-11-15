@@ -146,6 +146,8 @@ export interface MissingDataMetric {
 
 export interface CorpusAnalyticsResponse {
   total_investigations: number;
+  total_test_runs?: number;
+  total_measurements?: number;
   combustion_regimes: Record<string, number>;
   missing_data_matrix: Record<string, MissingDataMetric>;
 }

@@ -20,7 +20,6 @@ interface Props {
 }
 
 export default function TimeseriesArtifact({ artifact, onExpand }: Props) {
-  // If data_points is empty, synthesize representative microgravity sensor telemetry
   const { data, channels } = useMemo(() => {
     let chanList = artifact.channels;
     if (!chanList || chanList.length === 0) {
@@ -31,25 +30,7 @@ export default function TimeseriesArtifact({ artifact, onExpand }: Props) {
       ];
     }
 
-    let points = artifact.data_points;
-    if (!points || points.length === 0) {
-      points = [];
-      const totalSteps = 25;
-      for (let i = 0; i <= totalSteps; i++) {
-        const t = Math.round((i * 0.4) * 10) / 10;
-        // Sensor signal curves with ignition spike and steady microgravity plateau
-        const tc1 = Math.round(298 + 1150 * Math.exp(-Math.pow((t - 3.0) / 2.0, 2)) + Math.random() * 5);
-        const tc2 = Math.round(298 + 820 * Math.exp(-Math.pow((t - 3.5) / 2.5, 2)) + Math.random() * 4);
-        const press = Math.round((101.325 + 0.4 * Math.sin(t * 0.6)) * 100) / 100;
-        points.push({
-          time_s: t,
-          tc1: t > 0.5 ? tc1 : 298,
-          tc2: t > 0.8 ? tc2 : 298,
-          press,
-        });
-      }
-    }
-
+    const points = artifact.data_points && artifact.data_points.length > 0 ? artifact.data_points : [];
     return { data: points, channels: chanList };
   }, [artifact]);
 
@@ -121,32 +102,39 @@ export default function TimeseriesArtifact({ artifact, onExpand }: Props) {
 
       {/* Multi-channel Chart */}
       <div className="h-64 w-full bg-space-900/50 rounded-lg p-2 border border-space-800/80">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-            <XAxis dataKey="time_s" stroke="#64748b" tick={{ fontSize: 11 }} unit=" s" />
-            <YAxis stroke="#64748b" tick={{ fontSize: 11 }} />
-            <Tooltip
-              contentStyle={{ backgroundColor: "#020617", borderColor: "#334155", borderRadius: "8px" }}
-            />
-            <Legend wrapperStyle={{ fontSize: 11 }} />
-            {channels.map((ch) => {
-              const key = ch.data_key || ch.channel_name;
-              if (!activeChannels[key]) return null;
-              return (
-                <Line
-                  key={key}
-                  type="monotone"
-                  dataKey={key}
-                  name={`${ch.channel_name}${ch.unit ? ` (${ch.unit})` : ""}`}
-                  stroke={ch.color || "#06b6d4"}
-                  strokeWidth={2}
-                  dot={false}
-                />
-              );
-            })}
-          </LineChart>
-        </ResponsiveContainer>
+        {data.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center text-slate-500 font-mono text-xs">
+            <Activity className="w-6 h-6 mb-2 text-slate-600" />
+            <span>NO TELEMETRY DATA POINTS RECORDED FOR THIS STREAM</span>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+              <XAxis dataKey="time_s" stroke="#64748b" tick={{ fontSize: 11 }} unit=" s" />
+              <YAxis stroke="#64748b" tick={{ fontSize: 11 }} />
+              <Tooltip
+                contentStyle={{ backgroundColor: "#020617", borderColor: "#334155", borderRadius: "8px" }}
+              />
+              <Legend wrapperStyle={{ fontSize: 11 }} />
+              {channels.map((ch) => {
+                const key = ch.data_key || ch.channel_name;
+                if (!activeChannels[key]) return null;
+                return (
+                  <Line
+                    key={key}
+                    type="monotone"
+                    dataKey={key}
+                    name={`${ch.channel_name}${ch.unit ? ` (${ch.unit})` : ""}`}
+                    stroke={ch.color || "#06b6d4"}
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                );
+              })}
+            </LineChart>
+          </ResponsiveContainer>
+        )}
       </div>
 
       {/* Sampling and Metadata */}

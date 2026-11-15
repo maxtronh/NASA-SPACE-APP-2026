@@ -37,6 +37,38 @@ import {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
+export class ApiError extends Error {
+  constructor(
+    public readonly status: number,
+    message: string,
+    public readonly details?: unknown
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
+export async function handleApiResponse<T>(res: Response): Promise<T> {
+  if (!res.ok) {
+    let details: unknown = null;
+    let message = `API request failed with HTTP ${res.status}`;
+    try {
+      const data = await res.json();
+      if (data && data.error && data.error.message) {
+        message = data.error.message;
+        details = data.error.details;
+      } else if (data && data.detail) {
+        message = typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail);
+        details = data.detail;
+      }
+    } catch {
+      // Body was not JSON
+    }
+    throw new ApiError(res.status, message, details);
+  }
+  return await res.json();
+}
+
 /**
  * Checks backend health status.
  */

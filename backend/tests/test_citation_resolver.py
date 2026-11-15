@@ -735,3 +735,32 @@ def test_alembic_migration_0003_definition():
     assert callable(mod.upgrade)
     assert callable(mod.downgrade)
 
+
+def test_api_investigations_citations_by_slug(client: TestClient):
+    """Verifies GET /api/v1/citations/investigations/{slug} resolves citations by investigation slug."""
+    # Retrieve existing investigation to use its slug
+    res = client.get("/api/v1/investigations?limit=1")
+    assert res.status_code == 200
+    items = res.json().get("items", [])
+    if items:
+        slug = items[0]["slug"]
+        cit_res = client.get(f"/api/v1/citations/investigations/{slug}")
+        assert cit_res.status_code == 200
+        assert isinstance(cit_res.json(), list)
+
+        # Also verify bibtex export route
+        bib_res = client.get(f"/api/v1/citations/investigations/{slug}/bibtex")
+        assert bib_res.status_code == 200
+        assert "text/plain" in bib_res.headers.get("content-type", "") or "x-bibtex" in bib_res.headers.get("content-type", "")
+
+
+def test_api_investigations_citations_slug_404_envelope(client: TestClient):
+    """Verifies that non-existent slugs return 404 with structured error envelope."""
+    res = client.get("/api/v1/citations/investigations/non-existent-flight-experiment-999")
+    assert res.status_code == 404
+    data = res.json()
+    assert "error" in data
+    assert data["error"]["code"] == "HTTP_ERROR"
+    assert data["error"]["status_code"] == 404
+    assert "detail" in data
+

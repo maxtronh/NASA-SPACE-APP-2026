@@ -348,8 +348,10 @@ def train_nasa_qwen_model(
         "vocab_size": VOCAB_SIZE,
         "model_max_length": 32768
     }
-    with open(os.path.join(output_dir, "tokenizer_config.json"), "w", encoding="utf-8") as f:
+    tokenizer_config_path = os.path.join(output_dir, "tokenizer_config.json")
+    with open(tokenizer_config_path, "w", encoding="utf-8") as f:
         json.dump(tokenizer_config, f, indent=2)
+    print(f"  ✓ Saved tokenizer configuration: {tokenizer_config_path}")
 
     total_time = round(time.time() - start_time, 2)
 

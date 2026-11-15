@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import {
   Cpu,
   Sliders,
@@ -114,20 +115,26 @@ export default function OptimizerPage() {
     setSelectedProposal(proposal);
   };
 
+  const debouncedPressure = useDebouncedValue(pressure, 300);
+  const debouncedOxygen = useDebouncedValue(oxygen, 300);
+  const debouncedVentilation = useDebouncedValue(ventilation, 300);
+  const debouncedDiameter = useDebouncedValue(diameter, 300);
+  const debouncedKappa = useDebouncedValue(kappa, 300);
+
   useEffect(() => {
     let active = true;
     async function runOptimization() {
       setLoading(true);
       try {
         const payload: OEDOptimizationRequest = {
-          kappa,
+          kappa: debouncedKappa,
           target_metric: targetMetric,
           varying_parameter: varyingAxis,
           fixed_parameters: {
-            pressure_kpa: pressure,
-            oxygen_pct: oxygen,
-            ventilation_velocity_cm_s: ventilation,
-            droplet_diameter_mm: diameter,
+            pressure_kpa: debouncedPressure,
+            oxygen_pct: debouncedOxygen,
+            ventilation_velocity_cm_s: debouncedVentilation,
+            droplet_diameter_mm: debouncedDiameter,
           },
         };
         const res = await optimizeOEDParameters(payload);
@@ -147,7 +154,7 @@ export default function OptimizerPage() {
     return () => {
       active = false;
     };
-  }, [pressure, oxygen, ventilation, diameter, kappa, varyingAxis, targetMetric]);
+  }, [debouncedPressure, debouncedOxygen, debouncedVentilation, debouncedDiameter, debouncedKappa, varyingAxis, targetMetric]);
 
   // Chart data formatting: calculate upper and lower bounds for the epistemic uncertainty band
   const chartData = useMemo(() => {

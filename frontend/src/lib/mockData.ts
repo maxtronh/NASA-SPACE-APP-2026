@@ -91,6 +91,8 @@ export const MOCK_INVESTIGATIONS: InvestigationSummary[] = [
 
 export const MOCK_CORPUS_ANALYTICS: CorpusAnalyticsResponse = {
   total_investigations: 3,
+  total_test_runs: 300,
+  total_measurements: 1208,
   combustion_regimes: {
     droplet_combustion: 1,
     solid_flame_spread: 1,
@@ -1005,14 +1007,14 @@ export function calculateMockEAFHI(payload: EAFHIEnvironmentInput): EAFHIResult 
   const V_vent = Math.max(0.0, payload.ventilation_velocity_cm_s);
   const L = payload.characteristic_length_m || 0.05;
 
-  // Material standard 1g Limiting Oxygen Index (LOI)
+  // Material standard 1g Limiting Oxygen Index (LOI) per NASA-STD-6001B
   const matLoiMap: Record<string, number> = {
-    pmma: 17.3,
-    nomex: 28.5,
+    pmma: 17.5,
+    nomex: 29.0,
     delrin: 15.0,
-    polycarbonate: 25.0,
+    polycarbonate: 26.0,
     teflon: 95.0,
-    kevlar: 29.0,
+    kevlar: 29.5,
   };
   const loi = matLoiMap[payload.material_key?.toLowerCase()] ?? 18.0;
 

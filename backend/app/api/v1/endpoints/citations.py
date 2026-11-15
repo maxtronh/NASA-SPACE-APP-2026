@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.db.session import get_db
 from backend.app.models.citation import LiteratureCitation
+from backend.app.models.investigation import Investigation
 from backend.app.services.citation_resolver import CitationResolver, ResolvedCitation
 
 router = APIRouter(prefix="/citations", tags=["citations"])
@@ -166,6 +167,25 @@ async def get_rate_limit_telemetry():
     return {"rate_limit": resolver.rate_limit_telemetry}
 
 
+async def _resolve_investigation(db: AsyncSession, id_or_slug: str) -> Investigation:
+    try:
+        val_uuid = uuid.UUID(id_or_slug)
+        res = await db.execute(select(Investigation).where(Investigation.id == val_uuid))
+        inv = res.scalar_one_or_none()
+    except ValueError:
+        res = await db.execute(select(Investigation).where(Investigation.slug == id_or_slug))
+        inv = res.scalar_one_or_none()
+        if not inv and id_or_slug == "flex-droplet-burning":
+            alt = await db.execute(select(Investigation).where(Investigation.slug == "flex-2-heptane-droplet"))
+            inv = alt.scalar_one_or_none()
+    if not inv:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Investigation '{id_or_slug}' not found",
+        )
+    return inv
+
+
 @router.get("/investigation/{investigation_id}")
 async def list_investigation_citations(
     investigation_id: uuid.UUID,
@@ -178,6 +198,40 @@ async def list_investigation_citations(
     result = await db.execute(query)
     citations = result.scalars().all()
     return [c.to_dict() for c in citations]
+
+
+@router.get("/investigations/{slug}")
+async def list_investigation_citations_by_slug(
+    slug: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Retrieves all verified literature citations for an investigation by its slug or ID."""
+    inv = await _resolve_investigation(db, slug)
+    query = select(LiteratureCitation).where(
+        LiteratureCitation.investigation_id == inv.id
+    )
+    result = await db.execute(query)
+    citations = result.scalars().all()
+    return [c.to_dict() for c in citations]
+
+
+@router.get("/investigations/{slug}/bibtex")
+async def get_investigation_bibtex_by_slug(
+    slug: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Retrieves concatenated BibTeX entries for an investigation by its slug or ID."""
+    inv = await _resolve_investigation(db, slug)
+    query = select(LiteratureCitation).where(
+        LiteratureCitation.investigation_id == inv.id
+    )
+    result = await db.execute(query)
+    citations = result.scalars().all()
+    bibtex_entries = [c.bibtex for c in citations if c.bibtex]
+    return PlainTextResponse(
+        content="\n\n".join(bibtex_entries),
+        media_type="application/x-bibtex; charset=utf-8",
+    )
 
 
 @router.post("/save", status_code=status.HTTP_201_CREATED)

@@ -10,5 +10,7 @@ class MissingDataMetric(BaseModel):
 
 class CorpusAnalyticsResponse(BaseModel):
     total_investigations: int
+    total_test_runs: int = 0
+    total_measurements: int = 0
     combustion_regimes: dict[str, int]
     missing_data_matrix: dict[str, MissingDataMetric]

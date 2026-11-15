@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo, useRef } from "react";
 import Link from "next/link";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import {
   Radio,
   Activity,
@@ -246,10 +247,16 @@ export default function MissionControlPage() {
     }
   };
 
+  const debouncedThresholdG = useDebouncedValue(thresholdG, 300);
+  const debouncedFuelTempK = useDebouncedValue(fuelTempK, 300);
+  const debouncedChamberPressureKpa = useDebouncedValue(chamberPressureKpa, 300);
+  const debouncedO2Percentage = useDebouncedValue(o2Percentage, 300);
+  const debouncedVentilationCmS = useDebouncedValue(ventilationCmS, 300);
+
   // Re-run wavelet when sliders change
   useEffect(() => {
     executeWaveletDecomposition(jitterInjected);
-  }, [decompLevel, thresholdG, thresholdMode]);
+  }, [decompLevel, debouncedThresholdG, thresholdMode]);
 
   // ==========================================
   // RECOMPUTE SILENT REKINDLING KINETICS
@@ -257,14 +264,14 @@ export default function MissionControlPage() {
   useEffect(() => {
     let active = true;
     async function updateRekindle() {
-      const effectiveVent = damperIsolated ? 0.0 : ventilationCmS;
+      const effectiveVent = damperIsolated ? 0.0 : debouncedVentilationCmS;
       try {
         const res = await calculateRekindleRisk({
           fuel_type: selectedFuel,
-          fuel_temperature_k: fuelTempK,
+          fuel_temperature_k: debouncedFuelTempK,
           visible_flame_active: visibleFlameActive,
-          chamber_pressure_kpa: chamberPressureKpa,
-          oxygen_percentage: o2Percentage,
+          chamber_pressure_kpa: debouncedChamberPressureKpa,
+          oxygen_percentage: debouncedO2Percentage,
           ventilation_velocity_cm_s: effectiveVent,
         });
         if (active) setRekindleResult(res);
@@ -272,10 +279,10 @@ export default function MissionControlPage() {
         if (active) {
           const fallback = computeMockRekindleRisk({
             fuel_type: selectedFuel,
-            fuel_temperature_k: fuelTempK,
+            fuel_temperature_k: debouncedFuelTempK,
             visible_flame_active: visibleFlameActive,
-            chamber_pressure_kpa: chamberPressureKpa,
-            oxygen_percentage: o2Percentage,
+            chamber_pressure_kpa: debouncedChamberPressureKpa,
+            oxygen_percentage: debouncedO2Percentage,
             ventilation_velocity_cm_s: effectiveVent,
           });
           setRekindleResult(fallback);
@@ -288,12 +295,12 @@ export default function MissionControlPage() {
     };
   }, [
     selectedFuel,
-    fuelTempK,
+    debouncedFuelTempK,
     visibleFlameActive,
-    ventilationCmS,
+    debouncedVentilationCmS,
     damperIsolated,
-    chamberPressureKpa,
-    o2Percentage,
+    debouncedChamberPressureKpa,
+    debouncedO2Percentage,
   ]);
 
   // ==========================================
@@ -688,14 +695,14 @@ export default function MissionControlPage() {
             <div className="bg-space-850 border border-space-800 p-2.5 rounded-lg text-center">
               <div className="text-[10px] font-mono text-slate-400 uppercase">SNR Enhancement</div>
               <div className="text-base font-bold font-mono text-emerald-400 mt-0.5">
-                +{waveletResult?.snr_enhancement_db ?? 21.4} dB
+                {waveletResult?.snr_enhancement_db != null ? `+${waveletResult.snr_enhancement_db} dB` : "—"}
               </div>
             </div>
 
             <div className="bg-space-850 border border-space-800 p-2.5 rounded-lg text-center">
               <div className="text-[10px] font-mono text-slate-400 uppercase">Peak Jitter Attenuation</div>
               <div className="text-base font-bold font-mono text-emerald-400 mt-0.5">
-                {waveletResult?.peak_reduction_pct ?? 98.7}%
+                {waveletResult?.peak_reduction_pct != null ? `${waveletResult.peak_reduction_pct}%` : "—"}
               </div>
             </div>
 
@@ -947,10 +954,10 @@ export default function MissionControlPage() {
               <span className="text-slate-400">Cool-Flame Damköhler (Da_cool):</span>
               <span
                 className={`font-bold ${
-                  (rekindleResult?.cool_flame_damkohler ?? 0) >= 1.0 ? "text-rose-400" : "text-nasa-cyan"
+                  rekindleResult?.cool_flame_damkohler != null && rekindleResult.cool_flame_damkohler >= 1.0 ? "text-rose-400" : "text-nasa-cyan"
                 }`}
               >
-                {rekindleResult?.cool_flame_damkohler.toFixed(2) ?? "1.84"} (Crit: 1.00)
+                {rekindleResult?.cool_flame_damkohler != null ? `${rekindleResult.cool_flame_damkohler.toFixed(2)} (Crit: 1.00)` : "—"}
               </span>
             </div>
 
@@ -962,7 +969,7 @@ export default function MissionControlPage() {
                     (rekindleResult?.rekindle_probability ?? 0) >= 0.7 ? "text-rose-400" : "text-emerald-400"
                   }`}
                 >
-                  {((rekindleResult?.rekindle_probability ?? 0.882) * 100).toFixed(1)}%
+                  {rekindleResult?.rekindle_probability != null ? `${(rekindleResult.rekindle_probability * 100).toFixed(1)}%` : "—"}
                 </span>
               </div>
               <div className="w-full bg-space-800 h-2 rounded-full overflow-hidden">
@@ -975,7 +982,7 @@ export default function MissionControlPage() {
                       : "bg-emerald-400"
                   }`}
                   style={{
-                    width: `${Math.min(100, (rekindleResult?.rekindle_probability ?? 0.882) * 100)}%`,
+                    width: `${Math.min(100, (rekindleResult?.rekindle_probability ?? 0) * 100)}%`,
                   }}
                 />
               </div>
@@ -991,14 +998,14 @@ export default function MissionControlPage() {
               <div>
                 <span className="text-slate-400">Flash Point:</span>
                 <span className="ml-1.5 font-bold text-slate-200">
-                  {rekindleResult?.flash_point_k ? `${rekindleResult.flash_point_k.toFixed(1)} K` : "269.1 K"}
+                  {rekindleResult?.flash_point_k != null ? `${rekindleResult.flash_point_k.toFixed(1)} K` : "—"}
                 </span>
               </div>
               <div>
                 <span className="text-slate-400">Droplet Core T:</span>
                 <span
                   className={`ml-1.5 font-bold ${
-                    fuelTempK > (rekindleResult?.flash_point_k ?? 269) ? "text-rose-300" : "text-emerald-300"
+                    rekindleResult?.flash_point_k != null && fuelTempK > rekindleResult.flash_point_k ? "text-rose-300" : "text-emerald-300"
                   }`}
                 >
                   {fuelTempK.toFixed(0)} K
@@ -1007,7 +1014,7 @@ export default function MissionControlPage() {
               <div>
                 <span className="text-slate-400">Rec. Airspeed:</span>
                 <span className="ml-1.5 font-bold text-nasa-cyan">
-                  {rekindleResult?.recommended_ventilation_cm_s ?? "18.5"} cm/s
+                  {rekindleResult?.recommended_ventilation_cm_s != null ? `${rekindleResult.recommended_ventilation_cm_s} cm/s` : "—"}
                 </span>
               </div>
             </div>

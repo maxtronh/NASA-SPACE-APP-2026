@@ -1,9 +1,11 @@
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.models.investigation import Investigation
+from backend.app.models.measurement import Measurement
+from backend.app.models.test_run import TestRun
 from backend.app.services.investigation_service import InvestigationService
 
 
@@ -18,6 +20,13 @@ class AnalyticsService:
 
         total = len(investigations)
         regime_counts: dict[str, int] = {}
+
+        # Aggregate counts
+        total_runs_res = await session.execute(select(func.count(TestRun.id)))
+        total_runs = total_runs_res.scalar_one() or 0
+
+        total_meas_res = await session.execute(select(func.count(Measurement.id)))
+        total_measurements = total_meas_res.scalar_one() or 0
 
         # Fetch detail for each to gather complete measurement metrics
         all_details = []
@@ -46,6 +55,8 @@ class AnalyticsService:
 
         return {
             "total_investigations": total,
+            "total_test_runs": total_runs,
+            "total_measurements": total_measurements,
             "combustion_regimes": regime_counts,
             "missing_data_matrix": missing_matrix,
         }

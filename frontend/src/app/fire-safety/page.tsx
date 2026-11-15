@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import {
   ShieldAlert,
   ShieldCheck,
@@ -83,16 +84,21 @@ export default function FireSafetyPage() {
     setMaterial("pmma");
   };
 
+  const debouncedGravity = useDebouncedValue(gravity, 300);
+  const debouncedPressure = useDebouncedValue(pressure, 300);
+  const debouncedOxygen = useDebouncedValue(oxygen, 300);
+  const debouncedVentilation = useDebouncedValue(ventilation, 300);
+
   useEffect(() => {
     let active = true;
     async function evaluateSafety() {
       setLoading(true);
       try {
         const payload: EAFHIEnvironmentInput = {
-          gravity_g: gravity,
-          pressure_kpa: pressure,
-          oxygen_pct: oxygen,
-          ventilation_velocity_cm_s: ventilation,
+          gravity_g: debouncedGravity,
+          pressure_kpa: debouncedPressure,
+          oxygen_pct: debouncedOxygen,
+          ventilation_velocity_cm_s: debouncedVentilation,
           material_key: material,
           characteristic_length_m: 0.05,
         };
@@ -116,7 +122,7 @@ export default function FireSafetyPage() {
     return () => {
       active = false;
     };
-  }, [gravity, pressure, oxygen, ventilation, material, sweepParam]);
+  }, [debouncedGravity, debouncedPressure, debouncedOxygen, debouncedVentilation, material, sweepParam]);
 
   // Circular Gauge Math: 270 degree arc from 135 deg to 405 deg
   const gaugeScore = eafhiResult?.risk_score ?? 0.5;

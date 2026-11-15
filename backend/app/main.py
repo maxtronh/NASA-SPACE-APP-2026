@@ -5,8 +5,12 @@ CORTEXX Scientific Intelligence Platform
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, Request, Response, status
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from sqlalchemy.exc import SQLAlchemyError
 
 from backend.app.api.v1.router import api_v1_router
@@ -63,6 +67,58 @@ app.add_middleware(
 )
 # OpenTelemetry & Prometheus Metrics Middleware
 app.add_middleware(TelemetryMetricsMiddleware)
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    """Unified HTTP error envelope preserving detail string and structured error code."""
+    detail_str = str(exc.detail) if exc.detail else "HTTP Exception"
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "detail": exc.detail,
+            "error": {
+                "code": "HTTP_ERROR",
+                "status_code": exc.status_code,
+                "message": detail_str,
+            },
+        },
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Unified request validation error envelope preserving detail list and structured details."""
+    errors = jsonable_encoder(exc.errors())
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={
+            "detail": errors,
+            "error": {
+                "code": "VALIDATION_ERROR",
+                "status_code": 422,
+                "message": "Request parameter validation failed",
+                "details": errors,
+            },
+        },
+    )
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Global unhandled exception envelope preventing raw internal stack trace leaks."""
+    logger.exception(f"Unhandled exception processing {request.method} {request.url.path}: {exc}")
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "detail": "Internal server error occurred",
+            "error": {
+                "code": "INTERNAL_ERROR",
+                "status_code": 500,
+                "message": "An unexpected error occurred processing the scientific request",
+            },
+        },
+    )
 
 
 @app.get("/health", response_model=HealthResponse, tags=["health"])

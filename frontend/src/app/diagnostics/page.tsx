@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import {
   Video,
   Search,
@@ -57,28 +58,36 @@ export default function DiagnosticsPage() {
     "High-pressure Schlieren density gradient",
   ];
 
+  const debouncedSearch = useDebouncedValue(searchQuery, 300);
+
   useEffect(() => {
+    let active = true;
     async function loadFrames() {
       setLoading(true);
       try {
         const res = await searchFrameRAG({
-          query: searchQuery,
+          query: debouncedSearch,
           modality: selectedModality,
           investigation_slug: selectedInvestigation !== "all" ? selectedInvestigation : undefined,
           limit: 12,
         });
-        setFrames(res.results || []);
-        if (res.results && res.results.length > 0 && !activeFrame) {
-          setActiveFrame(res.results[0]);
+        if (active) {
+          setFrames(res.results || []);
+          if (res.results && res.results.length > 0 && !activeFrame) {
+            setActiveFrame(res.results[0]);
+          }
         }
       } catch (err) {
         console.error("Failed to query frame RAG:", err);
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     }
     loadFrames();
-  }, [searchQuery, selectedModality, selectedInvestigation]);
+    return () => {
+      active = false;
+    };
+  }, [debouncedSearch, selectedModality, selectedInvestigation]);
 
   const handleInspect = (frame: VideoFrameRAGItem) => {
     setActiveFrame(frame);
