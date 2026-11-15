@@ -42,7 +42,25 @@ start "Flame in Freefall — Backend API" cmd /k "title Flame in Freefall — Ba
 echo [*] Launching Next.js Frontend on http://localhost:3000 ...
 start "Flame in Freefall — Frontend" cmd /k "title Flame in Freefall — Next.js Frontend [Port 3000] && cd /d "%~dp0\frontend" && npm run dev"
 
-:: 5. Open Browser
+:: 5. Await Backend Readiness & Open Browser
+echo.
+echo [*] Waiting for Backend API service to report healthy...
+set "BACKEND_READY=0"
+for /L %%i in (1,1,15) do (
+    if !BACKEND_READY! equ 0 (
+        curl -s -m 2 http://127.0.0.1:8000/api/v1/health >nul 2>&1
+        if !errorlevel! equ 0 (
+            set "BACKEND_READY=1"
+            echo [OK] Backend API is live and responding (attempt %%i/15).
+        ) else (
+            timeout /t 1 /nobreak >nul
+        )
+    )
+)
+if !BACKEND_READY! equ 0 (
+    echo [INFO] Backend is still initializing in background. Frontend will start with authentic local cache.
+)
+
 echo.
 echo =====================================================================
 echo  Services launched successfully!
@@ -51,8 +69,6 @@ echo  - Backend API: http://localhost:8000
 echo  - API Docs:    http://localhost:8000/docs
 echo =====================================================================
 echo.
-echo Waiting 5 seconds before opening browser...
-timeout /t 5 /nobreak >nul
 start http://localhost:3000
 
 echo.

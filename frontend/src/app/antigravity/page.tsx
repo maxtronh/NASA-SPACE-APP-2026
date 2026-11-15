@@ -225,12 +225,12 @@ export default function AntigravityWorkspacePage() {
               </span>
               <span
                 className={`text-xs font-mono px-2.5 py-1 rounded-md border ${
-                  comparison.equivalence_assessment.equivalent
+                  comparison.equivalence_assessment?.equivalent
                     ? "bg-emerald-950 text-emerald-300 border-emerald-600"
                     : "bg-amber-950 text-amber-300 border-amber-600"
                 }`}
               >
-                {comparison.equivalence_assessment.equivalent
+                {comparison.equivalence_assessment?.equivalent
                   ? "✓ Equivalent Conditions"
                   : "⚠ Non-Equivalent Aerodynamics"}
               </span>

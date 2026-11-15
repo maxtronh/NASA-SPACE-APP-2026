@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { queryCopilotChat } from "@/lib/api";
 // Embedded NASA Eyes on the Solar System Orrery: https://eyes.nasa.gov/apps/orrery/
 import {
   Orbit,
@@ -501,26 +502,17 @@ export default function SolarSystem25FacesHUD() {
     setChatMessages((prev) => [...prev, userMsg]);
 
     try {
-      const res = await fetch("/api/v1/exploration/copilot/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: text,
-          active_face_id: selectedFace.id,
-          departure_body: departureBody,
-          target_body: targetBody,
-        }),
+      const data = await queryCopilotChat({
+        query: text,
+        active_face_id: selectedFace.id,
+        departure_body: departureBody,
+        target_body: targetBody,
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        setChatMessages((prev) => [
-          ...prev,
-          { role: "copilot", content: `[${data.inference_mode}]\n${data.response}` },
-        ]);
-      } else {
-        throw new Error("API call failed");
-      }
+      setChatMessages((prev) => [
+        ...prev,
+        { role: "copilot", content: `[${data.inference_mode}]\n${data.response}` },
+      ]);
     } catch {
       // Local client fallback
       let fallbackText =
