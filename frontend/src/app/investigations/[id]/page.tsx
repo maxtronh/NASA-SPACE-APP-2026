@@ -15,7 +15,7 @@ import {
   Activity,
   AlertTriangle,
 } from "lucide-react";
-import { fetchInvestigationDetail } from "@/lib/api";
+import { ApiError, fetchInvestigationDetail } from "@/lib/api";
 import ProvenanceCard from "@/components/ProvenanceCard";
 import ScientificChart from "@/components/ScientificChart";
 
@@ -30,7 +30,10 @@ export default async function InvestigationDetailPage({ params }: InvestigationD
   try {
     data = await fetchInvestigationDetail(id);
   } catch (err) {
-    notFound();
+    // Only a genuine 404 should render the not-found page; network and
+    // server failures must surface through the error boundary instead.
+    if (err instanceof ApiError && err.status === 404) notFound();
+    throw err;
   }
 
   const { investigation, provenance } = data;

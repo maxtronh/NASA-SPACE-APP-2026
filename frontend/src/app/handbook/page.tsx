@@ -15,13 +15,13 @@ export default function HandbookPage() {
         <div className="border-b border-space-800 pb-6">
           <div className="flex items-center gap-3 mb-2">
             <StatusPill label="NASA Technical Handbook" tone="info" icon={<BookOpen className="w-3.5 h-3.5" />} />
-            <StatusPill label="PWA Offline Ready" tone="success" pulse icon={<ShieldCheck className="w-3.5 h-3.5" />} />
+            <StatusPill label="Offline Cache: Not Enabled" tone="warning" icon={<ShieldCheck className="w-3.5 h-3.5" />} />
           </div>
           <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white">
             Microgravity Combustion & Spacecraft Fire Safety Handbook
           </h1>
           <p className="text-slate-400 mt-2 text-sm md:text-base leading-relaxed">
-            Authoritative reference manual grounded in NASA-STD-6001B, ISS flight experiments (FLEX, ACME, BASS-II, SoFIE), and fundamental microgravity kinetics. Available offline via service worker cache.
+            Authoritative reference manual grounded in NASA-STD-6001B, ISS flight experiments (FLEX, ACME, BASS-II, SoFIE), and fundamental microgravity kinetics. A network connection is required in this build; offline caching is not yet enabled.
           </p>
         </div>
 
@@ -31,7 +31,7 @@ export default function HandbookPage() {
             { id: 'standards', label: 'NASA-STD-6001B Standards' },
             { id: 'equations', label: 'Governing Equations' },
             { id: 'regimes', label: 'Combustion Regimes' },
-            { id: 'offline', label: 'PWA & Offline Architecture' },
+            { id: 'offline', label: 'Offline & PWA Roadmap' },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -135,22 +135,24 @@ export default function HandbookPage() {
 
         {activeTab === 'offline' && (
           <Card variant="subtle" className="space-y-4">
-            <h2 className="text-lg font-bold text-white">Progressive Web Application (PWA) Offline Engine</h2>
+            <h2 className="text-lg font-bold text-white">Progressive Web Application (PWA) Roadmap</h2>
             <p className="text-sm text-slate-300 leading-relaxed">
-              CORTEXX incorporates a service worker with cache-first static shell strategy and stale-while-revalidate data strategy. When deployed in flight environments or field research with intermittent network connectivity, the platform operates seamlessly offline.
+              A web app manifest is present, but service-worker caching is <strong className="text-amber-300">not registered</strong> in this build, so the
+              handbook is not available offline yet. The cache-first worker in <code className="font-mono text-nasa-cyan">public/sw.js</code> is scaffolded
+              and will be registered once cache invalidation and version rollover are validated.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
               <div className="bg-space-950 p-4 rounded-lg border border-space-800/80">
                 <span className="text-xs font-semibold text-nasa-cyan font-mono">Manifest</span>
-                <p className="text-xs text-slate-400 mt-1">Standalone display mode with NASA blue theme (#0b3d91).</p>
+                <p className="text-xs text-slate-400 mt-1">Defined at <code>/manifest.json</code> with standalone display mode. Not yet linked from app metadata.</p>
               </div>
               <div className="bg-space-950 p-4 rounded-lg border border-space-800/80">
-                <span className="text-xs font-semibold text-emerald-400 font-mono">Cache Storage</span>
-                <p className="text-xs text-slate-400 mt-1">Pre-cached handbook, comparison matrix, and offline fallback.</p>
+                <span className="text-xs font-semibold text-amber-400 font-mono">Cache Storage</span>
+                <p className="text-xs text-slate-400 mt-1">Scaffolded in <code>public/sw.js</code>; registration is pending, so no pages are cached.</p>
               </div>
               <div className="bg-space-950 p-4 rounded-lg border border-space-800/80">
-                <span className="text-xs font-semibold text-amber-400 font-mono">Data Integrity</span>
-                <p className="text-xs text-slate-400 mt-1">Merkle tree hashes cached locally for offline provenance verification.</p>
+                <span className="text-xs font-semibold text-slate-300 font-mono">Data Integrity</span>
+                <p className="text-xs text-slate-400 mt-1">Offline Merkle verification is planned; live roots come from the provenance API.</p>
               </div>
             </div>
           </Card>

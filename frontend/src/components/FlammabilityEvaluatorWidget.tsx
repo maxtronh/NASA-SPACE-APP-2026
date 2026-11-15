@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ShieldAlert,
   ShieldCheck,
@@ -12,6 +12,7 @@ import {
   Layers,
   Sparkles,
 } from "lucide-react";
+import { fetchMerkleRoot } from "@/lib/api";
 
 const MATERIALS = [
   { key: "pmma", name: "PMMA (Acrylic)", loi: 17.5, char: false },
@@ -35,6 +36,34 @@ export default function FlammabilityEvaluatorWidget() {
   const [pressureKpa, setPressureKpa] = useState(101.325);
   const [thicknessMm, setThicknessMm] = useState(2.0);
   const [activeTab, setActiveTab] = useState<"flammability" | "merkle">("flammability");
+
+  // Live provenance root. Deliberately no placeholder hash: if the API is
+  // unavailable the panel says so instead of inventing a digest.
+  const [merkle, setMerkle] = useState<{
+    root: string;
+    leaves: number;
+    depth: number;
+  } | null>(null);
+  const [merkleError, setMerkleError] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    fetchMerkleRoot()
+      .then((data) => {
+        if (!active) return;
+        setMerkle({
+          root: data.merkle_root,
+          leaves: data.total_leaves,
+          depth: data.tree_depth,
+        });
+      })
+      .catch(() => {
+        if (active) setMerkleError(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Physics-based NASA-STD-6001B calculation
   const loi = selectedMaterial.loi;
@@ -61,9 +90,8 @@ export default function FlammabilityEvaluatorWidget() {
   const test7Status = test7Pass ? "PASS" : "FAIL";
 
   const isCompliant = test1Status === "PASS" && test7Status === "PASS";
-  const isRestricted = test1Status in ["PASS", "MARGINAL"] && test7Status === "PASS";
-
-  const merkleRoot = "a8f3b207d4c5e6918a2431cf90632b7811ef92c478a5e01b349d71c692881a42";
+  const isRestricted =
+    ["PASS", "MARGINAL"].includes(test1Status) && test7Status === "PASS";
 
   return (
     <div className="bg-space-900 border border-space-700/80 rounded-xl overflow-hidden shadow-xl space-y-4">
@@ -311,35 +339,56 @@ export default function FlammabilityEvaluatorWidget() {
                 Cryptographic Flight Archive Merkle Root
               </span>
             </div>
-            <span className="px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800 text-[10px]">
-              RFC 6962 Standard
+            <span
+              className={`px-2 py-0.5 rounded border text-[10px] ${
+                merkle
+                  ? "bg-cyan-950 text-cyan-300 border-cyan-800"
+                  : merkleError
+                  ? "bg-amber-950 text-amber-300 border-amber-800"
+                  : "bg-space-900 text-slate-400 border-space-700"
+              }`}
+            >
+              {merkle ? "Live API" : merkleError ? "Unavailable" : "Loading"}
             </span>
           </div>
 
           <div className="bg-space-950 p-3 rounded-lg border border-space-800 space-y-1">
             <span className="text-[10px] text-slate-400 uppercase block">Active Merkle Root Hash (SHA-256)</span>
-            <code className="text-nasa-cyan break-all select-all font-bold text-xs">{merkleRoot}</code>
+            {merkle ? (
+              <code className="text-nasa-cyan break-all select-all font-bold text-xs">{merkle.root}</code>
+            ) : (
+              <span className="text-slate-400 text-xs font-sans">
+                {merkleError
+                  ? "Provenance service unreachable. No placeholder hash is displayed — start the backend to load the live root."
+                  : "Fetching the live root from the provenance service…"}
+              </span>
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
             <div className="bg-space-950 p-2.5 rounded border border-space-800">
               <span className="text-[9px] text-slate-400 uppercase block">Leaves Anchored</span>
-              <span className="text-white font-bold text-sm">7 Investigations</span>
+              <span className="text-white font-bold text-sm">
+                {merkle ? `${merkle.leaves} Investigations` : "—"}
+              </span>
             </div>
             <div className="bg-space-950 p-2.5 rounded border border-space-800">
-              <span className="text-[9px] text-slate-400 uppercase block">Inclusion Proof Depth</span>
-              <span className="text-emerald-400 font-bold text-sm">3 Sibling Hashes</span>
+              <span className="text-[9px] text-slate-400 uppercase block">Tree Depth</span>
+              <span className="text-emerald-400 font-bold text-sm">
+                {merkle ? `${merkle.depth} Levels` : "—"}
+              </span>
             </div>
             <div className="bg-space-950 p-2.5 rounded border border-space-800">
-              <span className="text-[9px] text-slate-400 uppercase block">Tamper Resilience</span>
-              <span className="text-purple-400 font-bold text-sm">Mathematical (Zero-Forge)</span>
+              <span className="text-[9px] text-slate-400 uppercase block">Hash Algorithm</span>
+              <span className="text-purple-400 font-bold text-sm">SHA-256</span>
             </div>
           </div>
 
           <p className="text-slate-400 text-xs font-sans leading-relaxed">
-            Every flight campaign, test run, and Pint SI normalized sensor channel is cryptographically
-            hashed into a deterministic binary Merkle tree. Any modification to a single sensor channel or
-            checksum alters the Merkle root, guaranteeing immutable provenance for external peer review.
+            When the provenance service is online, every flight campaign, test run, and
+            SI-normalized sensor channel is hashed into a deterministic binary Merkle tree. Any
+            modification to a single channel or checksum changes the root, making tampering
+            detectable during peer review.
           </p>
         </div>
       )}

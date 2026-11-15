@@ -162,21 +162,31 @@ export async function fetchInvestigations(params?: {
  * Retrieves full investigation details and flight runs by slug or ID.
  */
 export async function fetchInvestigationDetail(idOrSlug: string): Promise<InvestigationDetailResponse> {
+  let res: Response;
+
   try {
-    const res = await fetch(`${API_BASE}/investigations/${encodeURIComponent(idOrSlug)}`, {
+    res = await fetch(`${API_BASE}/investigations/${encodeURIComponent(idOrSlug)}`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
       cache: "no-store",
     });
-    if (!res.ok) {
-      throw new Error(`HTTP error ${res.status}`);
-    }
-    return await res.json();
-  } catch (err) {
-    const fallback = MOCK_INVESTIGATION_DETAILS[idOrSlug] || MOCK_INVESTIGATION_DETAILS["flex-droplet-burning"];
+  } catch {
+    // Backend unreachable: serve the bundled demo record only when one exists
+    // for this exact slug. Never substitute a different investigation.
+    const fallback = MOCK_INVESTIGATION_DETAILS[idOrSlug];
     if (fallback) return fallback;
-    throw new Error(`Investigation '${idOrSlug}' not found.`);
+    throw new ApiError(503, "Provenance API is unreachable.");
   }
+
+  if (!res.ok) {
+    const message =
+      res.status === 404
+        ? `Investigation '${idOrSlug}' not found.`
+        : `API request failed with HTTP ${res.status}`;
+    throw new ApiError(res.status, message);
+  }
+
+  return await res.json();
 }
 
 /**
@@ -501,26 +511,26 @@ export async function fetchInvestigationBibtex(id: string): Promise<string> {
   }
 }
 
+export interface MerkleRootResponse {
+  merkle_root: string;
+  total_leaves: number;
+  tree_depth: number;
+  algorithm?: string;
+}
+
 /**
  * Retrieves cryptographic Merkle root of authenticated flight archives.
  */
-export async function fetchMerkleRoot(): Promise<any> {
-  try {
-    const res = await fetch(`${API_BASE}/provenance/merkle-root`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-      cache: "no-store",
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
-  } catch (err) {
-    return {
-      merkle_root: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      total_leaves: 7,
-      tree_depth: 4,
-      algorithm: "RFC-6962 / SHA-256",
-    };
+export async function fetchMerkleRoot(): Promise<MerkleRootResponse> {
+  const res = await fetch(`${API_BASE}/provenance/merkle-root`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    throw new ApiError(res.status, `Provenance API returned HTTP ${res.status}`);
   }
+  return await res.json();
 }
 
 /**

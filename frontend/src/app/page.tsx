@@ -25,6 +25,22 @@ export default async function DashboardPage() {
   const totalRuns = analytics?.total_test_runs ?? (investigationsData?.items?.reduce((acc, i) => acc + (i.test_runs_count ?? 0), 0) || 0);
   const totalMeasurements = analytics?.total_measurements ?? (investigationsData?.items?.reduce((acc, i) => acc + (i.measurements_count ?? 0), 0) || 0);
 
+  // Per-campaign run counts come from the catalog itself so the dashboard can
+  // never drift from the API data.
+  const runsBySlug = new Map(
+    investigationsData.items.map((investigation) => [
+      investigation.slug,
+      investigation.test_runs_count,
+    ])
+  );
+  const flexRuns = runsBySlug.get("flex-droplet-burning");
+  const bassRuns = runsBySlug.get("bass-ii-solid-slab");
+  const acmeRuns = runsBySlug.get("acme-cld-flame");
+  const campaignRunSummary =
+    flexRuns != null && bassRuns != null && acmeRuns != null
+      ? `${flexRuns} droplet burns, ${bassRuns} solid slabs, ${acmeRuns} gas coflow runs`
+      : "Per-campaign run counts are available in the Exploration catalog";
+
   return (
     <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
       {/* Mission Hero Banner */}
@@ -90,7 +106,7 @@ export default async function DashboardPage() {
           </div>
           <div className="mt-4 flex items-baseline space-x-2">
             <span className="text-3xl font-bold font-mono text-white">
-              {analytics.total_investigations || 3}
+              {analytics.total_investigations}
             </span>
             <span className="text-xs text-slate-400 font-mono">ISS CIR & MSG</span>
           </div>
@@ -113,9 +129,7 @@ export default async function DashboardPage() {
             <span className="text-3xl font-bold font-mono text-white">{totalRuns}</span>
             <span className="text-xs text-slate-400 font-mono">Individual Trials</span>
           </div>
-          <p className="mt-2 text-xs text-slate-400">
-            276 droplet burns, 20 solid slabs, 4 gas coflow runs
-          </p>
+          <p className="mt-2 text-xs text-slate-400">{campaignRunSummary}</p>
         </div>
 
         {/* Metric 3 */}
@@ -187,7 +201,9 @@ export default async function DashboardPage() {
                 <span className="px-2.5 py-0.5 rounded text-[11px] font-mono uppercase bg-cyan-950 border border-cyan-500/40 text-nasa-cyan">
                   Droplet Combustion
                 </span>
-                <span className="text-xs font-mono text-slate-400">276 Runs</span>
+                {flexRuns != null && (
+                  <span className="text-xs font-mono text-slate-400">{flexRuns} Runs</span>
+                )}
               </div>
               <h3 className="font-semibold text-white text-base">FLEX Program</h3>
               <p className="text-xs text-slate-400 mt-2 leading-relaxed">
@@ -213,7 +229,9 @@ export default async function DashboardPage() {
                 <span className="px-2.5 py-0.5 rounded text-[11px] font-mono uppercase bg-amber-950 border border-amber-500/40 text-amber-400">
                   Solid Fuel Spread
                 </span>
-                <span className="text-xs font-mono text-slate-400">20 Runs</span>
+                {bassRuns != null && (
+                  <span className="text-xs font-mono text-slate-400">{bassRuns} Runs</span>
+                )}
               </div>
               <h3 className="font-semibold text-white text-base">BASS-II Program</h3>
               <p className="text-xs text-slate-400 mt-2 leading-relaxed">
@@ -239,7 +257,9 @@ export default async function DashboardPage() {
                 <span className="px-2.5 py-0.5 rounded text-[11px] font-mono uppercase bg-purple-950 border border-purple-500/40 text-purple-400">
                   Laminar Diffusion
                 </span>
-                <span className="text-xs font-mono text-slate-400">4 Runs</span>
+                {acmeRuns != null && (
+                  <span className="text-xs font-mono text-slate-400">{acmeRuns} Runs</span>
+                )}
               </div>
               <h3 className="font-semibold text-white text-base">ACME Program</h3>
               <p className="text-xs text-slate-400 mt-2 leading-relaxed">

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
   BarChart3,
   Layers,
@@ -6,22 +5,35 @@ import {
   Flame,
   ShieldCheck,
   AlertCircle,
-  HelpCircle,
-  ArrowRight,
-  TrendingUp,
 } from "lucide-react";
-import { fetchCorpusAnalytics } from "@/lib/api";
+import { fetchCorpusAnalytics, fetchInvestigations } from "@/lib/api";
 import FlammabilityEvaluatorWidget from "@/components/FlammabilityEvaluatorWidget";
 
 export const revalidate = 60;
 
 export default async function AnalyticsPage() {
-  const analytics = await fetchCorpusAnalytics();
+  const [analytics, investigationsData] = await Promise.all([
+    fetchCorpusAnalytics(),
+    fetchInvestigations({ limit: 50 }),
+  ]);
 
-  const totalRuns = 300;
-  const totalMeasurements = 1208;
+  const totalRuns = analytics.total_test_runs ?? 0;
+  const totalMeasurements = analytics.total_measurements ?? 0;
 
-  const regimeEntries = Object.entries(analytics.combustion_regimes || {});
+  const runsBySlug = new Map(
+    investigationsData.items.map((investigation) => [
+      investigation.slug,
+      investigation.test_runs_count,
+    ])
+  );
+  const flexRuns = runsBySlug.get("flex-droplet-burning");
+  const bassRuns = runsBySlug.get("bass-ii-solid-slab");
+  const acmeRuns = runsBySlug.get("acme-cld-flame");
+  const campaignRunSummary =
+    flexRuns != null && bassRuns != null && acmeRuns != null
+      ? `${flexRuns} droplet burns, ${bassRuns} solid slab spreads, ${acmeRuns} gas coflow runs`
+      : "Per-campaign run counts are available in the Exploration catalog";
+
   const matrixEntries = Object.entries(analytics.missing_data_matrix || {});
 
   return (
@@ -74,9 +86,7 @@ export default async function AnalyticsPage() {
             <span className="text-3xl font-bold font-mono text-white">{totalRuns}</span>
             <span className="text-xs text-slate-400 font-mono">Trials</span>
           </div>
-          <p className="text-xs text-slate-400 mt-2">
-            276 droplet burns, 20 solid slab spreads, 4 gas coflow runs
-          </p>
+          <p className="text-xs text-slate-400 mt-2">{campaignRunSummary}</p>
         </div>
 
         <div className="bg-space-900 border border-space-700 rounded-xl p-5 shadow-lg">
@@ -147,17 +157,17 @@ export default async function AnalyticsPage() {
 
                 const regimeNote =
                   param === "chamber_pressure"
-                    ? "Universal (All 300 Runs)"
+                    ? `Universal (all ${totalRuns} flight runs)`
                     : param === "droplet_initial_diameter"
-                    ? "FLEX Droplet Combustion (276 Runs)"
+                    ? "FLEX droplet combustion"
                     : param === "burning_rate_constant"
-                    ? "FLEX Droplet Extinction (260 Runs)"
+                    ? "FLEX droplet extinction"
                     : param === "flame_spread_rate"
-                    ? "BASS-II Solid Fuel Spread (20 Runs)"
+                    ? "BASS-II solid fuel spread"
                     : param === "fuel_flow_rate"
-                    ? "ACME Gas Jet Flames (4 Runs)"
+                    ? "ACME gas jet flames"
                     : param === "soot_volume_fraction"
-                    ? "ACME Coflow Flames (4 Runs)"
+                    ? "ACME coflow flames"
                     : "Radiometer uncalibrated / absent";
 
                 return (
@@ -212,7 +222,7 @@ export default async function AnalyticsPage() {
       {/* NASA-STD-6001B Flammability & Merkle Provenance Widget */}
       <FlammabilityEvaluatorWidget />
 
-      {/* Regime Breakdown Breakdown Cards */}
+      {/* Regime Breakdown Cards */}
       <div className="space-y-4">
         <h3 className="font-semibold text-white text-base">
           Research Campaign Allocation
@@ -221,11 +231,11 @@ export default async function AnalyticsPage() {
           <div className="bg-space-900 border border-space-700/80 rounded-xl p-5">
             <div className="flex justify-between text-xs font-mono text-slate-400 mb-2">
               <span className="text-nasa-cyan font-bold">CIR Facility</span>
-              <span>276 Runs</span>
+              {flexRuns != null && <span>{flexRuns} Runs</span>}
             </div>
             <h4 className="font-bold text-white text-base">FLEX (Droplet Combustion)</h4>
             <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-              Evaluating the classical $d^2$ burning rate law, radiative extinction, and cool flames
+              Evaluating the classical d² burning rate law, radiative extinction, and cool flames
               in isolated Methanol, n-Heptane, and Decane droplets.
             </p>
           </div>
@@ -233,7 +243,7 @@ export default async function AnalyticsPage() {
           <div className="bg-space-900 border border-space-700/80 rounded-xl p-5">
             <div className="flex justify-between text-xs font-mono text-slate-400 mb-2">
               <span className="text-amber-400 font-bold">MSG Facility</span>
-              <span>20 Runs</span>
+              {bassRuns != null && <span>{bassRuns} Runs</span>}
             </div>
             <h4 className="font-bold text-white text-base">BASS-II (Solid Fuel Spread)</h4>
             <p className="text-xs text-slate-400 mt-1 leading-relaxed">
@@ -245,7 +255,7 @@ export default async function AnalyticsPage() {
           <div className="bg-space-900 border border-space-700/80 rounded-xl p-5">
             <div className="flex justify-between text-xs font-mono text-slate-400 mb-2">
               <span className="text-purple-400 font-bold">CIR Facility</span>
-              <span>4 Runs</span>
+              {acmeRuns != null && <span>{acmeRuns} Runs</span>}
             </div>
             <h4 className="font-bold text-white text-base">ACME (Laminar Diffusion)</h4>
             <p className="text-xs text-slate-400 mt-1 leading-relaxed">
