@@ -2,13 +2,26 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { SITE_URL } from "@/lib/site";
+
+const DESCRIPTION =
+  "Scientific Intelligence platform leveraging authentic NASA microgravity combustion research data from the International Space Station (CIR, MSG) and Glenn Research Center.";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "Flame in Freefall — NASA Microgravity Combustion Intelligence",
-  description:
-    "Scientific Intelligence platform leveraging authentic NASA microgravity combustion research data from the International Space Station (CIR, MSG) and Glenn Research Center.",
-  icons: {
-    icon: "/favicon.ico",
+  description: DESCRIPTION,
+  applicationName: "Flame in Freefall",
+  openGraph: {
+    title: "Flame in Freefall — NASA Microgravity Combustion Intelligence",
+    description: DESCRIPTION,
+    siteName: "Flame in Freefall",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Flame in Freefall — NASA Microgravity Combustion Intelligence",
+    description: DESCRIPTION,
   },
 };
 

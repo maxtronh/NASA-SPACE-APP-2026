@@ -9,8 +9,14 @@ import {
 import { fetchCorpusAnalytics, fetchInvestigations } from "@/lib/api";
 import FlammabilityEvaluatorWidget from "@/components/FlammabilityEvaluatorWidget";
 import DataOriginNotice from "@/components/DataOriginNotice";
+import { pageMetadata } from "@/lib/metadata";
 
 export const revalidate = 60;
+
+export const metadata = pageMetadata(
+  "Corpus Analytics & Missing Data Matrix",
+  "Systematic audit of physical measurement channels, sensor availability, and null preservation across the NASA microgravity combustion corpus."
+);
 
 export default async function AnalyticsPage() {
   const [analytics, investigationsData] = await Promise.all([

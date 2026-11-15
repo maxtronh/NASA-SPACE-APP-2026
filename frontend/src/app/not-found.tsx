@@ -13,10 +13,10 @@ export default function NotFound() {
           404 — Microgravity Archive Signal Lost
         </span>
         <h1 className="text-3xl font-extrabold text-white">
-          Investigation Record Not Found
+          Page Not Found
         </h1>
         <p className="text-slate-400 text-sm max-w-md">
-          The requested flight investigation, telemetry run, or scientific resource could not be located in the indexed NASA archives.
+          The requested page or scientific resource could not be located in the indexed NASA archives.
         </p>
       </div>
 

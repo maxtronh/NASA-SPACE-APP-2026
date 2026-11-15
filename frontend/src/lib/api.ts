@@ -1,3 +1,4 @@
+import { cache } from "react";
 import {
   AntigravityCompareResponse,
   CompareResponse,
@@ -153,8 +154,12 @@ export async function fetchInvestigations(params?: {
 
 /**
  * Retrieves full investigation details and flight runs by slug or ID.
+ *
+ * Cached per request so `generateMetadata` and the page share one API call.
  */
-export async function fetchInvestigationDetail(idOrSlug: string): Promise<InvestigationDetailResponse> {
+async function fetchInvestigationDetailUncached(
+  idOrSlug: string
+): Promise<InvestigationDetailResponse> {
   let res: Response;
 
   try {
@@ -181,6 +186,8 @@ export async function fetchInvestigationDetail(idOrSlug: string): Promise<Invest
 
   return await res.json();
 }
+
+export const fetchInvestigationDetail = cache(fetchInvestigationDetailUncached);
 
 /**
  * Compares two or more investigations.

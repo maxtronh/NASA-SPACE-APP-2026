@@ -20,7 +20,9 @@ export const revalidate = 60;
 export default async function DashboardPage() {
   const [analytics, investigationsData] = await Promise.all([
     fetchCorpusAnalytics(),
-    fetchInvestigations({ limit: 4 }),
+    // Fetch the full catalog so campaign run counts and links stay accurate;
+    // the "recent" grid below still shows only three records.
+    fetchInvestigations({ limit: 50 }),
   ]);
 
   const usingDemo =
@@ -52,6 +54,11 @@ export default async function DashboardPage() {
   const flexRuns = runsBySlug.get("flex-droplet-burning");
   const bassRuns = runsBySlug.get("bass-ii-solid-slab");
   const acmeRuns = runsBySlug.get("acme-cld-flame");
+  // A campaign card may only link to a detail page that the catalog actually
+  // returned; otherwise the user would land on a 404.
+  const catalogSlugs = new Set(
+    investigationsData.items.map((investigation) => investigation.slug)
+  );
   const campaignRunSummary =
     flexRuns != null && bassRuns != null && acmeRuns != null
       ? `${flexRuns} droplet burns, ${bassRuns} solid slabs, ${acmeRuns} gas coflow runs`
@@ -236,13 +243,17 @@ export default async function DashboardPage() {
             </div>
             <div className="mt-4 pt-3 border-t border-space-800 flex items-center justify-between text-xs">
               <span className="text-slate-400 font-mono">Facility: CIR / MDCA</span>
-              <Link
-                href="/investigations/flex-droplet-burning"
-                className="text-nasa-cyan hover:underline flex items-center space-x-1"
-              >
-                <span>Inspect Runs</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
+              {catalogSlugs.has("flex-droplet-burning") ? (
+                <Link
+                  href="/investigations/flex-droplet-burning"
+                  className="text-nasa-cyan hover:underline flex items-center space-x-1"
+                >
+                  <span>Inspect Runs</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              ) : (
+                <span className="text-slate-500 font-mono">Not in catalog</span>
+              )}
             </div>
           </div>
 
@@ -264,13 +275,17 @@ export default async function DashboardPage() {
             </div>
             <div className="mt-4 pt-3 border-t border-space-800 flex items-center justify-between text-xs">
               <span className="text-slate-400 font-mono">Facility: MSG Flow Duct</span>
-              <Link
-                href="/investigations/bass-ii-solid-slab"
-                className="text-nasa-cyan hover:underline flex items-center space-x-1"
-              >
-                <span>Inspect Runs</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
+              {catalogSlugs.has("bass-ii-solid-slab") ? (
+                <Link
+                  href="/investigations/bass-ii-solid-slab"
+                  className="text-nasa-cyan hover:underline flex items-center space-x-1"
+                >
+                  <span>Inspect Runs</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              ) : (
+                <span className="text-slate-500 font-mono">Not in catalog</span>
+              )}
             </div>
           </div>
 
@@ -292,13 +307,17 @@ export default async function DashboardPage() {
             </div>
             <div className="mt-4 pt-3 border-t border-space-800 flex items-center justify-between text-xs">
               <span className="text-slate-400 font-mono">Facility: CIR Burner</span>
-              <Link
-                href="/investigations/acme-cld-flame"
-                className="text-nasa-cyan hover:underline flex items-center space-x-1"
-              >
-                <span>Inspect Runs</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
+              {catalogSlugs.has("acme-cld-flame") ? (
+                <Link
+                  href="/investigations/acme-cld-flame"
+                  className="text-nasa-cyan hover:underline flex items-center space-x-1"
+                >
+                  <span>Inspect Runs</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              ) : (
+                <span className="text-slate-500 font-mono">Not in catalog</span>
+              )}
             </div>
           </div>
         </div>

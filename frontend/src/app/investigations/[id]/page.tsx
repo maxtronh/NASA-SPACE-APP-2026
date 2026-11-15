@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
   ArrowLeft,
@@ -16,6 +17,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { ApiError, fetchInvestigationDetail } from "@/lib/api";
+import { isSafeSlug } from "@/lib/slug";
 import ProvenanceCard from "@/components/ProvenanceCard";
 import ScientificChart from "@/components/ScientificChart";
 
@@ -23,8 +25,32 @@ interface InvestigationDetailPageProps {
   params: Promise<{ id: string }>;
 }
 
+export async function generateMetadata({
+  params,
+}: InvestigationDetailPageProps): Promise<Metadata> {
+  const { id } = await params;
+  // Metadata resolves before the streamed shell starts, so a genuine 404 here
+  // produces an HTTP 404 instead of a 200 carrying the not-found UI.
+  if (!isSafeSlug(id)) notFound();
+
+  let data;
+  try {
+    data = await fetchInvestigationDetail(id);
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) notFound();
+    throw err;
+  }
+
+  const { investigation } = data;
+  return {
+    title: `${investigation.project_acronym} — ${investigation.title} | Flame in Freefall`,
+    description: investigation.summary,
+  };
+}
+
 export default async function InvestigationDetailPage({ params }: InvestigationDetailPageProps) {
   const { id } = await params;
+  if (!isSafeSlug(id)) notFound();
 
   let data;
   try {
