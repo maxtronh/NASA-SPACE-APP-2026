@@ -43,7 +43,9 @@ export default function IntelligenceChatPage() {
       id: "welcome",
       sender: "si",
       text: "Welcome to the Flame in Freefall Scientific Intelligence Assistant. I provide evidence-grounded answers derived strictly from authentic NASA microgravity combustion archives (FLEX, BASS-II, ACME). If evidence is lacking or questions fall outside the domain, I explicitly abstain rather than fabricate assertions.",
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      // No timestamp: this message is static, and rendering a clock value here
+      // would mismatch between the server and client render (hydration error).
+      timestamp: "",
     },
   ]);
   const [inputQuery, setInputQuery] = useState("");
@@ -167,7 +169,7 @@ export default function IntelligenceChatPage() {
                   <span className="font-semibold text-slate-300">
                     {isUser ? "Research Investigator" : "Flame in Freefall SI Engine"}
                   </span>
-                  <span>{msg.timestamp}</span>
+                  {msg.timestamp && <span>{msg.timestamp}</span>}
                 </div>
 
                 {/* Body Text */}

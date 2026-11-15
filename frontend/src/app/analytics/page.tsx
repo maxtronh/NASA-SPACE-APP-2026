@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { fetchCorpusAnalytics, fetchInvestigations } from "@/lib/api";
 import FlammabilityEvaluatorWidget from "@/components/FlammabilityEvaluatorWidget";
+import DataOriginNotice from "@/components/DataOriginNotice";
 
 export const revalidate = 60;
 
@@ -17,8 +18,24 @@ export default async function AnalyticsPage() {
     fetchInvestigations({ limit: 50 }),
   ]);
 
-  const totalRuns = analytics.total_test_runs ?? 0;
-  const totalMeasurements = analytics.total_measurements ?? 0;
+  // Prefer the analytics totals. When the API omits them, sum the catalog
+  // counts; if those are missing too, show "Unavailable" instead of a fake 0.
+  const catalogRuns = investigationsData.items
+    .map((investigation) => investigation.test_runs_count)
+    .filter((count): count is number => count != null);
+  const catalogMeasurements = investigationsData.items
+    .map((investigation) => investigation.measurements_count)
+    .filter((count): count is number => count != null);
+  const totalRuns =
+    analytics.total_test_runs ??
+    (catalogRuns.length > 0 ? catalogRuns.reduce((sum, count) => sum + count, 0) : null);
+  const totalMeasurements =
+    analytics.total_measurements ??
+    (catalogMeasurements.length > 0
+      ? catalogMeasurements.reduce((sum, count) => sum + count, 0)
+      : null);
+  const usingDemo =
+    analytics.data_source === "demo" || investigationsData.data_source === "demo";
 
   const runsBySlug = new Map(
     investigationsData.items.map((investigation) => [
@@ -59,6 +76,8 @@ export default async function AnalyticsPage() {
         </div>
       </div>
 
+      <DataOriginNotice demo={usingDemo} />
+
       {/* Top Overview Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <div className="bg-space-900 border border-space-700 rounded-xl p-5 shadow-lg">
@@ -83,8 +102,12 @@ export default async function AnalyticsPage() {
             <Flame className="w-4 h-4 text-amber-400" />
           </div>
           <div className="mt-3 flex items-baseline space-x-2">
-            <span className="text-3xl font-bold font-mono text-white">{totalRuns}</span>
-            <span className="text-xs text-slate-400 font-mono">Trials</span>
+            <span className="text-3xl font-bold font-mono text-white">
+              {totalRuns != null ? totalRuns : "Unavailable"}
+            </span>
+            {totalRuns != null && (
+              <span className="text-xs text-slate-400 font-mono">Trials</span>
+            )}
           </div>
           <p className="text-xs text-slate-400 mt-2">{campaignRunSummary}</p>
         </div>
@@ -96,9 +119,11 @@ export default async function AnalyticsPage() {
           </div>
           <div className="mt-3 flex items-baseline space-x-2">
             <span className="text-3xl font-bold font-mono text-white">
-              {totalMeasurements.toLocaleString()}
+              {totalMeasurements != null ? totalMeasurements.toLocaleString() : "Unavailable"}
             </span>
-            <span className="text-xs text-slate-400 font-mono">Measurements</span>
+            {totalMeasurements != null && (
+              <span className="text-xs text-slate-400 font-mono">Measurements</span>
+            )}
           </div>
           <p className="text-xs text-slate-400 mt-2">
             100% SHA-256 anchored to official NASA NTRS archives
@@ -157,7 +182,9 @@ export default async function AnalyticsPage() {
 
                 const regimeNote =
                   param === "chamber_pressure"
-                    ? `Universal (all ${totalRuns} flight runs)`
+                    ? totalRuns != null
+                      ? `Universal (all ${totalRuns} flight runs)`
+                      : "Universal across indexed flight runs"
                     : param === "droplet_initial_diameter"
                     ? "FLEX droplet combustion"
                     : param === "burning_rate_constant"

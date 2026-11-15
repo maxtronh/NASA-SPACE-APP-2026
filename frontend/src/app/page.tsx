@@ -13,6 +13,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { fetchCorpusAnalytics, fetchInvestigations } from "@/lib/api";
+import DataOriginNotice from "@/components/DataOriginNotice";
 
 export const revalidate = 60;
 
@@ -22,8 +23,23 @@ export default async function DashboardPage() {
     fetchInvestigations({ limit: 4 }),
   ]);
 
-  const totalRuns = analytics?.total_test_runs ?? (investigationsData?.items?.reduce((acc, i) => acc + (i.test_runs_count ?? 0), 0) || 0);
-  const totalMeasurements = analytics?.total_measurements ?? (investigationsData?.items?.reduce((acc, i) => acc + (i.measurements_count ?? 0), 0) || 0);
+  const usingDemo =
+    analytics.data_source === "demo" || investigationsData.data_source === "demo";
+
+  const catalogRuns = investigationsData.items
+    .map((investigation) => investigation.test_runs_count)
+    .filter((count): count is number => count != null);
+  const catalogMeasurements = investigationsData.items
+    .map((investigation) => investigation.measurements_count)
+    .filter((count): count is number => count != null);
+  const totalRuns =
+    analytics.total_test_runs ??
+    (catalogRuns.length > 0 ? catalogRuns.reduce((sum, count) => sum + count, 0) : null);
+  const totalMeasurements =
+    analytics.total_measurements ??
+    (catalogMeasurements.length > 0
+      ? catalogMeasurements.reduce((sum, count) => sum + count, 0)
+      : null);
 
   // Per-campaign run counts come from the catalog itself so the dashboard can
   // never drift from the API data.
@@ -92,6 +108,8 @@ export default async function DashboardPage() {
         </div>
       </div>
 
+      <DataOriginNotice demo={usingDemo} />
+
       {/* 4 Mission Critical Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {/* Metric 1 */}
@@ -126,8 +144,12 @@ export default async function DashboardPage() {
             </div>
           </div>
           <div className="mt-4 flex items-baseline space-x-2">
-            <span className="text-3xl font-bold font-mono text-white">{totalRuns}</span>
-            <span className="text-xs text-slate-400 font-mono">Individual Trials</span>
+            <span className="text-3xl font-bold font-mono text-white">
+              {totalRuns != null ? totalRuns : "Unavailable"}
+            </span>
+            {totalRuns != null && (
+              <span className="text-xs text-slate-400 font-mono">Individual Trials</span>
+            )}
           </div>
           <p className="mt-2 text-xs text-slate-400">{campaignRunSummary}</p>
         </div>
@@ -144,9 +166,11 @@ export default async function DashboardPage() {
           </div>
           <div className="mt-4 flex items-baseline space-x-2">
             <span className="text-3xl font-bold font-mono text-white">
-              {totalMeasurements.toLocaleString()}
+              {totalMeasurements != null ? totalMeasurements.toLocaleString() : "Unavailable"}
             </span>
-            <span className="text-xs text-slate-400 font-mono">Telemetry Points</span>
+            {totalMeasurements != null && (
+              <span className="text-xs text-slate-400 font-mono">Telemetry Points</span>
+            )}
           </div>
           <p className="mt-2 text-xs text-slate-400">
             Deterministic SI conversions with strict null preservation

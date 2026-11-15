@@ -71,28 +71,19 @@ export async function handleApiResponse<T>(res: Response): Promise<T> {
 
 /**
  * Checks backend health status.
+ *
+ * Throws when the backend is unreachable so callers can show an explicit
+ * offline state. Never fabricates a "healthy" or "cached" response.
  */
 export async function fetchHealth(): Promise<HealthResponse> {
-  try {
-    const res = await fetch(`${API_BASE}/health`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-      cache: "no-store",
-    });
-    if (!res.ok) {
-      throw new Error(`HTTP error ${res.status}`);
-    }
-    return await res.json();
-  } catch (err) {
-    // Return fallback healthy status for preview when backend is launching
-    return {
-      status: "degraded",
-      database: "local_cache",
-      tier: "fallback_cache",
-      pgvector_ready: true,
-      version: "1.0.0 (offline fallback)",
-    };
+  const res = await fetch(`${API_BASE}/health`, {
+    method: "GET",
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    throw new ApiError(res.status, `Health check failed with HTTP ${res.status}`);
   }
+  return (await res.json()) as HealthResponse;
 }
 
 /**
@@ -128,7 +119,8 @@ export async function fetchInvestigations(params?: {
     if (!res.ok) {
       throw new Error(`HTTP error ${res.status}`);
     }
-    return await res.json();
+    const data = (await res.json()) as PaginatedInvestigationsResponse;
+    return { ...data, data_source: "live" };
   } catch (err) {
     // Filter fallback investigations
     let items = [...MOCK_INVESTIGATIONS];
@@ -154,6 +146,7 @@ export async function fetchInvestigations(params?: {
       limit: params?.limit || 20,
       offset: params?.offset || 0,
       items,
+      data_source: "demo",
     };
   }
 }
@@ -321,9 +314,10 @@ export async function fetchCorpusAnalytics(): Promise<CorpusAnalyticsResponse> {
     if (!res.ok) {
       throw new Error(`HTTP error ${res.status}`);
     }
-    return await res.json();
+    const data = (await res.json()) as CorpusAnalyticsResponse;
+    return { ...data, data_source: "live" };
   } catch (err) {
-    return MOCK_CORPUS_ANALYTICS;
+    return { ...MOCK_CORPUS_ANALYTICS, data_source: "demo" };
   }
 }
 
@@ -953,7 +947,8 @@ export async function calculateRekindleRisk(payload: RekindleRiskRequest): Promi
  */
 export function createCCSDSTelemetryStream(
   onFrame: (frame: CCSDSTelemetryFrame) => void,
-  onError?: (error: any) => void
+  onError?: (error: any) => void,
+  onSourceChange?: (source: "live" | "simulated") => void
 ): () => void {
   if (typeof window === "undefined") {
     return () => {};
@@ -963,12 +958,34 @@ export function createCCSDSTelemetryStream(
   let eventSource: EventSource | null = null;
   let intervalId: any = null;
   let sequenceCount = 1000;
+  let reportedLive = false;
+  let reportedSimulated = false;
+
+  const reportLive = () => {
+    if (reportedLive) return;
+    reportedLive = true;
+    if (onSourceChange) onSourceChange("live");
+  };
+
+  const startSimulation = () => {
+    if (!reportedSimulated) {
+      reportedSimulated = true;
+      if (onSourceChange) onSourceChange("simulated");
+    }
+    if (!intervalId) {
+      intervalId = setInterval(() => {
+        sequenceCount++;
+        onFrame(generateMockTelemetryFrame(sequenceCount));
+      }, 300);
+    }
+  };
 
   try {
     eventSource = new EventSource(url);
     eventSource.onmessage = (event) => {
       try {
         const frame = JSON.parse(event.data);
+        reportLive();
         onFrame(frame);
       } catch (e) {
         if (onError) onError(e);
@@ -980,21 +997,11 @@ export function createCCSDSTelemetryStream(
         eventSource.close();
         eventSource = null;
       }
-      if (!intervalId) {
-        intervalId = setInterval(() => {
-          sequenceCount++;
-          onFrame(generateMockTelemetryFrame(sequenceCount));
-        }, 300);
-      }
+      startSimulation();
     };
   } catch (err) {
     if (onError) onError(err);
-    if (!intervalId) {
-      intervalId = setInterval(() => {
-        sequenceCount++;
-        onFrame(generateMockTelemetryFrame(sequenceCount));
-      }, 300);
-    }
+    startSimulation();
   }
 
   return () => {

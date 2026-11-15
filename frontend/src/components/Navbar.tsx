@@ -67,22 +67,48 @@ export default function Navbar() {
 
   useEffect(() => {
     let mounted = true;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let inFlight = false;
+    let healthy = false;
+
     async function checkHealth() {
+      // Skip while the tab is hidden; visibilitychange triggers a fresh check.
+      if (inFlight || document.hidden) return;
+      inFlight = true;
       try {
         const res = await fetchHealth();
-        if (mounted) {
-          setHealth(res);
-          setLoadingHealth(false);
-        }
+        if (!mounted) return;
+        healthy = res.status === "healthy";
+        setHealth(res);
       } catch {
-        if (mounted) setLoadingHealth(false);
+        if (!mounted) return;
+        healthy = false;
+        setHealth(null);
+      } finally {
+        inFlight = false;
+        if (mounted) {
+          setLoadingHealth(false);
+          // Poll aggressively only when live; back off when the API is down.
+          timer = setTimeout(checkHealth, healthy ? 30000 : 120000);
+        }
       }
     }
+
+    function handleVisibilityChange() {
+      if (document.hidden) return;
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+      checkHealth();
+    }
+
     checkHealth();
-    const interval = setInterval(checkHealth, 30000);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
       mounted = false;
-      clearInterval(interval);
+      if (timer) clearTimeout(timer);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 
@@ -121,6 +147,18 @@ export default function Navbar() {
   }, [moreOpen]);
 
   const isHealthy = health?.status === "healthy";
+  const healthLabel = loadingHealth
+    ? "SYNCING..."
+    : isHealthy
+    ? "BACKEND LIVE"
+    : health
+    ? "BACKEND DEGRADED"
+    : "BACKEND OFFLINE";
+  const healthTitle = health
+    ? `Backend: ${health.status} (${health.database}) | v${health.version}`
+    : loadingHealth
+    ? "Checking backend health..."
+    : "Backend unreachable — live data and provenance are unavailable";
   const isSecondaryActive = SECONDARY_LINKS.some((item) =>
     isLinkActive(pathname, item.href)
   );
@@ -242,11 +280,7 @@ export default function Navbar() {
                   ? "bg-emerald-950/40 border-emerald-500/40 text-emerald-400"
                   : "bg-amber-950/40 border-amber-500/40 text-amber-300"
               }`}
-              title={
-                health
-                  ? `Backend: ${health.status} (${health.database}) | v${health.version}`
-                  : "Checking Backend Health..."
-              }
+              title={healthTitle}
             >
               <span
                 aria-hidden="true"
@@ -254,13 +288,7 @@ export default function Navbar() {
                   isHealthy ? "bg-emerald-400" : "bg-amber-400"
                 }`}
               />
-              <span className="font-semibold tracking-wide">
-                {loadingHealth
-                  ? "SYNCING..."
-                  : isHealthy
-                  ? "BACKEND LIVE"
-                  : "CACHED MODE"}
-              </span>
+              <span className="font-semibold tracking-wide">{healthLabel}</span>
               <ShieldCheck aria-hidden="true" className="w-3.5 h-3.5 opacity-80" />
             </div>
           </div>
@@ -322,7 +350,7 @@ export default function Navbar() {
                 isHealthy ? "text-emerald-400" : "text-amber-300"
               }`}
             >
-              {isHealthy ? "BACKEND LIVE" : "CACHED MODE"}
+              {healthLabel}
             </span>
           </div>
         </div>

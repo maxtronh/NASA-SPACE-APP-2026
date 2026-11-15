@@ -34,6 +34,8 @@ export interface PaginatedInvestigationsResponse {
   limit: number;
   offset: number;
   items: InvestigationSummary[];
+  /** Set by the API client: "demo" means the bundled sample archive was used. */
+  data_source?: "live" | "demo";
 }
 
 export interface ProvenanceInfo {
@@ -150,6 +152,8 @@ export interface CorpusAnalyticsResponse {
   total_measurements?: number;
   combustion_regimes: Record<string, number>;
   missing_data_matrix: Record<string, MissingDataMetric>;
+  /** Set by the API client: "demo" means the bundled sample archive was used. */
+  data_source?: "live" | "demo";
 }
 
 export interface SICitation {

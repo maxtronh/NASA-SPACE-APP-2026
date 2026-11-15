@@ -17,10 +17,12 @@ import {
 } from "lucide-react";
 import { fetchInvestigations } from "@/lib/api";
 import { InvestigationSummary } from "@/types";
+import DataOriginNotice from "@/components/DataOriginNotice";
 
 export default function InvestigationsExplorerPage() {
   const [investigations, setInvestigations] = useState<InvestigationSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dataSource, setDataSource] = useState<"live" | "demo">("live");
 
   // Faceted filter state
   const [searchQuery, setSearchQuery] = useState("");
@@ -39,6 +41,7 @@ export default function InvestigationsExplorerPage() {
         const res = await fetchInvestigations({ limit: 50 });
         if (mounted) {
           setInvestigations(res.items);
+          setDataSource(res.data_source === "demo" ? "demo" : "live");
           setLoading(false);
         }
       } catch (err) {
@@ -159,6 +162,7 @@ export default function InvestigationsExplorerPage() {
       </div>
 
       {/* Filter Toolbar */}
+      <DataOriginNotice demo={dataSource === "demo"} />
       <div className="bg-space-900 border border-space-700/80 rounded-xl p-5 shadow-lg space-y-4">
         {/* Search Bar */}
         <div className="relative">

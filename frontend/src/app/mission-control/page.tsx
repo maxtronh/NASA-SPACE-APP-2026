@@ -88,6 +88,10 @@ export default function MissionControlPage() {
   const [isStreaming, setIsStreaming] = useState<boolean>(true);
   const [simulateLOS, setSimulateLOS] = useState<boolean>(false);
   const [sequenceCount, setSequenceCount] = useState<number>(1024);
+  // Frames come from the backend stream when available, otherwise from the
+  // local deterministic simulator. The badge must never claim a live feed
+  // while the server is unreachable.
+  const [telemetrySource, setTelemetrySource] = useState<"live" | "simulated">("simulated");
 
   // ==========================================
   // SECTION B: WAVELET JITTER STUDIO STATE
@@ -176,8 +180,9 @@ export default function MissionControlPage() {
         }
       },
       () => {
-        // Handled silently by mock fallback inside createCCSDSTelemetryStream
-      }
+        // The API client falls back to a local simulator when the stream fails.
+      },
+      (source) => setTelemetrySource(source)
     );
 
     return () => {
@@ -489,7 +494,11 @@ export default function MissionControlPage() {
             }`}
           >
             {simulateLOS ? <WifiOff className="w-3.5 h-3.5" /> : <Wifi className="w-3.5 h-3.5" />}
-            <span>{simulateLOS ? "TDRS LOS (HANDOVER)" : "KU-BAND LOCKED 50 Hz"}</span>
+            <span>{simulateLOS
+              ? "TDRS LOS (HANDOVER)"
+              : telemetrySource === "live"
+              ? "KU-BAND LOCKED 50 Hz"
+              : "LOCAL SIMULATION"}</span>
           </div>
 
           <button
@@ -593,6 +602,15 @@ export default function MissionControlPage() {
             <span className="text-xs font-mono font-bold uppercase tracking-wider text-white">
               ISS Telemetry Downlink (Ku-Band)
             </span>
+            <span
+              className={`px-2 py-0.5 rounded border text-[10px] font-mono font-bold tracking-wide ${
+                telemetrySource === "live"
+                  ? "bg-emerald-950/40 border-emerald-500/40 text-emerald-300"
+                  : "bg-amber-950/40 border-amber-500/40 text-amber-300"
+              }`}
+            >
+              {telemetrySource === "live" ? "LIVE FEED" : "SIMULATED"}
+            </span>
             <span className="text-[11px] font-mono text-slate-400 ml-2">
               APID 0x01A0 • Sequence #{sequenceCount}
             </span>
@@ -666,6 +684,12 @@ export default function MissionControlPage() {
             <div className="text-[10px] font-mono text-slate-500 mt-0.5">BER &lt; 10⁻⁹ • White Sands Relay</div>
           </div>
         </div>
+
+        {telemetrySource === "simulated" && (
+          <p className="text-[11px] font-mono text-amber-300/90 border-t border-amber-500/20 pt-3">
+            Backend stream unavailable — frames are produced by the local deterministic simulator, not the ISS Ku-Band downlink.
+          </p>
+        )}
       </div>
 
       {/* Main Split Grid: Section B & Section C */}
