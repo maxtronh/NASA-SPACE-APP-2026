@@ -436,4 +436,169 @@ export interface RekindleRiskResponse {
   critical_ventilation_velocity_m_s?: number;
 }
 
+// ==========================================
+// REQUIREMENT R1 / E-09: ANOMALY DETECTION ENGINE
+// ==========================================
+export type AnomalyContradictionLevel =
+  | "CRITICAL"
+  | "STRONG_CONTRADICTION"
+  | "MODERATE_CONTRADICTION"
+  | "MILD_CONTRADICTION"
+  | "CONSISTENT_WITH_1G"
+  | "MODERATE"
+  | "HIGH";
+
+export interface AnomalyCitation {
+  archive?: "FLEX" | "BASS-II" | "ACME" | "CIR" | "MSG" | string;
+  project_acronym?: string;
+  mission?: string;
+  title: string;
+  nasa_ntrs_id?: string;
+  ntrs_id?: string;
+  nasa_source_url: string;
+  doi?: string | null;
+  citation_text?: string;
+  relevance_summary?: string;
+  flight_facility?: string;
+  primary_investigators?: string[];
+  verification_status?: string;
+}
+
+export interface CombustionAnomalyItem {
+  id?: string;
+  anomaly_id?: string;
+  name?: string;
+  title?: string;
+  regime: string;
+  divergence_score: number; // 0.0 to 1.0
+  classical_1g_behavior: string;
+  classical_1g_prediction?: string;
+  microgravity_behavior: string;
+  microgravity_observation?: string;
+  contradiction_level: AnomalyContradictionLevel | string;
+  mechanism?: string;
+  kinetics_mechanism?: string;
+  physical_mechanism?: string;
+  quantitative_metrics?: Record<string, any>;
+  governing_parameters?: Record<string, any>;
+  evidence_measurements?: Record<string, any>;
+  citations: AnomalyCitation[];
+  verifiable_citations?: AnomalyCitation[];
+  evidence_summary?: string;
+}
+
+export interface AnomalyDetectRequest {
+  fuel_type?: string;
+  fuel?: string;
+  regime?: string;
+  investigation_slug?: string;
+  ventilation_velocity_cm_s?: number;
+  initial_diameter_mm?: number;
+  droplet_diameter_mm?: number;
+  ambient_o2_percentage?: number;
+  o2_percentage?: number;
+  chamber_pressure_kpa?: number;
+  fuel_temperature_k?: number;
+  temperature_k?: number;
+  gravity_level?: string;
+  gravity_level_g?: number;
+}
+
+export interface AnomalyDetectResponse {
+  total_anomalies?: number;
+  detected_anomalies_count?: number;
+  overall_divergence_score: number;
+  max_divergence_score?: number;
+  gravity_level?: string;
+  primary_contradiction?: string | null;
+  anomalies: CombustionAnomalyItem[];
+  anomalies_detected?: CombustionAnomalyItem[];
+  summary?: string;
+  scientific_summary?: string;
+  primary_citation?: string;
+  citations?: AnomalyCitation[];
+  verifiable_citations?: AnomalyCitation[];
+  zero_fabrication_provenance?: boolean;
+}
+
+// ==========================================
+// REQUIREMENT R2 / E-12: CABIN SUPPRESSION SIMULATOR
+// ==========================================
+export type ChemicalAgentType = "none" | "halon_1301" | "fk_5_1_12" | "FK-5-1-12" | "Halon 1301";
+export type SuppressionStatus = "EXTINGUISHED" | "COOL_FLAME_ACTIVE" | "SUPPRESSED" | "UNCONTAINED";
+
+export interface SuppressionTelemetryPoint {
+  time_s: number;
+  temperature_k: number;
+  heat_release_rate_kw?: number;
+  heat_release_w?: number;
+  residual_radical_hrr_w?: number;
+  radical_pool_fraction?: number;
+  o2_percentage?: number;
+  o2_pct?: number;
+  ventilation_velocity_cm_s?: number;
+  agent_concentration_vol_pct?: number;
+  damkohler_cool?: number;
+  rekindle_probability?: number;
+}
+
+export interface SuppressionSimulateRequest {
+  fuel?: string;
+  fuel_temperature_k?: number;
+  initial_fuel_temperature_k?: number;
+  initial_o2_percentage?: number;
+  ambient_o2_pct?: number;
+  initial_ventilation_velocity_cm_s?: number;
+  ventilation_velocity_cm_s?: number;
+  chamber_pressure_kpa?: number;
+  cabin_pressure_kpa?: number;
+  characteristic_length_m?: number;
+  droplet_diameter_mm?: number;
+  damper_isolated: boolean;
+  chemical_agent?: ChemicalAgentType;
+  chemical_agent_released?: boolean;
+  chemical_agent_type?: string;
+  n2_flooding?: boolean;
+  n2_flooding_active?: boolean;
+  n2_target_o2_percentage?: number;
+  simulation_duration_s?: number;
+  time_step_s?: number;
+  restart_ventilation_velocity_cm_s?: number;
+}
+
+export interface SuppressionSimulateResponse {
+  fuel?: string;
+  fuel_formula?: string;
+  actions_applied?: string[];
+  action_summary?: string;
+  extinction_achieved?: boolean;
+  transient_extinction_time_s?: number | null;
+  extinction_time_s?: number;
+  extinction_mechanism?: string;
+  initial_temperature_k?: number;
+  final_temperature_k?: number;
+  initial_o2_percentage?: number;
+  final_o2_percentage?: number;
+  initial_ventilation_velocity_cm_s?: number;
+  final_ventilation_velocity_cm_s?: number;
+  initial_radical_heat_release_w?: number;
+  residual_radical_heat_release_w?: number;
+  residual_heat_release_w?: number;
+  damkohler_cool_final?: number;
+  damkohler_cool?: number;
+  damkohler_cool_restart?: number;
+  rekindle_probability_restart?: number;
+  rekindle_probability?: number;
+  rekindle_risk_level?: RekindleRiskLevel | string;
+  safe_to_restart_ventilation?: boolean;
+  suppression_status?: SuppressionStatus;
+  radical_depletion_pct?: number;
+  flame_state?: "VISIBLE" | "COOL_FLAME" | "QUENCHED";
+  advisory_message?: string;
+  safety_advisory?: string;
+  audit_message?: string;
+  decay_curve?: SuppressionTelemetryPoint[];
+  transient_telemetry?: SuppressionTelemetryPoint[];
+}
+
 

@@ -13,6 +13,12 @@ from backend.app.schemas.analytics import (
     CorpusAnalyticsResponse,
     MissingDataMetric,
 )
+from backend.app.schemas.anomalies import (
+    AnomalyDetectionRequest,
+    AnomalyDetectionResponse,
+    MicrogravityAnomaly,
+    NASAArchiveCitation,
+)
 from backend.app.schemas.artifacts import (
     ChartArtifact,
     ChartDataSeries,
@@ -67,8 +73,17 @@ from backend.app.schemas.si import (
     SIQueryRequest,
     SIQueryResponse,
 )
+from backend.app.schemas.suppression import (
+    CabinSuppressionRequest,
+    CabinSuppressionResponse,
+    SuppressionDecayPoint,
+)
 
 __all__ = [
+    "AnomalyDetectionRequest",
+    "AnomalyDetectionResponse",
+    "CabinSuppressionRequest",
+    "CabinSuppressionResponse",
     "ChartArtifact",
     "ChartDataSeries",
     "CitationArtifact",
@@ -97,12 +112,14 @@ __all__ = [
     "KeyframeExtractionResponse",
     "KeyframeSummary",
     "MissingDataMetric",
+    "MicrogravityAnomaly",
     "MultimodalFrameDetailResponse",
     "MultimodalFrameIndexRequest",
     "MultimodalFrameIndexResponse",
     "MultimodalFrameSearchRequest",
     "MultimodalFrameSearchResponse",
     "MultimodalFrameSearchResult",
+    "NASAArchiveCitation",
     "OEDOptimizeRequest",
     "OEDOptimizeResponse",
     "PaginatedInvestigationsResponse",
@@ -116,6 +133,7 @@ __all__ = [
     "SIQueryRequest",
     "SIQueryResponse",
     "ScientificArtifact",
+    "SuppressionDecayPoint",
     "TableArtifact",
     "TableColumn",
     "TimeseriesArtifact",

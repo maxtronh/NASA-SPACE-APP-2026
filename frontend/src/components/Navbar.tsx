@@ -17,11 +17,8 @@ import {
   Cpu,
   ShieldAlert,
   Radio,
-<<<<<<< HEAD
   ChevronDown,
-=======
   RotateCw,
->>>>>>> origin/master
 } from "lucide-react";
 import { fetchHealth } from "@/lib/api";
 import { HealthResponse } from "@/types";
@@ -65,58 +62,9 @@ export default function Navbar() {
   const [moreOpen, setMoreOpen] = useState(false);
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [loadingHealth, setLoadingHealth] = useState(true);
-<<<<<<< HEAD
   const moreRef = useRef<HTMLDivElement>(null);
   const moreButtonRef = useRef<HTMLButtonElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    let mounted = true;
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    let inFlight = false;
-    let healthy = false;
-
-    async function checkHealth() {
-      // Skip while the tab is hidden; visibilitychange triggers a fresh check.
-      if (inFlight || document.hidden) return;
-      inFlight = true;
-      try {
-        const res = await fetchHealth();
-        if (!mounted) return;
-        healthy = res.status === "healthy";
-        setHealth(res);
-      } catch {
-        if (!mounted) return;
-        healthy = false;
-        setHealth(null);
-      } finally {
-        inFlight = false;
-        if (mounted) {
-          setLoadingHealth(false);
-          // Poll aggressively only when live; back off when the API is down.
-          timer = setTimeout(checkHealth, healthy ? 30000 : 120000);
-        }
-      }
-    }
-
-    function handleVisibilityChange() {
-      if (document.hidden) return;
-      if (timer) {
-        clearTimeout(timer);
-        timer = null;
-      }
-      checkHealth();
-    }
-
-    checkHealth();
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => {
-      mounted = false;
-      if (timer) clearTimeout(timer);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, []);
-=======
   const [isSyncing, setIsSyncing] = useState(false);
 
   const checkHealth = async () => {
@@ -139,7 +87,6 @@ export default function Navbar() {
     const interval = setInterval(checkHealth, intervalMs);
     return () => clearInterval(interval);
   }, [health?.status]);
->>>>>>> origin/master
 
   // Any navigation closes both menus.
   useEffect(() => {
@@ -302,29 +249,22 @@ export default function Navbar() {
           </div>
 
           {/* Right side: Live Health Badge */}
-<<<<<<< HEAD
-          <div className="hidden xl:flex items-center space-x-3 shrink-0">
-            <div
-=======
-          <div className="hidden sm:flex items-center space-x-3">
+          <div className="hidden sm:flex items-center space-x-3 shrink-0">
             <button
               onClick={checkHealth}
               disabled={isSyncing}
->>>>>>> origin/master
               className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs font-mono border transition-all ${
                 isHealthy
                   ? "bg-emerald-950/40 border-emerald-500/40 text-emerald-400 hover:border-emerald-400"
                   : "bg-amber-950/40 border-amber-500/40 text-amber-300 hover:border-amber-400"
               }`}
-<<<<<<< HEAD
-              title={healthTitle}
-=======
               title={
                 health
                   ? `Backend: ${health.status} (${health.database}) | v${health.version} — Click to re-sync`
-                  : "Checking Backend Health..."
+                  : loadingHealth
+                  ? "Checking backend health..."
+                  : "Backend unreachable — Click to re-sync"
               }
->>>>>>> origin/master
             >
               <span
                 aria-hidden="true"
@@ -332,11 +272,6 @@ export default function Navbar() {
                   isHealthy ? "bg-emerald-400" : "bg-amber-400"
                 }`}
               />
-<<<<<<< HEAD
-              <span className="font-semibold tracking-wide">{healthLabel}</span>
-              <ShieldCheck aria-hidden="true" className="w-3.5 h-3.5 opacity-80" />
-            </div>
-=======
               <span className="font-semibold tracking-wide">
                 {loadingHealth || isSyncing
                   ? "SYNCING..."
@@ -346,7 +281,6 @@ export default function Navbar() {
               </span>
               <RotateCw className={`w-3 h-3 opacity-75 ${isSyncing ? "animate-spin" : ""}`} />
             </button>
->>>>>>> origin/master
           </div>
 
           {/* Mobile Menu Button */}

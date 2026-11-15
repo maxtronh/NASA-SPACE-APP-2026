@@ -18,6 +18,7 @@ import {
 import { ApiError, fetchInvestigationDetail } from "@/lib/api";
 import ProvenanceCard from "@/components/ProvenanceCard";
 import ScientificChart from "@/components/ScientificChart";
+import AnomalyInsightCard from "@/components/AnomalyInsightCard";
 
 interface InvestigationDetailPageProps {
   params: Promise<{ id: string }>;
@@ -185,6 +186,13 @@ export default async function InvestigationDetailPage({ params }: InvestigationD
           )}
         </div>
       </div>
+
+      {/* Autonomous Microgravity Anomaly & Contradiction Discovery Card (E-09) */}
+      <AnomalyInsightCard
+        initialFuel={investigation.fuel_type || "n-heptane"}
+        initialRegime={investigation.combustion_regime}
+        title={`Microgravity Anomaly Engine: ${investigation.project_acronym || investigation.title}`}
+      />
 
       {/* Flight Test Runs Table with Mandatory Null-Preservation */}
       <div className="bg-space-900 border border-space-700 rounded-xl shadow-lg overflow-hidden space-y-4 p-5">

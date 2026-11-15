@@ -1,16 +1,13 @@
 """Safety API endpoints for NASA-STD-6001B materials flammability and EAFHI fire safety evaluation."""
 
-from typing import Any, Optional
-
-from fastapi import APIRouter, HTTPException, Query, status
-from pydantic import BaseModel, Field
+from typing import Any
 
 from backend.app.core.logging import logger
-
 from backend.app.kinetics.rekindle_warning import RekindleWarningEngine
 from backend.app.safety.eafhi import EAFHIEngine
 from backend.app.safety.evaluator import FlammabilityEvaluator
 from backend.app.safety.standards import CABIN_ATMOSPHERES, SPACECRAFT_MATERIALS
+from backend.app.safety.suppression import CabinSuppressionEngine
 from backend.app.schemas.eafhi import (
     EAFHICalculateRequest,
     EAFHIResponse,
@@ -24,6 +21,12 @@ from backend.app.schemas.rekindle import (
     RekindleWarningRequest,
     RekindleWarningResponse,
 )
+from backend.app.schemas.suppression import (
+    CabinSuppressionRequest,
+    CabinSuppressionResponse,
+)
+from fastapi import APIRouter, HTTPException, status
+from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/safety", tags=["safety"])
 
@@ -91,7 +94,7 @@ async def list_spacecraft_materials():
 async def list_cabin_atmospheres():
     """Returns NASA standard spacecraft cabin atmospheres (ISS, Artemis Gateway, Lunar Habitat, EVA)."""
     atmospheres = []
-    for key, a in CABIN_ATMOSPHERES.items():
+    for a in CABIN_ATMOSPHERES.values():
         atmospheres.append({
             "code": a.code,
             "name": a.name,
@@ -123,7 +126,7 @@ async def calculate_eafhi(payload: EAFHICalculateRequest):
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=str(exc),
         )
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         logger.exception(f"EAFHI calculation error: {exc}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -137,7 +140,7 @@ async def get_gateway_profile():
     try:
         result = EAFHIEngine.evaluate_gateway_profile()
         return GatewayProfileResponse(**result)
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         logger.exception(f"Gateway profile calculation error: {exc}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -163,7 +166,7 @@ async def sweep_eafhi_sensitivity(payload: EAFHISensitivityRequest):
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=str(exc),
         )
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         logger.exception(f"Sensitivity sweep error: {exc}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -183,7 +186,7 @@ async def assess_cool_flame_rekindle_risk(payload: RekindleWarningRequest):
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=str(exc),
         )
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         logger.exception(f"Rekindle risk assessment error: {exc}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -201,10 +204,31 @@ async def monitor_cool_flame_stream(payload: CoolFlameStreamMonitorRequest):
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=str(exc),
         )
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         logger.exception(f"Stream monitor error: {exc}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Stream monitor analysis failed",
         )
+
+
+# --- Interactive Cabin Fire Suppression & Damper Simulator (Upgrade E-12) ---
+
+@router.post("/suppression/simulate", response_model=CabinSuppressionResponse)
+async def simulate_cabin_fire_suppression(payload: CabinSuppressionRequest):
+    """Simulates spacecraft cabin emergency fire suppression actions and damper isolation kinetics."""
+    try:
+        return CabinSuppressionEngine.simulate(payload)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.exception(f"Suppression simulation error: {exc}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Cabin suppression simulation failed",
+        )
+
 

@@ -43,13 +43,7 @@ export default function IntelligenceChatPage() {
       id: "welcome",
       sender: "si",
       text: "Welcome to the Flame in Freefall Scientific Intelligence Assistant. I provide evidence-grounded answers derived strictly from authentic NASA microgravity combustion archives (FLEX, BASS-II, ACME). If evidence is lacking or questions fall outside the domain, I explicitly abstain rather than fabricate assertions.",
-<<<<<<< HEAD
-      // No timestamp: this message is static, and rendering a clock value here
-      // would mismatch between the server and client render (hydration error).
-      timestamp: "",
-=======
       timestamp: "12:00 UTC",
->>>>>>> origin/master
     },
   ]);
   const [inputQuery, setInputQuery] = useState("");

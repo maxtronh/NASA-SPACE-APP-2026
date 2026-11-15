@@ -34,6 +34,7 @@ import {
 } from "recharts";
 import { searchFrameRAG } from "@/lib/api";
 import { VideoFrameRAGItem, DiagnosticModality } from "@/types";
+import AnomalyInsightCard from "@/components/AnomalyInsightCard";
 
 export default function DiagnosticsPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -765,6 +766,12 @@ export default function DiagnosticsPage() {
           </div>
         </div>
       </div>
+
+      {/* Autonomous Microgravity Anomaly & Contradiction Discovery Engine */}
+      <AnomalyInsightCard
+        title="Multimodal Diagnostic Anomaly Engine (BASS-II • FLEX • ACME)"
+        className="mt-6"
+      />
     </div>
   );
 }

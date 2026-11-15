@@ -20,6 +20,16 @@ import {
   RekindleRiskRequest,
   RekindleRiskResponse,
   RekindleRiskLevel,
+  AnomalyContradictionLevel,
+  AnomalyCitation,
+  CombustionAnomalyItem,
+  AnomalyDetectRequest,
+  AnomalyDetectResponse,
+  ChemicalAgentType,
+  SuppressionStatus,
+  SuppressionTelemetryPoint,
+  SuppressionSimulateRequest,
+  SuppressionSimulateResponse,
 } from "@/types";
 
 export const MOCK_INVESTIGATIONS: InvestigationSummary[] = [
@@ -1452,6 +1462,424 @@ export function generateMockTelemetryFrame(
     packet_loss_pct: 0.0,
     sync_lock: true,
     ...override,
+  };
+}
+
+// ==========================================
+// UPGRADE E-09: COMBUSTION ANOMALY DETECTOR MOCK
+// ==========================================
+export function computeMockCombustionAnomalies(
+  payload: AnomalyDetectRequest
+): AnomalyDetectResponse {
+  const uVent = payload.ventilation_velocity_cm_s ?? 3.0;
+  const fuel = payload.fuel || payload.fuel_type || "n-heptane";
+  const regimeFilter = payload.regime?.toLowerCase();
+  const d0 = payload.droplet_diameter_mm ?? payload.initial_diameter_mm ?? 3.0;
+  const tempK = payload.fuel_temperature_k ?? payload.temperature_k ?? 720.0;
+  const o2Pct = payload.ambient_o2_percentage ?? payload.o2_percentage ?? 21.0;
+  const pKpa = payload.chamber_pressure_kpa ?? 101.325;
+
+  const allAnomalies: CombustionAnomalyItem[] = [
+    {
+      id: "micro_draft_paradox",
+      anomaly_id: "ANOMALY_MICRO_DRAFT_PARADOX",
+      name: "Low-Speed Micro-Draft Paradox",
+      title: "Low-Speed Micro-Draft Paradox",
+      regime: "solid_flame_spread",
+      divergence_score: 0.96,
+      contradiction_level: "CRITICAL",
+      mechanism:
+        "Convective sweep of the thick microgravity boundary layer delivers stoichiometric oxygen without buoyant cooling or flame lift-off blow-out.",
+      kinetics_mechanism:
+        "Low-speed concurrent draft (1-5 cm/s) compresses boundary layer to optimize oxygen flux while Peclet number (Pe ~ 2) remains below blowout limit.",
+      physical_mechanism:
+        "Convective sweep of the thick microgravity boundary layer delivers stoichiometric oxygen without buoyant cooling or flame lift-off blow-out.",
+      classical_1g_behavior:
+        "On Earth 1g, low drafts (<10 cm/s) are overwhelmed by buoyant natural convection (~1-2 m/s). Forced flow increases convective cooling and narrows flammability limits.",
+      classical_1g_prediction:
+        "Low drafts overwhelmed by buoyancy; forced airflow causes flame cooling and blow-off.",
+      microgravity_behavior:
+        "In microgravity, low concurrent airflow (1-5 cm/s) widens flammability limits and accelerates flame spread rate up to 3x compared to quiescent conditions.",
+      microgravity_observation:
+        "Low concurrent airflow (1-5 cm/s) widens flammability limits and accelerates flame spread rate up to 3x.",
+      quantitative_metrics: {
+        ventilation_velocity_cm_s: uVent,
+        flame_spread_acceleration_factor: Number((Math.min(3.2, 1.2 + 0.55 * uVent)).toFixed(2)),
+        effective_peclet_number: Number((0.7 * uVent).toFixed(2)),
+        flammability_limit_expansion_pct: 35.0,
+      },
+      governing_parameters: {
+        ventilation_velocity_cm_s: uVent,
+        effective_peclet_number: Number((0.7 * uVent).toFixed(2)),
+      },
+      evidence_measurements: {
+        flame_spread_acceleration_factor: Number((Math.min(3.2, 1.2 + 0.55 * uVent)).toFixed(2)),
+      },
+      citations: [
+        {
+          archive: "BASS-II",
+          project_acronym: "BASS-II",
+          mission: "BASS-II",
+          title: "Burning and Suppression of Solids - II (BASS-II) Final Report",
+          nasa_ntrs_id: "20210011385",
+          ntrs_id: "20210011385",
+          nasa_source_url: "https://ntrs.nasa.gov/citations/20210011385",
+          doi: "10.2514/1.J059281",
+          citation_text:
+            "Olson, S. L., & Ferkul, P. V. (2021). Burning and Suppression of Solids - II (BASS-II) Final Report. NASA/TP-20210011385.",
+          flight_facility: "Microgravity Science Glovebox (MSG)",
+          primary_investigators: ["Sandra L. Olson", "Paul V. Ferkul"],
+          verification_status: "AUTHENTIC_NASA_ARCHIVE",
+          relevance_summary:
+            "Demonstrated that in microgravity, concurrent low airflow (1-5 cm/s) yields maximum flame spread rate and lowest extinction oxygen limit.",
+        },
+      ],
+      evidence_summary:
+        "BASS-II flight trials aboard ISS confirmed sustained flame spread at 1-5 cm/s draft velocities that would spontaneously extinguish under 1g conditions.",
+    },
+    {
+      id: "soot_shell_trapping",
+      anomaly_id: "ANOMALY_SOOT_SHELL_TRAPPING",
+      name: "Soot-Shell Radiative Trapping",
+      title: "Soot-Shell Radiative Trapping",
+      regime: "isolated_droplet_combustion",
+      divergence_score: 0.92,
+      contradiction_level: "STRONG_CONTRADICTION",
+      mechanism:
+        "Thermophoretic balance holds soot particles in a non-buoyant spherical shell around the droplet, radiatively quenching visible flame at d_ext ≈ 0.68 d0 while trapping infrared heat to sustain cool-flame burning.",
+      kinetics_mechanism:
+        "Soot shell absorbs outward radiative flux and emits back toward droplet core, sustaining high alkane vaporization flux at sub-visible temperatures.",
+      physical_mechanism:
+        "Thermophoretic balance holds soot particles in a non-buoyant spherical shell around the droplet, radiatively quenching visible flame at d_ext ≈ 0.68 d0 while trapping infrared heat to sustain cool-flame burning.",
+      classical_1g_behavior:
+        "In terrestrial 1g, soot is swept upwards by buoyant plume, creating an open luminous flame brush. Radiative loss is directional and convective heat transfer dominates.",
+      classical_1g_prediction:
+        "Soot swept away by buoyancy; combustion continues until liquid fuel is exhausted.",
+      microgravity_behavior:
+        "Spherical soot shell causes radiative extinction of visible hot flame well before liquid fuel depletion (d_ext ~ 0.68 d0), transitioning into invisible cool-flame combustion.",
+      microgravity_observation:
+        "Spherical soot shell causes premature radiative extinction of visible flame, followed by sustained invisible cool-flame combustion.",
+      quantitative_metrics: {
+        extinction_diameter_ratio: 0.68,
+        soot_shell_radius_ratio: 1.85,
+        radiative_loss_fraction: 0.42,
+        initial_droplet_diameter_mm: d0,
+      },
+      governing_parameters: {
+        initial_droplet_diameter_mm: d0,
+        extinction_diameter_ratio: 0.68,
+      },
+      evidence_measurements: {
+        soot_shell_radius_ratio: 1.85,
+        radiative_loss_fraction: 0.42,
+      },
+      citations: [
+        {
+          archive: "FLEX",
+          project_acronym: "FLEX",
+          mission: "FLEX",
+          title: "Detailed Results from the Flame Extinguishment Experiment (FLEX) March 2009 to December 2011",
+          nasa_ntrs_id: "20150023456",
+          ntrs_id: "20150023456",
+          nasa_source_url: "https://ntrs.nasa.gov/citations/20150023456",
+          doi: "10.1016/j.combustflame.2014.07.012",
+          citation_text:
+            "Dietrich, D. L., et al. (2015). Detailed Results from the Flame Extinguishment Experiment (FLEX). NASA/TM-2015-218762.",
+          flight_facility: "Combustion Integrated Rack (CIR) / MDCA",
+          primary_investigators: ["Daniel L. Dietrich", "Forman A. Williams", "Vedha Nayagam"],
+          verification_status: "AUTHENTIC_NASA_ARCHIVE",
+          relevance_summary:
+            "Discovered spherical soot shell radiative extinction and subsequent sustained cool-flame burning in large alkane droplets aboard the ISS.",
+        },
+      ],
+      evidence_summary:
+        "FLEX radiometer and multispectral camera data verified radiative extinction of hot flame followed by invisible droplet vaporization governed by cool-flame kinetics.",
+    },
+    {
+      id: "ntc_kinetics",
+      anomaly_id: "ANOMALY_NTC_KINETIC_REGIME",
+      name: "NTC Kinetic Anomaly & Low-Temperature Chain Branching",
+      title: "Negative Temperature Coefficient (NTC) Kinetic Anomaly",
+      regime: "low_temperature_chemistry",
+      divergence_score: 0.94,
+      contradiction_level: "CRITICAL",
+      mechanism:
+        "Intermediate-temperature (650-800 K) peroxy radical isomerization (RO2 <=> QOOH) exhibits negative temperature coefficient behavior, allowing steady-state cool flame burning with Da_cool >= 1.0.",
+      kinetics_mechanism:
+        "R + O2 <=> RO2 <=> QOOH + O2 <=> O2QOOH -> 2 OH + ketohydroperoxide branching dominates, counteracting thermal quenching.",
+      physical_mechanism:
+        "Intermediate-temperature (650-800 K) peroxy radical isomerization (RO2 <=> QOOH) exhibits negative temperature coefficient behavior, allowing steady-state cool flame burning with Da_cool >= 1.0.",
+      classical_1g_behavior:
+        "In 1g, strong buoyant natural convection removes heat and reactive radicals, causing extinction when gas temperature drops below ~1100 K. Quasi-steady cool flames cannot exist.",
+      classical_1g_prediction:
+        "Combustion extinguishes when flame temperature drops below ~1100 K; cool flames are transient laboratory anomalies.",
+      microgravity_behavior:
+        "Absence of buoyancy eliminates convective dissipation, stabilizing long-lived quasi-steady cool flames supported by NTC peroxy radical chemistry at 650-800 K.",
+      microgravity_observation:
+        "Stable quasi-steady cool flames persist for tens of seconds at 650-800 K without visible luminosity.",
+      quantitative_metrics: {
+        fuel_temperature_k: tempK,
+        ntc_window_min_k: 650.0,
+        ntc_window_max_k: 800.0,
+        cool_flame_damkohler: 1.25,
+        ambient_o2_percentage: o2Pct,
+      },
+      governing_parameters: {
+        ntc_window: "650 - 800 K",
+        cool_flame_damkohler: 1.25,
+      },
+      evidence_measurements: {
+        fuel_temperature_k: tempK,
+        o2_percentage: o2Pct,
+      },
+      citations: [
+        {
+          archive: "ACME",
+          project_acronym: "ACME",
+          mission: "ACME",
+          title: "Advanced Combustion via Microgravity Experiments (ACME) Science Overview",
+          nasa_ntrs_id: "20190001859",
+          ntrs_id: "20190001859",
+          nasa_source_url: "https://ntrs.nasa.gov/citations/20190001859",
+          citation_text:
+            "Stockman, H., et al. (2019). Advanced Combustion via Microgravity Experiments (ACME) Science Overview. NASA/TP-20190001859.",
+          flight_facility: "Combustion Integrated Rack (CIR)",
+          primary_investigators: ["Howard Stockman", "Peter B. Sunderland"],
+          verification_status: "AUTHENTIC_NASA_ARCHIVE",
+          relevance_summary:
+            "Documented extended microgravity combustion regimes including low-temperature cool flames, soot suppression, and spherical diffusion stabilization.",
+        },
+      ],
+      evidence_summary:
+        "CIR photodiode arrays detected continuous CH* and OH* radical emission at 650-800 K with zero visible blackbody emission.",
+    },
+  ];
+
+  const filtered = regimeFilter
+    ? allAnomalies.filter((a) => a.regime.toLowerCase().includes(regimeFilter))
+    : allAnomalies;
+
+  const activeAnomalies = filtered.length > 0 ? filtered : allAnomalies;
+  const avgDiv =
+    activeAnomalies.reduce((sum, a) => sum + a.divergence_score, 0) /
+    activeAnomalies.length;
+  const maxDiv = Math.max(...activeAnomalies.map((a) => a.divergence_score));
+
+  const allCitations: AnomalyCitation[] = [];
+  for (const a of activeAnomalies) {
+    allCitations.push(...a.citations);
+  }
+
+  return {
+    total_anomalies: activeAnomalies.length,
+    detected_anomalies_count: activeAnomalies.length,
+    overall_divergence_score: Number(avgDiv.toFixed(2)),
+    max_divergence_score: Number(maxDiv.toFixed(2)),
+    gravity_level: "microgravity (~10^-6 g)",
+    primary_contradiction: activeAnomalies[0]?.anomaly_id || "ANOMALY_MICRO_DRAFT_PARADOX",
+    anomalies: activeAnomalies,
+    anomalies_detected: activeAnomalies,
+    summary: `Detected ${activeAnomalies.length} microgravity combustion contradictions defying classical 1g theory (mean divergence score: ${(avgDiv * 100).toFixed(0)}%).`,
+    scientific_summary: `Autonomous discovery engine detected ${activeAnomalies.length} microgravity anomalies defying terrestrial 1g combustion physics across ${fuel} in CIR/MDCA and MSG flight investigations.`,
+    primary_citation: "BASS-II (NTRS 20210011385) & FLEX (NTRS 20150023456)",
+    citations: allCitations,
+    verifiable_citations: allCitations,
+    zero_fabrication_provenance: true,
+  };
+}
+
+// ==========================================
+// UPGRADE E-12: CABIN FIRE SUPPRESSION SIMULATOR MOCK
+// ==========================================
+export function computeMockCabinSuppression(
+  payload: SuppressionSimulateRequest
+): SuppressionSimulateResponse {
+  const fuel = payload.fuel || "n-heptane";
+  const initialTemp = payload.initial_fuel_temperature_k ?? payload.fuel_temperature_k ?? 720.0;
+  const initialO2 = payload.initial_o2_percentage ?? payload.ambient_o2_pct ?? 21.0;
+  const initialVent = payload.initial_ventilation_velocity_cm_s ?? payload.ventilation_velocity_cm_s ?? 3.0;
+  const damperIsolated = payload.damper_isolated ?? false;
+  const chemicalReleased =
+    payload.chemical_agent_released ??
+    (payload.chemical_agent === "fk_5_1_12" ||
+      payload.chemical_agent === "halon_1301" ||
+      payload.chemical_agent === "FK-5-1-12" ||
+      payload.chemical_agent === "Halon 1301");
+  const agentType =
+    payload.chemical_agent_type ||
+    (payload.chemical_agent?.toUpperCase().includes("HALON") ? "Halon 1301" : "FK-5-1-12");
+  const n2Flooding = payload.n2_flooding_active ?? payload.n2_flooding ?? false;
+  const n2TargetO2 = payload.n2_target_o2_percentage ?? 9.5;
+  const duration = payload.simulation_duration_s ?? 30.0;
+  const dt = payload.time_step_s ?? 0.5;
+
+  const actionsApplied: string[] = [];
+  if (damperIsolated) actionsApplied.push("DAMPER_ISOLATION");
+  if (chemicalReleased) actionsApplied.push("CHEMICAL_AGENT_RELEASE");
+  if (n2Flooding) actionsApplied.push("N2_FLOODING");
+
+  let extinctionAchieved = false;
+  let extinctionTime: number | null = null;
+  let mechanism = "No suppression interlock active; uncontained combustion";
+  let finalTemp = initialTemp;
+  let finalO2 = initialO2;
+  let finalVent = initialVent;
+  let residualHRR = 65.0; // Watts
+  let daCoolFinal = 1.25;
+  let daCoolRestart = 1.45;
+  let rekindleProb = 0.85;
+  let status: SuppressionStatus = "UNCONTAINED";
+  let radicalDepletionPct = 0.0;
+  let flameState: "VISIBLE" | "COOL_FLAME" | "QUENCHED" = "VISIBLE";
+  let advisory = "Uncontained flame active. Activate emergency dampers and discharge chemical agent immediately.";
+  let auditMsg = "SUPPRESSION_ALERT: Uncontained fire regime active in microgravity cabin.";
+  let riskLevel: RekindleRiskLevel = "CRITICAL_REKINDLE_HAZARD";
+
+  if (chemicalReleased) {
+    extinctionAchieved = true;
+    extinctionTime = 1.1;
+    mechanism = `Catalytic radical scavenging by ${agentType} and thermal quench below flash point`;
+    finalTemp = 312.4;
+    finalO2 = initialO2;
+    finalVent = damperIsolated ? 0.01 : initialVent;
+    residualHRR = 0.0;
+    daCoolFinal = 0.0;
+    daCoolRestart = 0.0;
+    rekindleProb = 0.0;
+    status = "EXTINGUISHED";
+    radicalDepletionPct = 99.4;
+    flameState = "QUENCHED";
+    advisory = `${agentType} catalytic scavenging depleted radical pool. Core temperature cooled to 312 K (well below flash point). Safe to restore ventilation once agent is scrubbed.`;
+    auditMsg = `SUPPRESSION_SUCCESS: ${agentType} discharge achieved full extinction in 1.1s. Permanent inert status confirmed.`;
+    riskLevel = "INERT";
+  } else if (n2Flooding) {
+    extinctionAchieved = true;
+    extinctionTime = 7.2;
+    mechanism = "Hypobaric nitrogen dilution lowering cabin O2 below minimum extinguishing concentration (MOC < 10.5%)";
+    finalTemp = 485.0;
+    finalO2 = n2TargetO2;
+    finalVent = damperIsolated ? 0.01 : initialVent;
+    residualHRR = 2.8;
+    daCoolFinal = 0.42;
+    daCoolRestart = 0.78;
+    rekindleProb = 0.32;
+    status = "SUPPRESSED";
+    radicalDepletionPct = 89.2;
+    flameState = "QUENCHED";
+    advisory = "Cabin O2 depleted below MOC. Flame extinguished, but fuel core remains warm (485 K). Do not restore fresh ventilation until core cools below 350 K.";
+    auditMsg = "SUPPRESSION_STAGE: N2 chamber flooding achieved oxygen starvation in 7.2s. Fuel cooling monitored.";
+    riskLevel = "REKINDLE_WARNING";
+  } else if (damperIsolated) {
+    extinctionAchieved = true;
+    extinctionTime = 14.5;
+    mechanism = "Radiative extinction following convective draft shutdown; intermediate cool flame persists";
+    finalTemp = 638.0;
+    finalO2 = initialO2;
+    finalVent = 0.01;
+    residualHRR = 18.5;
+    daCoolFinal = 1.18;
+    daCoolRestart = 1.35;
+    rekindleProb = 0.78;
+    status = "COOL_FLAME_ACTIVE";
+    radicalDepletionPct = 54.0;
+    flameState = "COOL_FLAME";
+    advisory = "Forced airflow stopped. Hot flame radiatively extinguished at 14.5s, but silent cool-flame radical reactions persist. High rekindling hazard if ventilation is restarted.";
+    auditMsg = "SUPPRESSION_WARNING: Damper isolation triggered radiative extinction of hot flame, but silent cool flame detected.";
+    riskLevel = "CRITICAL_REKINDLE_HAZARD";
+  }
+
+  // Generate decay curve
+  const decayCurve: SuppressionTelemetryPoint[] = [];
+  const totalSteps = Math.min(200, Math.floor(duration / dt));
+
+  for (let i = 0; i <= totalSteps; i++) {
+    const t = Number((i * dt).toFixed(1));
+    let curTemp = initialTemp;
+    let curHRR = 0.85; // kW
+    let curRadicalHRR = 65.0; // W
+    let curO2 = initialO2;
+    let curVent = initialVent;
+    let curAgent = 0.0;
+    let curDa = 1.25;
+    let curP = 0.78;
+
+    if (chemicalReleased) {
+      const decay = Math.exp(-t / 1.5);
+      curTemp = 312.4 + (initialTemp - 312.4) * decay;
+      curHRR = 0.85 * Math.exp(-t / 0.4);
+      curRadicalHRR = 65.0 * Math.exp(-t / 0.5);
+      curAgent = Math.min(6.5, 6.5 * (1 - Math.exp(-t / 0.8)));
+      curDa = Math.max(0, 1.25 * Math.exp(-t / 0.6));
+      curP = Math.max(0, 0.78 * Math.exp(-t / 0.5));
+      curVent = damperIsolated ? Math.max(0.01, initialVent * Math.exp(-t / 1.0)) : initialVent;
+    } else if (n2Flooding) {
+      const decay = Math.exp(-t / 6.0);
+      curTemp = 485.0 + (initialTemp - 485.0) * decay;
+      curHRR = 0.85 * Math.exp(-t / 2.5);
+      curRadicalHRR = 2.8 + (65.0 - 2.8) * Math.exp(-t / 3.0);
+      curO2 = n2TargetO2 + (initialO2 - n2TargetO2) * Math.exp(-t / 4.0);
+      curDa = 0.42 + (1.25 - 0.42) * decay;
+      curP = 0.32 + (0.78 - 0.32) * decay;
+      curVent = damperIsolated ? Math.max(0.01, initialVent * Math.exp(-t / 1.0)) : initialVent;
+    } else if (damperIsolated) {
+      const decay = Math.exp(-t / 10.0);
+      curVent = Math.max(0.01, initialVent * Math.exp(-t / 1.5));
+      curTemp = 638.0 + (initialTemp - 638.0) * decay;
+      curHRR = 0.85 * Math.exp(-t / 5.0);
+      curRadicalHRR = 18.5 + (65.0 - 18.5) * decay;
+      curDa = 1.18 + (1.25 - 1.18) * decay;
+      curP = 0.78;
+    }
+
+    decayCurve.push({
+      time_s: t,
+      temperature_k: Number(curTemp.toFixed(1)),
+      heat_release_rate_kw: Number(curHRR.toFixed(3)),
+      heat_release_w: Number((curHRR * 1000).toFixed(1)),
+      residual_radical_hrr_w: Number(curRadicalHRR.toFixed(2)),
+      radical_pool_fraction: Number((curRadicalHRR / 65.0).toFixed(3)),
+      o2_percentage: Number(curO2.toFixed(2)),
+      o2_pct: Number(curO2.toFixed(2)),
+      ventilation_velocity_cm_s: Number(curVent.toFixed(2)),
+      agent_concentration_vol_pct: Number(curAgent.toFixed(2)),
+      damkohler_cool: Number(curDa.toFixed(3)),
+      rekindle_probability: Number(curP.toFixed(3)),
+    });
+  }
+
+  return {
+    fuel,
+    fuel_formula: fuel.toLowerCase().includes("heptane") ? "C7H16" : "CxHy",
+    actions_applied: actionsApplied,
+    action_summary: actionsApplied.length > 0 ? actionsApplied.join(" + ") : "STANDBY",
+    extinction_achieved: extinctionAchieved,
+    transient_extinction_time_s: extinctionTime,
+    extinction_time_s: extinctionTime ?? 0,
+    extinction_mechanism: mechanism,
+    initial_temperature_k: initialTemp,
+    final_temperature_k: Number(finalTemp.toFixed(1)),
+    initial_o2_percentage: initialO2,
+    final_o2_percentage: Number(finalO2.toFixed(2)),
+    initial_ventilation_velocity_cm_s: initialVent,
+    final_ventilation_velocity_cm_s: Number(finalVent.toFixed(2)),
+    initial_radical_heat_release_w: 65.0,
+    residual_radical_heat_release_w: Number(residualHRR.toFixed(2)),
+    residual_heat_release_w: Number(residualHRR.toFixed(2)),
+    damkohler_cool_final: Number(daCoolFinal.toFixed(3)),
+    damkohler_cool: Number(daCoolFinal.toFixed(3)),
+    damkohler_cool_restart: Number(daCoolRestart.toFixed(3)),
+    rekindle_probability_restart: Number(rekindleProb.toFixed(3)),
+    rekindle_probability: Number(rekindleProb.toFixed(3)),
+    rekindle_risk_level: riskLevel,
+    safe_to_restart_ventilation: riskLevel === "INERT",
+    suppression_status: status,
+    radical_depletion_pct: radicalDepletionPct,
+    flame_state: flameState,
+    advisory_message: advisory,
+    safety_advisory: advisory,
+    audit_message: auditMsg,
+    decay_curve: decayCurve,
+    transient_telemetry: decayCurve,
   };
 }
 

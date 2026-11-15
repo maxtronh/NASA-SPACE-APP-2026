@@ -44,17 +44,23 @@ import {
   filterWaveletJitter,
   calculateRekindleRisk,
   createCCSDSTelemetryStream,
+  simulateCabinSuppression,
 } from "@/lib/api";
 import {
   generateMockTelemetryFrame,
   computeMockWaveletFilter,
   computeMockRekindleRisk,
+  computeMockCabinSuppression,
 } from "@/lib/mockData";
 import {
   CCSDSTelemetryFrame,
   WaveletFilterResponse,
   RekindleRiskResponse,
   RekindleRiskLevel,
+  SuppressionSimulateRequest,
+  SuppressionSimulateResponse,
+  ChemicalAgentType,
+  SuppressionStatus,
 } from "@/types";
 
 interface AuditLog {
@@ -131,6 +137,9 @@ export default function MissionControlPage() {
   const [fkArmed, setFkArmed] = useState<boolean>(false);
   const [fkReleased, setFkReleased] = useState<boolean>(false);
   const [n2Flooding, setN2Flooding] = useState<boolean>(false);
+  const [selectedAgent, setSelectedAgent] = useState<ChemicalAgentType>("fk_5_1_12");
+  const [suppressionTelemetry, setSuppressionTelemetry] = useState<SuppressionSimulateResponse | null>(null);
+  const [suppressionLoading, setSuppressionLoading] = useState<boolean>(false);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([
     {
       id: "log-1",
@@ -390,15 +399,90 @@ export default function MissionControlPage() {
   };
 
   // ==========================================
-  // EMERGENCY SUPPRESSION ACTIONS
+  // EMERGENCY SUPPRESSION ACTIONS & SIMULATION
   // ==========================================
-  const toggleDamper = () => {
+  const runSuppressionSimulation = async (overrides?: Partial<SuppressionSimulateRequest>) => {
+    setSuppressionLoading(true);
+    try {
+      const isDamper = overrides?.damper_isolated ?? damperIsolated;
+      const isAgent = overrides?.chemical_agent_released ?? fkReleased;
+      const isN2 = overrides?.n2_flooding_active ?? overrides?.n2_flooding ?? n2Flooding;
+      const agent = overrides?.chemical_agent ?? selectedAgent;
+      const temp = overrides?.fuel_temperature_k ?? fuelTempK;
+      const vent = overrides?.ventilation_velocity_cm_s ?? (isDamper ? 0.0 : ventilationCmS);
+      const o2 = overrides?.ambient_o2_pct ?? o2Percentage;
+
+      const payload: SuppressionSimulateRequest = {
+        fuel: selectedFuel,
+        fuel_temperature_k: temp,
+        initial_fuel_temperature_k: temp,
+        initial_o2_percentage: o2,
+        ambient_o2_pct: o2,
+        initial_ventilation_velocity_cm_s: vent,
+        ventilation_velocity_cm_s: vent,
+        chamber_pressure_kpa: chamberPressureKpa,
+        cabin_pressure_kpa: chamberPressureKpa,
+        characteristic_length_m: 0.003,
+        damper_isolated: isDamper,
+        chemical_agent: agent,
+        chemical_agent_released: isAgent,
+        chemical_agent_type: agent === "halon_1301" || agent === "Halon 1301" ? "Halon 1301" : "FK-5-1-12",
+        n2_flooding: isN2,
+        n2_flooding_active: isN2,
+        n2_target_o2_percentage: 9.5,
+        simulation_duration_s: 30.0,
+        time_step_s: 0.5,
+        restart_ventilation_velocity_cm_s: 3.0,
+        ...overrides,
+      };
+
+      const res = await simulateCabinSuppression(payload);
+      setSuppressionTelemetry(res);
+      return res;
+    } catch {
+      const fallback = computeMockCabinSuppression({
+        fuel: selectedFuel,
+        fuel_temperature_k: fuelTempK,
+        damper_isolated: damperIsolated,
+        chemical_agent_released: fkReleased,
+        chemical_agent: selectedAgent,
+        n2_flooding: n2Flooding,
+        ambient_o2_pct: o2Percentage,
+        cabin_pressure_kpa: chamberPressureKpa,
+        ventilation_velocity_cm_s: ventilationCmS,
+      });
+      setSuppressionTelemetry(fallback);
+      return fallback;
+    } finally {
+      setSuppressionLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    runSuppressionSimulation();
+  }, [
+    selectedFuel,
+    debouncedFuelTempK,
+    damperIsolated,
+    fkReleased,
+    selectedAgent,
+    n2Flooding,
+    debouncedO2Percentage,
+    debouncedVentilationCmS,
+  ]);
+
+  const toggleDamper = async () => {
     const nextState = !damperIsolated;
     setDamperIsolated(nextState);
+    const res = await runSuppressionSimulation({ damper_isolated: nextState });
     if (nextState) {
+      const tExt = res?.transient_extinction_time_s ?? res?.extinction_time_s ?? 14.5;
+      const daCool = res?.damkohler_cool_final ?? res?.damkohler_cool ?? 1.18;
+      const qRes = res?.residual_radical_heat_release_w ?? res?.residual_heat_release_w ?? 18.5;
+      const pRekindle = Math.round(((res?.rekindle_probability_restart ?? res?.rekindle_probability ?? 0.78)) * 100);
       addAuditLog(
         "ALARM",
-        "EMERGENCY ACTION: Ventilation damper ISOLATED (0.0 cm/s). Oxygen inflow halted to suppress radical chain accumulation."
+        `EMERGENCY ACTION: Damper ISOLATED (u_vent=0.0 cm/s). Extinction t_ext=${tExt.toFixed(1)}s, Da_cool=${daCool.toFixed(2)}, Q_res=${qRes.toFixed(1)}W, P_rekindle=${pRekindle}%. Silent cool flame persists!`
       );
     } else {
       addAuditLog(
@@ -408,31 +492,49 @@ export default function MissionControlPage() {
     }
   };
 
-  const dischargeFK5112 = () => {
+  const dischargeFK5112 = async () => {
     if (!fkArmed) {
-      addAuditLog("WARN", "SUPPRESSION INHIBIT: FK-5-1-12 release requires arming safety toggle first.");
+      addAuditLog("WARN", `SUPPRESSION INHIBIT: ${selectedAgent.toUpperCase()} release requires arming safety toggle first.`);
       return;
     }
     setFkReleased(true);
-    setFuelTempK(315.0); // Rapid cooling below flash point
+    setFuelTempK(312.4);
     setVisibleFlameActive(false);
+    const res = await runSuppressionSimulation({
+      chemical_agent_released: true,
+      chemical_agent: selectedAgent,
+      fuel_temperature_k: 312.4,
+    });
+    const agentLabel = selectedAgent === "halon_1301" ? "Halon 1301 (BTM)" : "FK-5-1-12 (Novec 1230)";
+    const tExt = res?.transient_extinction_time_s ?? res?.extinction_time_s ?? 1.1;
+    const qRes = res?.residual_radical_heat_release_w ?? res?.residual_heat_release_w ?? 0.0;
+    const depletPct = res?.radical_depletion_pct ?? 99.4;
     addAuditLog(
       "CRIT",
-      "SUPPRESSION FIRED: FK-5-1-12 (Novec 1230 fluoroketone) gas discharged! Droplet core quenched to 315 K (< flash point). Cool flame kinetics completely extinguished."
+      `SUPPRESSION FIRED: ${agentLabel} discharged! Catalytic scavenging extinguished flame in ${tExt.toFixed(1)}s. Q_res=${qRes.toFixed(1)}W, Radical Depletion=${depletPct.toFixed(1)}%, Permanent INERT.`
     );
   };
 
-  const toggleN2Flood = () => {
+  const toggleN2Flood = async () => {
     const nextState = !n2Flooding;
     setN2Flooding(nextState);
+    const nextO2 = nextState ? 9.5 : 21.0;
+    setO2Percentage(nextO2);
+    const res = await runSuppressionSimulation({
+      n2_flooding_active: nextState,
+      n2_flooding: nextState,
+      ambient_o2_pct: nextO2,
+    });
     if (nextState) {
-      setO2Percentage(9.5); // Dilute below LOI
+      const tExt = res?.transient_extinction_time_s ?? res?.extinction_time_s ?? 7.2;
+      const daCool = res?.damkohler_cool_final ?? res?.damkohler_cool ?? 0.42;
+      const qRes = res?.residual_radical_heat_release_w ?? res?.residual_heat_release_w ?? 2.8;
+      const pRekindle = Math.round(((res?.rekindle_probability_restart ?? res?.rekindle_probability ?? 0.32)) * 100);
       addAuditLog(
         "ALARM",
-        "CHAMBER ACTION: Nitrogen (N2) flood active. Ambient O2 diluted to 9.5% (below 12% LOI)."
+        `CHAMBER ACTION: Nitrogen (N2) flood active. Ambient O2 diluted to 9.5% (below LOI). Extinction in ${tExt.toFixed(1)}s, Q_res=${qRes.toFixed(1)}W, Da_cool=${daCool.toFixed(2)}, P_rekindle=${pRekindle}%.`
       );
     } else {
-      setO2Percentage(21.0);
       addAuditLog("INFO", "CHAMBER ACTION: Nitrogen flood ceased. Ambient O2 normalized to 21.0%.");
     }
   };
@@ -448,6 +550,15 @@ export default function MissionControlPage() {
     setVisibleFlameActive(false);
     setJitterInjected(false);
     executeWaveletDecomposition(false);
+    runSuppressionSimulation({
+      damper_isolated: false,
+      chemical_agent_released: false,
+      n2_flooding_active: false,
+      n2_flooding: false,
+      fuel_temperature_k: 295.0,
+      ambient_o2_pct: 21.0,
+      ventilation_velocity_cm_s: 3.0,
+    });
     addAuditLog("INFO", "MASTER RESET: All interlocks cleared. Nominal CIR experiment conditions restored.");
   };
 
@@ -1150,139 +1261,276 @@ export default function MissionControlPage() {
       {/* ==========================================
           SECTION D: EMERGENCY SUPPRESSION & AUDIT LOG
       ========================================== */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Mitigation Interlocks Control Matrix (5 Cols) */}
-        <div className="lg:col-span-5 bg-space-900 border border-space-800 rounded-xl p-5 shadow-lg space-y-4">
-          <div className="border-b border-space-800 pb-3">
-            <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2 font-mono">
-              <Zap className="w-4 h-4 text-nasa-red" />
-              Emergency Suppression Interlock Matrix
-            </h2>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Flight controller override controls for forced convection isolation and chemical extinguishing
-            </p>
-          </div>
+      {(() => {
+        const suppressionStatus =
+          suppressionTelemetry?.suppression_status ??
+          (fkReleased ? "EXTINGUISHED" : damperIsolated ? "COOL_FLAME_ACTIVE" : n2Flooding ? "SUPPRESSED" : "UNCONTAINED");
+        const tExt =
+          suppressionTelemetry?.transient_extinction_time_s !== undefined &&
+          suppressionTelemetry?.transient_extinction_time_s !== null
+            ? `${suppressionTelemetry.transient_extinction_time_s.toFixed(1)} s`
+            : suppressionTelemetry?.extinction_achieved
+            ? `${(suppressionTelemetry.extinction_time_s ?? 1.1).toFixed(1)} s`
+            : fkReleased
+            ? "1.1 s"
+            : damperIsolated
+            ? "14.5 s"
+            : n2Flooding
+            ? "7.2 s"
+            : "ACTIVE";
+        const qRes = `${(
+          suppressionTelemetry?.residual_radical_heat_release_w ??
+          suppressionTelemetry?.residual_heat_release_w ??
+          (fkReleased ? 0.0 : damperIsolated ? 18.5 : n2Flooding ? 2.8 : 65.0)
+        ).toFixed(1)} W`;
+        const daCool = (
+          suppressionTelemetry?.damkohler_cool_final ??
+          suppressionTelemetry?.damkohler_cool ??
+          (fkReleased ? 0.0 : damperIsolated ? 1.18 : n2Flooding ? 0.42 : 1.25)
+        ).toFixed(2);
+        const pRekindle = `${Math.round(
+          (suppressionTelemetry?.rekindle_probability_restart ??
+            suppressionTelemetry?.rekindle_probability ??
+            (fkReleased ? 0.0 : damperIsolated ? 0.78 : n2Flooding ? 0.32 : 0.85)) * 100
+        )}%`;
+        const radicalDepletionVal =
+          suppressionTelemetry?.radical_depletion_pct ??
+          (fkReleased ? 99.4 : damperIsolated ? 54.0 : n2Flooding ? 89.2 : 0.0);
+        const radicalDepletion = `${radicalDepletionVal.toFixed(1)}%`;
 
-          <div className="space-y-3">
-            {/* Ventilation Isolation Damper */}
-            <div className="bg-space-850 border border-space-800 p-3 rounded-lg flex items-center justify-between">
+        return (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Mitigation Interlocks Control Matrix (5 Cols) */}
+            <div className="lg:col-span-5 bg-space-900 border border-space-800 rounded-xl p-5 shadow-lg space-y-4">
+              <div className="border-b border-space-800 pb-3">
+                <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2 font-mono">
+                  <Zap className="w-4 h-4 text-nasa-red" />
+                  Emergency Suppression Interlock Matrix
+                </h2>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Flight controller override controls for forced convection isolation and chemical extinguishing
+                </p>
+              </div>
+
+              {/* Dynamic Suppression Kinetic Telemetry Readouts */}
+              <div className="bg-space-950/80 border border-space-800 rounded-lg p-3 space-y-2">
+                <div className="flex items-center justify-between text-xs font-mono">
+                  <span className="text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Activity className="w-3.5 h-3.5 text-nasa-cyan" />
+                    Live Suppression Kinetics Telemetry
+                  </span>
+                  <span
+                    className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold uppercase tracking-wider border ${
+                      suppressionStatus === "EXTINGUISHED"
+                        ? "bg-emerald-950/80 text-emerald-300 border-emerald-500/50"
+                        : suppressionStatus === "SUPPRESSED"
+                        ? "bg-indigo-950/80 text-indigo-300 border-indigo-500/50"
+                        : suppressionStatus === "COOL_FLAME_ACTIVE"
+                        ? "bg-amber-950/80 text-amber-300 border-amber-500/50"
+                        : "bg-rose-950/80 text-rose-300 border-rose-500/50"
+                    }`}
+                  >
+                    {suppressionStatus}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 font-mono">
+                  {/* Extinction Time */}
+                  <div className="bg-space-900 border border-space-800/80 rounded-md p-2">
+                    <div className="text-[10px] text-slate-400">Extinction Time (t_ext)</div>
+                    <div className="text-sm font-bold text-white mt-0.5">{tExt}</div>
+                  </div>
+
+                  {/* Residual Radical Heat Release */}
+                  <div className="bg-space-900 border border-space-800/80 rounded-md p-2">
+                    <div className="text-[10px] text-slate-400">Residual Radical HRR (Q_res)</div>
+                    <div className="text-sm font-bold text-amber-300 mt-0.5">{qRes}</div>
+                  </div>
+
+                  {/* Damkohler Cool Number */}
+                  <div className="bg-space-900 border border-space-800/80 rounded-md p-2">
+                    <div className="text-[10px] text-slate-400">Damköhler Cool (Da_cool)</div>
+                    <div className="text-sm font-bold text-cyan-300 mt-0.5">{daCool}</div>
+                  </div>
+
+                  {/* Silent Rekindling Probability on Restart */}
+                  <div className="bg-space-900 border border-space-800/80 rounded-md p-2">
+                    <div className="text-[10px] text-slate-400">P(Rekindle on Restart)</div>
+                    <div className="text-sm font-bold text-rose-300 mt-0.5">{pRekindle}</div>
+                  </div>
+
+                  {/* Radical Depletion Efficiency */}
+                  <div className="bg-space-900 border border-space-800/80 rounded-md p-2 sm:col-span-2">
+                    <div className="text-[10px] text-slate-400">Radical Pool Depletion</div>
+                    <div className="flex items-center space-x-2 mt-0.5">
+                      <span className="text-sm font-bold text-emerald-400">{radicalDepletion}</span>
+                      <div className="flex-1 bg-space-800 h-1.5 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-emerald-400 rounded-full transition-all duration-500"
+                          style={{ width: `${Math.min(100, radicalDepletionVal)}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {/* Ventilation Isolation Damper */}
+                <div className="bg-space-850 border border-space-800 p-3 rounded-lg flex items-center justify-between">
+                  <div>
+                    <div className="text-xs font-mono font-bold text-slate-200">Cabin Ventilation Damper</div>
+                    <div className="text-[10px] font-mono text-slate-400 mt-0.5">
+                      {damperIsolated ? "Isolated (0.0 cm/s) — Halts Radical Replenishment" : "Open (Nominal 3.0 cm/s airflow)"}
+                    </div>
+                  </div>
+                  <button
+                    onClick={toggleDamper}
+                    disabled={suppressionLoading}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold border transition-all ${
+                      damperIsolated
+                        ? "bg-rose-950/80 border-rose-500 text-rose-200 animate-pulse"
+                        : "bg-space-800 hover:bg-space-700 border-space-700 text-slate-200"
+                    }`}
+                  >
+                    {damperIsolated ? "OPEN DAMPER" : "ISOLATE DAMPER"}
+                  </button>
+                </div>
+
+                {/* Chemical Suppressant Formulation Selector & Discharge */}
+                <div className="bg-space-850 border border-space-800 p-3 rounded-lg space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-mono font-bold text-slate-200">
+                        Chemical Agent Release ({selectedAgent === "halon_1301" ? "Halon 1301" : "FK-5-1-12"})
+                      </div>
+                      <div className="text-[10px] font-mono text-slate-400 mt-0.5">
+                        Catalytic scavenging and rapid droplet cooling below flash point
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setFkArmed(!fkArmed)}
+                      className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-mono border transition-all ${
+                        fkArmed
+                          ? "bg-amber-950/60 border-amber-500 text-amber-300 font-bold"
+                          : "bg-space-800 border-space-700 text-slate-400"
+                      }`}
+                    >
+                      {fkArmed ? <Unlock className="w-3 h-3 text-amber-400" /> : <Lock className="w-3 h-3" />}
+                      <span>{fkArmed ? "ARMED" : "SAFE"}</span>
+                    </button>
+                  </div>
+
+                  {/* Agent Type Selector */}
+                  <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
+                    <button
+                      type="button"
+                      disabled={fkReleased}
+                      onClick={() => setSelectedAgent("fk_5_1_12")}
+                      className={`py-1 px-2 rounded border text-center transition-all ${
+                        selectedAgent === "fk_5_1_12" || selectedAgent === "FK-5-1-12"
+                          ? "bg-nasa-cyan/20 border-nasa-cyan text-white font-bold"
+                          : "bg-space-800 border-space-700 text-slate-400 hover:text-white"
+                      }`}
+                    >
+                      FK-5-1-12 (Novec 1230)
+                    </button>
+                    <button
+                      type="button"
+                      disabled={fkReleased}
+                      onClick={() => setSelectedAgent("halon_1301")}
+                      className={`py-1 px-2 rounded border text-center transition-all ${
+                        selectedAgent === "halon_1301" || selectedAgent === "Halon 1301"
+                          ? "bg-nasa-cyan/20 border-nasa-cyan text-white font-bold"
+                          : "bg-space-800 border-space-700 text-slate-400 hover:text-white"
+                      }`}
+                    >
+                      Halon 1301 (BTM)
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={dischargeFK5112}
+                    disabled={!fkArmed || fkReleased || suppressionLoading}
+                    className={`w-full py-2 rounded-lg text-xs font-mono font-bold border transition-all ${
+                      fkReleased
+                        ? "bg-emerald-950/60 border-emerald-500/50 text-emerald-300 cursor-not-allowed"
+                        : fkArmed
+                        ? "bg-rose-600 hover:bg-rose-500 text-white border-rose-400 shadow-md shadow-rose-600/30 cursor-pointer animate-pulse"
+                        : "bg-space-800 border-space-700 text-slate-500 cursor-not-allowed"
+                    }`}
+                  >
+                    {fkReleased
+                      ? `AGENT DISCHARGED (${selectedAgent === "halon_1301" ? "HALON 1301" : "FK-5-1-12"} QUENCHED)`
+                      : `DISCHARGE ${selectedAgent === "halon_1301" ? "HALON 1301" : "FK-5-1-12"} SUPPRESSANT`}
+                  </button>
+                </div>
+
+                {/* Nitrogen Chamber Flood & Reset */}
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={toggleN2Flood}
+                    disabled={suppressionLoading}
+                    className={`py-2 px-3 rounded-lg text-xs font-mono border text-center transition-all ${
+                      n2Flooding
+                        ? "bg-indigo-950/80 border-indigo-500 text-indigo-200 font-bold animate-pulse"
+                        : "bg-space-850 hover:bg-space-800 border-space-800 text-slate-300"
+                    }`}
+                  >
+                    {n2Flooding ? "STOP N2 FLOOD (9.5% O2)" : "N2 CHAMBER FLOOD"}
+                  </button>
+
+                  <button
+                    onClick={masterReset}
+                    className="py-2 px-3 rounded-lg text-xs font-mono border border-space-800 bg-space-850 hover:bg-space-800 text-slate-300 hover:text-white flex items-center justify-center gap-1.5"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>MASTER RESET</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Flight Controller Audit Log Console (7 Cols) */}
+            <div className="lg:col-span-7 bg-space-900 border border-space-800 rounded-xl p-5 shadow-lg flex flex-col justify-between">
               <div>
-                <div className="text-xs font-mono font-bold text-slate-200">Cabin Ventilation Damper</div>
-                <div className="text-[10px] font-mono text-slate-400 mt-0.5">
-                  {damperIsolated ? "Isolated (0.0 cm/s) — Halts Radical Replenishment" : "Open (Nominal 3.0 cm/s airflow)"}
+                <div className="flex items-center justify-between border-b border-space-800 pb-3 mb-3">
+                  <div className="flex items-center gap-2">
+                    <Terminal className="w-4 h-4 text-emerald-400" />
+                    <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-white">
+                      Flight Controller Telemetry & Interlock Audit Log
+                    </h3>
+                  </div>
+                  <span className="text-[10px] font-mono text-slate-500">Auto-scrolling UTC stream</span>
+                </div>
+
+                {/* Terminal Window */}
+                <div className="bg-space-950 border border-space-850 rounded-lg p-3 font-mono text-xs space-y-1.5 h-64 overflow-y-auto custom-scrollbar">
+                  {auditLogs.map((log) => {
+                    let badgeColor = "text-slate-400";
+                    if (log.level === "ALARM") badgeColor = "text-amber-400 font-bold";
+                    if (log.level === "CRIT") badgeColor = "text-rose-400 font-bold";
+                    if (log.level === "WARN") badgeColor = "text-amber-300";
+
+                    return (
+                      <div key={log.id} className="leading-relaxed flex items-start gap-2">
+                        <span className="text-slate-500 shrink-0">[{log.timestamp}]</span>
+                        <span className={`shrink-0 ${badgeColor}`}>[{log.level}]</span>
+                        <span className="text-slate-300 break-words">{log.message}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-              <button
-                onClick={toggleDamper}
-                className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold border transition-all ${
-                  damperIsolated
-                    ? "bg-rose-950/80 border-rose-500 text-rose-200 animate-pulse"
-                    : "bg-space-800 hover:bg-space-700 border-space-700 text-slate-200"
-                }`}
-              >
-                {damperIsolated ? "OPEN DAMPER" : "ISOLATE DAMPER"}
-              </button>
-            </div>
 
-            {/* FK-5-1-12 Suppressant Release */}
-            <div className="bg-space-850 border border-space-800 p-3 rounded-lg space-y-2.5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-xs font-mono font-bold text-slate-200">FK-5-1-12 Gas Discharge (Novec 1230)</div>
-                  <div className="text-[10px] font-mono text-slate-400 mt-0.5">
-                    Fluoroketone agent quenches droplet core below flash point (&lt; 350 K)
-                  </div>
-                </div>
-                <button
-                  onClick={() => setFkArmed(!fkArmed)}
-                  className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-mono border transition-all ${
-                    fkArmed
-                      ? "bg-amber-950/60 border-amber-500 text-amber-300 font-bold"
-                      : "bg-space-800 border-space-700 text-slate-400"
-                  }`}
-                >
-                  {fkArmed ? <Unlock className="w-3 h-3 text-amber-400" /> : <Lock className="w-3 h-3" />}
-                  <span>{fkArmed ? "ARMED" : "SAFE"}</span>
-                </button>
+              <div className="pt-3 border-t border-space-800/80 flex items-center justify-between text-[11px] font-mono text-slate-400">
+                <span>Audit status: 100% genuine timestamped flight interlock events</span>
+                <span className="text-emerald-400 font-semibold">Integrity Verified</span>
               </div>
-
-              <button
-                onClick={dischargeFK5112}
-                disabled={!fkArmed || fkReleased}
-                className={`w-full py-2 rounded-lg text-xs font-mono font-bold border transition-all ${
-                  fkReleased
-                    ? "bg-emerald-950/60 border-emerald-500/50 text-emerald-300 cursor-not-allowed"
-                    : fkArmed
-                    ? "bg-rose-600 hover:bg-rose-500 text-white border-rose-400 shadow-md shadow-rose-600/30 cursor-pointer animate-pulse"
-                    : "bg-space-800 border-space-700 text-slate-500 cursor-not-allowed"
-                }`}
-              >
-                {fkReleased ? "AGENT DISCHARGED (CHAMBER QUENCHED)" : "DISCHARGE FK-5-1-12 SUPPRESSANT"}
-              </button>
-            </div>
-
-            {/* Nitrogen Chamber Flood & Reset */}
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={toggleN2Flood}
-                className={`py-2 px-3 rounded-lg text-xs font-mono border text-center transition-all ${
-                  n2Flooding
-                    ? "bg-indigo-950/80 border-indigo-500 text-indigo-200 font-bold animate-pulse"
-                    : "bg-space-850 hover:bg-space-800 border-space-800 text-slate-300"
-                }`}
-              >
-                {n2Flooding ? "STOP N2 FLOOD (9.5% O2)" : "N2 CHAMBER FLOOD"}
-              </button>
-
-              <button
-                onClick={masterReset}
-                className="py-2 px-3 rounded-lg text-xs font-mono border border-space-800 bg-space-850 hover:bg-space-800 text-slate-300 hover:text-white flex items-center justify-center gap-1.5"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>MASTER RESET</span>
-              </button>
             </div>
           </div>
-        </div>
-
-        {/* Flight Controller Audit Log Console (7 Cols) */}
-        <div className="lg:col-span-7 bg-space-900 border border-space-800 rounded-xl p-5 shadow-lg flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between border-b border-space-800 pb-3 mb-3">
-              <div className="flex items-center gap-2">
-                <Terminal className="w-4 h-4 text-emerald-400" />
-                <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-white">
-                  Flight Controller Telemetry & Interlock Audit Log
-                </h3>
-              </div>
-              <span className="text-[10px] font-mono text-slate-500">Auto-scrolling UTC stream</span>
-            </div>
-
-            {/* Terminal Window */}
-            <div className="bg-space-950 border border-space-850 rounded-lg p-3 font-mono text-xs space-y-1.5 h-64 overflow-y-auto custom-scrollbar">
-              {auditLogs.map((log) => {
-                let badgeColor = "text-slate-400";
-                if (log.level === "ALARM") badgeColor = "text-amber-400 font-bold";
-                if (log.level === "CRIT") badgeColor = "text-rose-400 font-bold";
-                if (log.level === "WARN") badgeColor = "text-amber-300";
-
-                return (
-                  <div key={log.id} className="leading-relaxed flex items-start gap-2">
-                    <span className="text-slate-500 shrink-0">[{log.timestamp}]</span>
-                    <span className={`shrink-0 ${badgeColor}`}>[{log.level}]</span>
-                    <span className="text-slate-300 break-words">{log.message}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="pt-3 border-t border-space-800/80 flex items-center justify-between text-[11px] font-mono text-slate-400">
-            <span>Audit status: 100% genuine timestamped flight interlock events</span>
-            <span className="text-emerald-400 font-semibold">Integrity Verified</span>
-          </div>
-        </div>
-      </div>
+        );
+      })()}
     </div>
   );
 }

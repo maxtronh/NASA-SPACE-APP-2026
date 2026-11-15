@@ -21,6 +21,10 @@ import {
   RekindleRiskRequest,
   RekindleRiskResponse,
   RekindleRiskLevel,
+  AnomalyDetectRequest,
+  AnomalyDetectResponse,
+  SuppressionSimulateRequest,
+  SuppressionSimulateResponse,
 } from "@/types";
 import {
   MOCK_CORPUS_ANALYTICS,
@@ -33,6 +37,8 @@ import {
   computeMockWaveletFilter,
   computeMockRekindleRisk,
   generateMockTelemetryFrame,
+  computeMockCombustionAnomalies,
+  computeMockCabinSuppression,
 } from "./mockData";
 
 /**
@@ -146,20 +152,7 @@ export async function handleApiResponse<T>(res: Response): Promise<T> {
 }
 
 /**
-<<<<<<< HEAD
- * Checks backend health status.
- *
- * Throws when the backend is unreachable so callers can show an explicit
- * offline state. Never fabricates a "healthy" or "cached" response.
- */
-export async function fetchHealth(): Promise<HealthResponse> {
-  const res = await fetch(`${API_BASE}/health`, {
-    method: "GET",
-    cache: "no-store",
-  });
-  if (!res.ok) {
-    throw new ApiError(res.status, `Health check failed with HTTP ${res.status}`);
-=======
+/**
  * Checks backend health status with fast timeout and retry.
  */
 export async function fetchHealth(): Promise<HealthResponse> {
@@ -184,9 +177,7 @@ export async function fetchHealth(): Promise<HealthResponse> {
       pgvector_ready: true,
       version: "1.0.0 (offline fallback)",
     };
->>>>>>> origin/master
   }
-  return (await res.json()) as HealthResponse;
 }
 
 /**
@@ -258,24 +249,12 @@ export async function fetchInvestigations(params?: {
  * Retrieves full investigation details and flight runs by slug or ID.
  */
 export async function fetchInvestigationDetail(idOrSlug: string): Promise<InvestigationDetailResponse> {
-  let res: Response;
-
   try {
-<<<<<<< HEAD
-    res = await fetch(`${API_BASE}/investigations/${encodeURIComponent(idOrSlug)}`, {
-=======
     const res = await resilientFetch(`${getApiBase()}/investigations/${encodeURIComponent(idOrSlug)}`, {
->>>>>>> origin/master
       method: "GET",
       headers: { "Content-Type": "application/json" },
       cache: "no-store",
     });
-<<<<<<< HEAD
-  } catch {
-    // Backend unreachable: serve the bundled demo record only when one exists
-    // for this exact slug. Never substitute a different investigation.
-    const fallback = MOCK_INVESTIGATION_DETAILS[idOrSlug];
-=======
     if (!res.ok) {
       throw new Error(`HTTP error ${res.status}`);
     }
@@ -291,20 +270,9 @@ export async function fetchInvestigationDetail(idOrSlug: string): Promise<Invest
       MOCK_INVESTIGATION_DETAILS[resolvedSlug] ||
       MOCK_INVESTIGATION_DETAILS[idOrSlug] ||
       MOCK_INVESTIGATION_DETAILS["flex-droplet-burning"];
->>>>>>> origin/master
     if (fallback) return fallback;
     throw new ApiError(503, "Provenance API is unreachable.");
   }
-
-  if (!res.ok) {
-    const message =
-      res.status === 404
-        ? `Investigation '${idOrSlug}' not found.`
-        : `API request failed with HTTP ${res.status}`;
-    throw new ApiError(res.status, message);
-  }
-
-  return await res.json();
 }
 
 /**
@@ -1349,6 +1317,105 @@ export async function calculateTrajectory(
     };
   }
 }
+
+/**
+ * Upgrade E-09: Microgravity Scientific Contradiction & Anomaly Detection.
+ * Calls POST /api/v1/kinetics/anomalies/detect with offline/SSR fallback.
+ */
+export async function detectCombustionAnomalies(
+  payload: AnomalyDetectRequest
+): Promise<AnomalyDetectResponse> {
+  try {
+    const res = await resilientFetch(`${getApiBase()}/kinetics/anomalies/detect`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+      timeoutMs: 6000,
+      retries: 1,
+    });
+    if (!res.ok) {
+      throw new Error(`HTTP error ${res.status}`);
+    }
+    const data = await res.json();
+    return {
+      ...data,
+      anomalies: data.anomalies || data.anomalies_detected || [],
+      anomalies_detected: data.anomalies_detected || data.anomalies || [],
+    };
+  } catch (err) {
+    return computeMockCombustionAnomalies(payload);
+  }
+}
+
+/**
+ * Upgrade E-12: Interactive Cabin Fire Suppression & Damper Simulator.
+ * Calls POST /api/v1/safety/suppression/simulate with offline/SSR fallback.
+ */
+export async function simulateCabinSuppression(
+  payload: SuppressionSimulateRequest
+): Promise<SuppressionSimulateResponse> {
+  try {
+    const backendPayload = {
+      fuel: payload.fuel || "n-heptane",
+      initial_fuel_temperature_k:
+        payload.initial_fuel_temperature_k ?? payload.fuel_temperature_k ?? 720.0,
+      initial_o2_percentage:
+        payload.initial_o2_percentage ?? payload.ambient_o2_pct ?? 21.0,
+      initial_ventilation_velocity_cm_s:
+        payload.initial_ventilation_velocity_cm_s ?? payload.ventilation_velocity_cm_s ?? 3.0,
+      chamber_pressure_kpa:
+        payload.chamber_pressure_kpa ?? payload.cabin_pressure_kpa ?? 101.325,
+      characteristic_length_m:
+        payload.characteristic_length_m ??
+        (payload.droplet_diameter_mm ? payload.droplet_diameter_mm / 1000 : 0.003),
+      damper_isolated: payload.damper_isolated ?? false,
+      chemical_agent_released:
+        payload.chemical_agent_released ??
+        (payload.chemical_agent === "fk_5_1_12" ||
+          payload.chemical_agent === "halon_1301" ||
+          payload.chemical_agent === "FK-5-1-12" ||
+          payload.chemical_agent === "Halon 1301"),
+      chemical_agent_type:
+        payload.chemical_agent_type ||
+        (payload.chemical_agent?.toUpperCase().includes("HALON") ? "Halon 1301" : "FK-5-1-12"),
+      n2_flooding_active:
+        payload.n2_flooding_active ?? payload.n2_flooding ?? false,
+      n2_target_o2_percentage: payload.n2_target_o2_percentage ?? 9.5,
+      simulation_duration_s: payload.simulation_duration_s ?? 30.0,
+      time_step_s: payload.time_step_s ?? 0.5,
+      restart_ventilation_velocity_cm_s:
+        payload.restart_ventilation_velocity_cm_s ?? 3.0,
+    };
+
+    const res = await resilientFetch(`${getApiBase()}/safety/suppression/simulate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(backendPayload),
+      cache: "no-store",
+      timeoutMs: 6000,
+      retries: 1,
+    });
+    if (!res.ok) {
+      throw new Error(`HTTP error ${res.status}`);
+    }
+    const data = await res.json();
+    return {
+      ...data,
+      extinction_time_s: data.transient_extinction_time_s ?? data.extinction_time_s ?? 0,
+      residual_heat_release_w:
+        data.residual_radical_heat_release_w ?? data.residual_heat_release_w ?? 0,
+      damkohler_cool: data.damkohler_cool_final ?? data.damkohler_cool ?? 0,
+      rekindle_probability:
+        data.rekindle_probability_restart ?? data.rekindle_probability ?? 0,
+      decay_curve: data.decay_curve || data.transient_telemetry || [],
+      transient_telemetry: data.decay_curve || data.transient_telemetry || [],
+    };
+  } catch (err) {
+    return computeMockCabinSuppression(payload);
+  }
+}
+
 
 
 

@@ -1,10 +1,7 @@
 """API endpoints for chemical kinetics and cool flame combustion transition modeling."""
 
-from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query, status
-from pydantic import BaseModel, Field
-
+from backend.app.kinetics.anomaly_detector import MicrogravityAnomalyDetector
 from backend.app.kinetics.cool_flame import (
     COOL_FLAME_SUSCEPTIBLE_FUELS,
     CoolFlamePredictionResult,
@@ -12,8 +9,13 @@ from backend.app.kinetics.cool_flame import (
 )
 from backend.app.kinetics.pinn_surrogate import (
     PINNDropletSurrogate,
-    PINNSurrogatePrediction,
 )
+from backend.app.schemas.anomalies import (
+    AnomalyDetectionRequest,
+    AnomalyDetectionResponse,
+)
+from fastapi import APIRouter, HTTPException, status
+from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/kinetics", tags=["kinetics"])
 
@@ -86,8 +88,41 @@ async def predict_pinn_surrogate(payload: PINNPredictRequest):
         # Return as dict / Pydantic-compatible JSON
         from dataclasses import asdict
         return asdict(res)
-    except Exception as exc:
+    except (ValueError, TypeError, KeyError, RuntimeError) as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=str(exc),
         )
+
+
+@router.post(
+    "/anomalies/detect",
+    response_model=AnomalyDetectionResponse,
+    summary="Detect microgravity combustion contradictions and anomalies",
+    status_code=status.HTTP_200_OK,
+)
+async def detect_microgravity_anomalies(payload: AnomalyDetectionRequest):
+    """Detects counter-intuitive combustion behaviors in microgravity defying classical 1g intuition.
+
+    Evaluates:
+    1. Low-Speed Micro-Draft Paradox (BASS-II NASA/TM-20210011385)
+    2. Soot-Shell Radiative Trapping (FLEX NASA/TP-2015-216046)
+    3. NTC Kinetic Anomaly (ACME NTRS #20190001859)
+    """
+    try:
+        return MicrogravityAnomalyDetector.detect(payload)
+    except (ValueError, TypeError, KeyError, RuntimeError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        )
+
+
+@router.get(
+    "/anomalies/catalog",
+    summary="List microgravity combustion contradiction catalog",
+    status_code=status.HTTP_200_OK,
+)
+async def list_anomaly_catalog():
+    """Lists authentic microgravity combustion contradictions with scientific mechanisms and citations."""
+    return MicrogravityAnomalyDetector.get_catalog()
