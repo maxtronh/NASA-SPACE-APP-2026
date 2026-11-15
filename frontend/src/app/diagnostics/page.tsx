@@ -751,7 +751,7 @@ export default function DiagnosticsPage() {
                       NASA Technical Report Evidence
                     </div>
                     <p className="text-slate-300 leading-relaxed italic">
-                      "{activeFrame.ntrs_passage_excerpt}"
+                      “{activeFrame.ntrs_passage_excerpt}”
                     </p>
                   </div>
                 )}
