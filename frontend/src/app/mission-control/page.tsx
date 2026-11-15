@@ -614,9 +614,11 @@ export default function MissionControlPage() {
           <div className="bg-space-850 border border-space-800/80 rounded-lg p-3.5">
             <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Orbital Velocity</div>
             <div className="text-lg sm:text-xl font-bold font-mono text-white mt-1">
-              {simulateLOS ? "---" : "7.66 km/s"}
+              {simulateLOS
+                ? "---"
+                : `${Math.sqrt(398600.4418 / (6371.0 + telemetry.iss_altitude_km)).toFixed(2)} km/s`}
             </div>
-            <div className="text-[10px] font-mono text-slate-500 mt-0.5">27,576 km/h • Mach 22.5</div>
+            <div className="text-[10px] font-mono text-slate-500 mt-0.5">Vis-Viva Orbital Equation</div>
           </div>
 
           <div className="bg-space-850 border border-space-800/80 rounded-lg p-3.5">

@@ -8,6 +8,7 @@ and strict zero-fabrication validation.
 
 from __future__ import annotations
 
+import asyncio
 import collections
 import hashlib
 import json
@@ -621,7 +622,7 @@ class CitationResolver:
                     resp = await client.get(url, headers=headers)
                     if resp.status_code == 429:
                         retry_after = float(resp.headers.get("Retry-After", 1.0))
-                        time.sleep(retry_after)
+                        await asyncio.sleep(retry_after)
                         continue
                     break
 

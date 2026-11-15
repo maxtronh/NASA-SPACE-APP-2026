@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X, Maximize2, Minimize2, Code2, Copy, Check, Sparkles } from "lucide-react";
 import { ScientificArtifact } from "@/types/artifacts";
 import ArtifactRenderer from "./ArtifactRenderer";
@@ -14,16 +14,53 @@ export default function ArtifactCanvasDrawer({ artifact, onClose }: Props) {
   const [showJson, setShowJson] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    if (artifact) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [artifact, onClose]);
+
   if (!artifact) return null;
 
   const handleCopyJson = () => {
-    navigator.clipboard.writeText(JSON.stringify(artifact, null, 2));
+    const text = JSON.stringify(artifact, null, 2);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text);
+    } else {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 w-full md:w-[600px] lg:w-[680px] bg-space-950/95 backdrop-blur-xl border-l border-space-800 shadow-2xl flex flex-col transform transition-transform duration-300 ease-in-out">
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 transition-opacity"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Split Canvas Workspace"
+        className="fixed inset-y-0 right-0 z-50 w-full md:w-[600px] lg:w-[680px] bg-space-950/95 backdrop-blur-xl border-l border-space-800 shadow-2xl flex flex-col transform transition-transform duration-300 ease-in-out"
+      >
       {/* Drawer Header */}
       <div className="px-5 py-4 border-b border-space-800 flex items-center justify-between bg-space-900/50">
         <div className="flex items-center space-x-2">
@@ -98,5 +135,6 @@ export default function ArtifactCanvasDrawer({ artifact, onClose }: Props) {
         </button>
       </div>
     </div>
+    </>
   );
 }

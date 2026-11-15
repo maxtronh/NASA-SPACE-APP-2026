@@ -12,6 +12,8 @@ from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from backend.app.core.logging import logger
+
 from backend.app.exploration.solar_physics import (
     PLANETARY_ORBITS,
     THE_25_FACES,
@@ -117,7 +119,8 @@ async def copilot_chat(payload: QwenChatRequest) -> QwenChatResponse:
         response = qwen_copilot_engine.chat(payload)
         return response
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Qwen Copilot inference error: {str(e)}")
+        logger.exception(f"Qwen Copilot inference error: {e}")
+        raise HTTPException(status_code=500, detail="Qwen Copilot scientific inference failed to process query")
 
 
 @router.get("/model/metadata", response_model=QwenModelMetadata)

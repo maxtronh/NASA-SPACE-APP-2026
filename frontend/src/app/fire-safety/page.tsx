@@ -502,6 +502,7 @@ export default function FireSafetyPage() {
                 </div>
                 <input
                   type="range"
+                  aria-label="Gravity Acceleration (g)"
                   min="0.001"
                   max="1.5"
                   step="0.01"
@@ -521,6 +522,7 @@ export default function FireSafetyPage() {
                   </div>
                   <input
                     type="range"
+                    aria-label="Total Cabin Pressure (kPa)"
                     min="40.0"
                     max="110.0"
                     step="0.5"
@@ -543,6 +545,7 @@ export default function FireSafetyPage() {
                   </div>
                   <input
                     type="range"
+                    aria-label="Oxygen Concentration (vol %)"
                     min="15.0"
                     max="45.0"
                     step="0.5"
@@ -565,6 +568,7 @@ export default function FireSafetyPage() {
                   </div>
                   <input
                     type="range"
+                    aria-label="Forced Ventilation Airspeed (cm/s)"
                     min="0.0"
                     max="30.0"
                     step="0.5"

@@ -115,7 +115,7 @@ export default async function InvestigationDetailPage({ params }: InvestigationD
             <div>
               <span className="text-slate-400 font-mono block text-[11px]">Data Completeness</span>
               <span className="text-emerald-400 font-mono font-bold">
-                {investigation.data_completeness_index ?? 94.5}%
+                {investigation.data_completeness_index != null ? `${investigation.data_completeness_index}%` : "—"}
               </span>
             </div>
           </div>

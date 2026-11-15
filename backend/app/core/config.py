@@ -22,13 +22,12 @@ class Settings(BaseSettings):
         "sqlite:///./test_flame.db"
     )
 
-    # CORS
+    # CORS Origins (Explicit origins required when allow_credentials=True)
     CORS_ORIGINS: list[str] = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "http://localhost:8000",
         "http://127.0.0.1:8000",
-        "*"
     ]
 
     # Automatic Data Ingestion / Seeding on Startup

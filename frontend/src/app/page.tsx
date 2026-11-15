@@ -304,12 +304,14 @@ export default async function DashboardPage() {
                 <div>
                   <div className="flex justify-between text-[11px] font-mono text-slate-400 mb-1">
                     <span>Data Completeness</span>
-                    <span className="text-emerald-400">{inv.data_completeness_index || 94.5}%</span>
+                    <span className="text-emerald-400">
+                      {inv.data_completeness_index != null ? `${inv.data_completeness_index}%` : "—"}
+                    </span>
                   </div>
                   <div className="w-full bg-space-800 rounded-full h-1.5 overflow-hidden">
                     <div
                       className="bg-emerald-400 h-1.5 rounded-full"
-                      style={{ width: `${inv.data_completeness_index || 94.5}%` }}
+                      style={{ width: `${inv.data_completeness_index ?? 0}%` }}
                     />
                   </div>
                 </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   LineChart,
   Line,
@@ -71,6 +71,19 @@ export default function ScientificChart({ investigationSlug, regime }: Scientifi
     { velocity_cm_s: 3.5, spread_mm_s: 0.29, label: "Steady Spread" },
     { velocity_cm_s: 5.0, spread_mm_s: 0.38, label: "High Flow Regime" },
   ];
+
+  const filteredRunsKData = useMemo(() => {
+    if (investigationSlug.includes("heptane")) {
+      return flightRunsKData.filter((r) => r.fuel === "n-Heptane");
+    }
+    if (investigationSlug.includes("methanol")) {
+      return flightRunsKData.filter((r) => r.fuel === "Methanol");
+    }
+    if (investigationSlug.includes("decane")) {
+      return flightRunsKData.filter((r) => r.fuel === "n-Decane");
+    }
+    return flightRunsKData;
+  }, [investigationSlug]);
 
   return (
     <div className="bg-space-900 border border-space-700/80 rounded-xl p-5 shadow-lg">
@@ -181,7 +194,7 @@ export default function ScientificChart({ investigationSlug, regime }: Scientifi
 
         {chartMode === "burning_rates" && (
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={flightRunsKData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
+            <BarChart data={filteredRunsKData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1e2f4d" />
               <XAxis
                 dataKey="run"

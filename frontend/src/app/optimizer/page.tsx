@@ -306,6 +306,7 @@ export default function OptimizerPage() {
                 </div>
                 <input
                   type="range"
+                  aria-label="Chamber Pressure (kPa)"
                   min="40.0"
                   max="150.0"
                   step="1.0"
@@ -328,6 +329,7 @@ export default function OptimizerPage() {
                 </div>
                 <input
                   type="range"
+                  aria-label="Oxygen Mole Fraction (vol %)"
                   min="15.0"
                   max="40.0"
                   step="0.5"
@@ -350,6 +352,7 @@ export default function OptimizerPage() {
                 </div>
                 <input
                   type="range"
+                  aria-label="Forced Ventilation Velocity (cm/s)"
                   min="0.0"
                   max="20.0"
                   step="0.2"
@@ -372,6 +375,7 @@ export default function OptimizerPage() {
                 </div>
                 <input
                   type="range"
+                  aria-label="Initial Droplet Diameter (mm)"
                   min="1.0"
                   max="5.0"
                   step="0.1"
@@ -402,6 +406,7 @@ export default function OptimizerPage() {
                 </div>
                 <input
                   type="range"
+                  aria-label="Exploration Tradeoff Kappa"
                   min="0.5"
                   max="5.0"
                   step="0.1"

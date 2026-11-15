@@ -268,8 +268,17 @@ export default function DiagnosticsPage() {
                   return (
                     <div
                       key={frame.id}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Inspect ${frame.run_identifier} ${frame.modality} frame at ${frame.timestamp_s}s`}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          handleInspect(frame);
+                        }
+                      }}
                       onClick={() => handleInspect(frame)}
-                      className={`group cursor-pointer rounded-xl border p-3.5 transition-all bg-space-900 ${
+                      className={`group cursor-pointer rounded-xl border p-3.5 transition-all bg-space-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-nasa-cyan ${
                         isSelected
                           ? "border-nasa-cyan shadow-md shadow-cyan-500/20 ring-1 ring-nasa-cyan"
                           : "border-space-700 hover:border-slate-500 hover:bg-space-850"

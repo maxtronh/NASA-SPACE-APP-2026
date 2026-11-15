@@ -5,6 +5,8 @@ from typing import Any, Optional
 from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
+from backend.app.core.logging import logger
+
 from backend.app.kinetics.rekindle_warning import RekindleWarningEngine
 from backend.app.safety.eafhi import EAFHIEngine
 from backend.app.safety.evaluator import FlammabilityEvaluator
@@ -116,10 +118,16 @@ async def calculate_eafhi(payload: EAFHICalculateRequest):
             flame_temperature_k=payload.flame_temperature_k,
         )
         return EAFHIResponse(**result)
-    except Exception as exc:
+    except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"EAFHI calculation error: {exc}",
+            detail=str(exc),
+        )
+    except Exception as exc:
+        logger.exception(f"EAFHI calculation error: {exc}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="EAFHI calculation failed due to an internal server error",
         )
 
 
@@ -130,9 +138,10 @@ async def get_gateway_profile():
         result = EAFHIEngine.evaluate_gateway_profile()
         return GatewayProfileResponse(**result)
     except Exception as exc:
+        logger.exception(f"Gateway profile calculation error: {exc}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to generate Gateway flammability profile: {exc}",
+            detail="Failed to generate Gateway flammability profile",
         )
 
 
@@ -155,9 +164,10 @@ async def sweep_eafhi_sensitivity(payload: EAFHISensitivityRequest):
             detail=str(exc),
         )
     except Exception as exc:
+        logger.exception(f"Sensitivity sweep error: {exc}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Sensitivity sweep calculation error: {exc}",
+            detail="Sensitivity sweep calculation failed",
         )
 
 
@@ -174,9 +184,10 @@ async def assess_cool_flame_rekindle_risk(payload: RekindleWarningRequest):
             detail=str(exc),
         )
     except Exception as exc:
+        logger.exception(f"Rekindle risk assessment error: {exc}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Rekindle risk assessment error: {exc}",
+            detail="Rekindle risk assessment calculation failed",
         )
 
 
@@ -191,8 +202,9 @@ async def monitor_cool_flame_stream(payload: CoolFlameStreamMonitorRequest):
             detail=str(exc),
         )
     except Exception as exc:
+        logger.exception(f"Stream monitor error: {exc}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Stream monitor error: {exc}",
+            detail="Stream monitor analysis failed",
         )
 

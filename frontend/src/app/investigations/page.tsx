@@ -95,7 +95,7 @@ export default function InvestigationsExplorerPage() {
       }
 
       // Completeness slider
-      const completeness = inv.data_completeness_index ?? 90;
+      const completeness = inv.data_completeness_index ?? 0;
       if (completeness < minCompleteness) {
         return false;
       }
@@ -341,7 +341,7 @@ export default function InvestigationsExplorerPage() {
                     {inv.test_runs_count || 0} Flight Runs
                   </span>
                   <span className="text-emerald-400 text-[11px]">
-                    {inv.data_completeness_index ?? 94}% Complete
+                    {inv.data_completeness_index != null ? `${inv.data_completeness_index}% Complete` : "—"}
                   </span>
                 </div>
 
@@ -405,7 +405,7 @@ export default function InvestigationsExplorerPage() {
                     </td>
                     <td className="py-3.5 px-4 text-slate-200">{inv.test_runs_count || 0}</td>
                     <td className="py-3.5 px-4 text-emerald-400">
-                      {inv.data_completeness_index ?? 94}%
+                      {inv.data_completeness_index != null ? `${inv.data_completeness_index}%` : "—"}
                     </td>
                     <td className="py-3.5 px-4 text-right">
                       <Link

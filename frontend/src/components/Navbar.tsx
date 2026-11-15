@@ -91,7 +91,7 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Nav Links */}
-          <div className="hidden xl:flex items-center space-x-1">
+          <div className="hidden lg:flex items-center space-x-1">
             {NAV_LINKS.map((item) => {
               const Icon = item.icon;
               const isActive =
@@ -117,7 +117,7 @@ export default function Navbar() {
           </div>
 
           {/* Right side: Live Health Badge */}
-          <div className="hidden md:flex items-center space-x-3">
+          <div className="hidden sm:flex items-center space-x-3">
             <div
               className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs font-mono border transition-all ${
                 isHealthy
@@ -147,7 +147,7 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="flex xl:hidden items-center space-x-2">
+          <div className="flex lg:hidden items-center space-x-2">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-space-800 focus:outline-none"
@@ -161,7 +161,7 @@ export default function Navbar() {
 
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="xl:hidden bg-space-900 border-b border-space-700 px-4 pt-2 pb-4 space-y-2">
+        <div className="lg:hidden bg-space-900 border-b border-space-700 px-4 pt-2 pb-4 space-y-2">
           {NAV_LINKS.map((item) => {
             const Icon = item.icon;
             const isActive =
