@@ -1,19 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { useState } from "react";
+// Embedded NASA Eyes on the Solar System Orrery: https://eyes.nasa.gov/apps/orrery/
 import {
   Orbit,
-  Flame,
   Cpu,
   Compass,
   Send,
-  RotateCw,
-  Sparkles,
-  Info,
   ChevronRight,
-  ShieldAlert,
   Layers,
 } from "lucide-react";
 
@@ -426,7 +420,6 @@ interface ChatMessage {
 }
 
 export default function SolarSystem25FacesHUD() {
-  const containerRef = useRef<HTMLDivElement>(null);
   const [selectedFace, setSelectedFace] = useState<FaceData>(STATIC_25_FACES[15]); // Default Face 16
   const [departureBody, setDepartureBody] = useState("Earth");
   const [targetBody, setTargetBody] = useState("Mars");
@@ -447,170 +440,6 @@ export default function SolarSystem25FacesHUD() {
   ]);
   const [queryInput, setQueryInput] = useState("");
   const [isSending, setIsSending] = useState(false);
-  const [showTransferArc, setShowTransferArc] = useState(true);
-
-  // Three.js 3D Solar System Viewport
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color("#020611");
-
-    const camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 2000);
-    camera.position.set(0, 180, 320);
-
-    let renderer: THREE.WebGLRenderer;
-    try {
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-      renderer.setSize(container.clientWidth, container.clientHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-      container.innerHTML = "";
-      container.appendChild(renderer.domElement);
-    } catch {
-      return;
-    }
-
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    controls.maxDistance = 800;
-    controls.minDistance = 30;
-
-    // Ambient and Sun Point Light
-    const ambientLight = new THREE.AmbientLight(0x334155, 1.2);
-    scene.add(ambientLight);
-
-    const sunLight = new THREE.PointLight(0xfffaed, 3.0, 1200);
-    sunLight.position.set(0, 0, 0);
-    scene.add(sunLight);
-
-    // Sun Sphere
-    const sunGeom = new THREE.SphereGeometry(14, 32, 32);
-    const sunMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
-    const sunMesh = new THREE.Mesh(sunGeom, sunMat);
-    scene.add(sunMesh);
-
-    // Planetary Bodies Data
-    const planetDefs = [
-      { name: "Mercury", a: 28, speed: 4.15, size: 2.2, color: 0x94a3b8 },
-      { name: "Venus", a: 45, speed: 1.62, size: 3.5, color: 0xf59e0b },
-      { name: "Earth", a: 70, speed: 1.0, size: 4.0, color: 0x38bdf8, hasMoon: true },
-      { name: "Mars", a: 100, speed: 0.53, size: 3.2, color: 0xef4444 },
-      { name: "Jupiter", a: 155, speed: 0.2, size: 7.5, color: 0xfb923c },
-      { name: "Saturn", a: 210, speed: 0.1, size: 6.5, color: 0xeab308, hasRing: true },
-      { name: "Uranus", a: 260, speed: 0.04, size: 5.0, color: 0x67e8f9 },
-      { name: "Neptune", a: 305, speed: 0.02, size: 4.8, color: 0x6366f1 },
-      { name: "Pluto", a: 345, speed: 0.015, size: 2.0, color: 0xc084fc },
-    ];
-
-    const planetMeshes: { mesh: THREE.Mesh; a: number; speed: number; angle: number; moonMesh?: THREE.Mesh }[] = [];
-
-    planetDefs.forEach((p) => {
-      // Orbit Line
-      const orbitCurve = new THREE.EllipseCurve(0, 0, p.a, p.a, 0, 2 * Math.PI, false, 0);
-      const points = orbitCurve.getPoints(100);
-      const orbitGeom = new THREE.BufferGeometry().setFromPoints(
-        points.map((pt) => new THREE.Vector3(pt.x, 0, pt.y))
-      );
-      const orbitMat = new THREE.LineBasicMaterial({ color: 0x1e3a5f, transparent: true, opacity: 0.5 });
-      const orbitLine = new THREE.Line(orbitGeom, orbitMat);
-      scene.add(orbitLine);
-
-      // Planet Sphere
-      const pGeom = new THREE.SphereGeometry(p.size, 24, 24);
-      const pMat = new THREE.MeshStandardMaterial({ color: p.color, roughness: 0.7, metalness: 0.1 });
-      const pMesh = new THREE.Mesh(pGeom, pMat);
-      scene.add(pMesh);
-
-      let moonMesh: THREE.Mesh | undefined;
-      if (p.hasMoon) {
-        const mGeom = new THREE.SphereGeometry(1.2, 16, 16);
-        const mMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1 });
-        moonMesh = new THREE.Mesh(mGeom, mMat);
-        scene.add(moonMesh);
-      }
-
-      if (p.hasRing) {
-        const ringGeom = new THREE.RingGeometry(p.size + 3, p.size + 8, 32);
-        const ringMat = new THREE.MeshBasicMaterial({
-          color: 0xeab308,
-          side: THREE.DoubleSide,
-          transparent: true,
-          opacity: 0.6,
-        });
-        const ringMesh = new THREE.Mesh(ringGeom, ringMat);
-        ringMesh.rotation.x = Math.PI / 3;
-        pMesh.add(ringMesh);
-      }
-
-      planetMeshes.push({ mesh: pMesh, a: p.a, speed: p.speed, angle: Math.random() * Math.PI * 2, moonMesh });
-    });
-
-    // Transfer Arc Line (Earth to Mars)
-    let transferLine: THREE.Line | null = null;
-    if (showTransferArc) {
-      const curve = new THREE.QuadraticBezierCurve3(
-        new THREE.Vector3(70, 0, 0),
-        new THREE.Vector3(85, 30, -50),
-        new THREE.Vector3(100, 0, -60)
-      );
-      const arcPoints = curve.getPoints(50);
-      const arcGeom = new THREE.BufferGeometry().setFromPoints(arcPoints);
-      const arcMat = new THREE.LineDashedMaterial({ color: 0x68e5ff, dashSize: 4, gapSize: 2 });
-      transferLine = new THREE.Line(arcGeom, arcMat);
-      transferLine.computeLineDistances();
-      scene.add(transferLine);
-    }
-
-    let reqId: number;
-    let t = 0;
-    const animate = () => {
-      reqId = requestAnimationFrame(animate);
-      t += 0.005;
-
-      planetMeshes.forEach((item) => {
-        item.angle += 0.005 * item.speed;
-        item.mesh.position.x = Math.cos(item.angle) * item.a;
-        item.mesh.position.z = Math.sin(item.angle) * item.a;
-        item.mesh.rotation.y += 0.01;
-
-        if (item.moonMesh) {
-          const mAngle = t * 3;
-          item.moonMesh.position.x = item.mesh.position.x + Math.cos(mAngle) * 8;
-          item.moonMesh.position.z = item.mesh.position.z + Math.sin(mAngle) * 8;
-        }
-      });
-
-      controls.update();
-      renderer.render(scene, camera);
-    };
-    animate();
-
-    const handleResize = () => {
-      if (!container) return;
-      camera.aspect = container.clientWidth / container.clientHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(container.clientWidth, container.clientHeight);
-    };
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      cancelAnimationFrame(reqId);
-      scene.traverse((obj) => {
-        if (obj instanceof THREE.Mesh || obj instanceof THREE.Line) {
-          obj.geometry.dispose();
-          if (Array.isArray(obj.material)) obj.material.forEach((m) => m.dispose());
-          else obj.material.dispose();
-        }
-      });
-      renderer.dispose();
-      if (container.contains(renderer.domElement)) {
-        container.removeChild(renderer.domElement);
-      }
-    };
-  }, [showTransferArc]);
 
   // Recalculate Hohmann Transfer
   const calculateTransfer = (dep: string, arr: string) => {
@@ -738,24 +567,28 @@ export default function SolarSystem25FacesHUD() {
           <span className="rounded-md border border-nasa-cyan/30 bg-nasa-cyan/10 px-2.5 py-1 text-nasa-cyan">
             25 Faces Synchronized
           </span>
-          <button
-            onClick={() => setShowTransferArc((prev) => !prev)}
-            className="rounded-md border border-space-600 bg-space-800 px-2.5 py-1 text-slate-200 hover:border-nasa-cyan hover:text-white"
-          >
-            {showTransferArc ? "Hide Transfer Arc" : "Show Transfer Arc"}
-          </button>
         </div>
       </div>
 
-      {/* Main Split View: 3D Solar Canvas & Qwen Copilot Drawer */}
+      {/* Main Split View: NASA Eyes Orrery & Qwen Copilot Drawer */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        {/* Left: 3D Solar Canvas (7 cols) */}
+        {/* Left: NASA Eyes on the Solar System Orrery (7 cols) */}
         <div className="relative h-[480px] overflow-hidden rounded-xl border border-space-700 bg-[#020611] lg:col-span-7">
-          <div ref={containerRef} className="h-full w-full" />
-          <div className="pointer-events-none absolute left-3 top-3 rounded-lg border border-space-700/80 bg-space-900/85 p-2.5 backdrop-blur">
-            <div className="text-xs font-bold text-white">Keplerian 3D Solar System Viewport</div>
+          <iframe
+            src="https://eyes.nasa.gov/apps/orrery/"
+            title="NASA Eyes on the Solar System"
+            width="100%"
+            height="100%"
+            className="h-full w-full rounded-xl border-none bg-black"
+            style={{ border: "none" }}
+            allow="fullscreen"
+            loading="lazy"
+            referrerPolicy="strict-origin-when-cross-origin"
+          />
+          <div className="pointer-events-none absolute left-3 top-3 z-10 rounded-lg border border-space-700/80 bg-space-900/85 p-2.5 backdrop-blur">
+            <div className="text-xs font-bold text-white">NASA Eyes on the Solar System</div>
             <div className="font-mono text-[10px] text-slate-400">
-              Sun, Mercury to Neptune, Pluto &bull; Drag to rotate, scroll to zoom
+              Live JPL Interactive Orrery &bull; Real-Time Planetary &amp; Asteroid Ephemeris
             </div>
           </div>
         </div>

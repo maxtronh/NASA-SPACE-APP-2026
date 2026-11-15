@@ -265,13 +265,16 @@ class TestFrontendComponentIntegration:
         assert "SolarSystem25FacesHUD" in code
 
     def test_solar_system_hud_component_exists(self):
-        """Assert SolarSystem25FacesHUD.tsx exists and implements vanilla Three.js."""
+        """Assert SolarSystem25FacesHUD.tsx exists and embeds NASA Eyes Orrery."""
         hud_path = os.path.join(WORKSPACE_DIR, "frontend", "src", "components", "SolarSystem25FacesHUD.tsx")
         assert os.path.isfile(hud_path)
         with open(hud_path, "r", encoding="utf-8") as f:
             code = f.read()
 
-        assert "THREE.WebGLRenderer" in code
-        assert "OrbitControls" in code
+        assert "eyes.nasa.gov/apps/orrery" in code
+        assert "<iframe" in code
+        assert "NASA Eyes on the Solar System" in code
+        assert "THREE.WebGLRenderer" not in code
+        assert "OrbitControls" not in code
         assert "STATIC_25_FACES" in code
         assert "Qwen 2.5" in code
