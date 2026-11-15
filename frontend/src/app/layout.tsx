@@ -19,9 +19,18 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className="bg-space-950 text-slate-100 min-h-screen flex flex-col selection:bg-cyan-500/30 selection:text-nasa-cyan antialiased">
+      <body className="bg-space-950 text-slate-100 min-h-dvh flex flex-col selection:bg-cyan-500/30 selection:text-nasa-cyan antialiased">
+        <a href="#main-content" className="skip-link">
+          Skip to main content
+        </a>
         <Navbar />
-        <main className="flex-1 flex flex-col">{children}</main>
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="flex-1 flex flex-col scroll-mt-16"
+        >
+          {children}
+        </main>
         <Footer />
       </body>
     </html>

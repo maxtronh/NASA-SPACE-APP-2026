@@ -54,6 +54,56 @@ body {
   background: #334155;
 }
 
+/* Keyboard focus is always visible. Several controls opt out of the browser
+   ring with `focus:outline-none` for pointer users, so this rule pins a
+   consistent indicator back on whenever the browser reports keyboard intent. */
+:focus-visible {
+  outline: 2px solid #00e5ff !important;
+  outline-offset: 2px !important;
+}
+
+/* The skip target is a landmark, not a control: focusing it programmatically
+   should not draw a box around the whole page. */
+#main-content:focus-visible {
+  outline: none !important;
+}
+
+.skip-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 100;
+  transform: translateY(-200%);
+  border-radius: 0.5rem;
+  background-color: #00e5ff;
+  color: #030712;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: transform 150ms ease-out;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+/* Respect the OS "reduce motion" setting: keep every transition and animation
+   effectively instant instead of removing them (so state changes still read). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .skip-link {
+    transition: none;
+  }
+}
+
 /* Glow effects */
 .glow-cyan {
   box-shadow: 0 0 15px -3px rgba(6, 182, 212, 0.25);

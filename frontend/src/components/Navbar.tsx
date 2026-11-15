@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Flame,
   Compass,
@@ -10,7 +10,6 @@ import {
   Sparkles,
   BarChart3,
   Orbit,
-  Activity,
   Menu,
   X,
   ShieldCheck,
@@ -18,6 +17,7 @@ import {
   Cpu,
   ShieldAlert,
   Radio,
+  ChevronDown,
 } from "lucide-react";
 import { fetchHealth } from "@/lib/api";
 import { HealthResponse } from "@/types";
@@ -37,11 +37,33 @@ const NAV_LINKS = [
   { href: "/handbook", label: "Handbook", icon: ShieldCheck },
 ];
 
+// Twelve links cannot fit on one row between 1024px and 1536px. The six most
+// visited destinations stay inline and the remainder move into a disclosure
+// menu, so nothing is clipped or pushed off-screen at intermediate widths.
+const PRIMARY_HREFS = new Set([
+  "/",
+  "/investigations",
+  "/mission-control",
+  "/fire-safety",
+  "/analytics",
+  "/handbook",
+]);
+const PRIMARY_LINKS = NAV_LINKS.filter((item) => PRIMARY_HREFS.has(item.href));
+const SECONDARY_LINKS = NAV_LINKS.filter((item) => !PRIMARY_HREFS.has(item.href));
+
+function isLinkActive(pathname: string, href: string) {
+  return href === "/" ? pathname === "/" : pathname.startsWith(href);
+}
+
 export default function Navbar() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [loadingHealth, setLoadingHealth] = useState(true);
+  const moreRef = useRef<HTMLDivElement>(null);
+  const moreButtonRef = useRef<HTMLButtonElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -52,7 +74,7 @@ export default function Navbar() {
           setHealth(res);
           setLoadingHealth(false);
         }
-      } catch (e) {
+      } catch {
         if (mounted) setLoadingHealth(false);
       }
     }
@@ -64,14 +86,54 @@ export default function Navbar() {
     };
   }, []);
 
+  // Any navigation closes both menus.
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    setMoreOpen(false);
+  }, [pathname]);
+
+  // Escape closes the open menu and returns focus to the button that opened it.
+  useEffect(() => {
+    if (!moreOpen && !mobileMenuOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      if (moreOpen) {
+        setMoreOpen(false);
+        moreButtonRef.current?.focus();
+      }
+      if (mobileMenuOpen) {
+        setMobileMenuOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [moreOpen, mobileMenuOpen]);
+
+  // Clicking anywhere outside the disclosure dismisses it.
+  useEffect(() => {
+    if (!moreOpen) return;
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!moreRef.current?.contains(event.target as Node)) setMoreOpen(false);
+    };
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [moreOpen]);
+
   const isHealthy = health?.status === "healthy";
+  const isSecondaryActive = SECONDARY_LINKS.some((item) =>
+    isLinkActive(pathname, item.href)
+  );
 
   return (
-    <nav className="sticky top-0 z-50 bg-space-950/90 backdrop-blur-md border-b border-space-700/60 shadow-lg">
+    <nav
+      aria-label="Main"
+      className="sticky top-0 z-50 bg-space-950/90 backdrop-blur-md border-b border-space-700/60 shadow-lg"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-16 gap-3">
           {/* Logo & Brand */}
-          <Link href="/" className="flex items-center space-x-3 group">
+          <Link href="/" className="flex items-center space-x-3 group shrink-0">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-md shadow-orange-500/20 group-hover:scale-105 transition-transform">
               <Flame className="w-6 h-6 text-white" />
             </div>
@@ -80,7 +142,7 @@ export default function Navbar() {
                 <span className="font-bold tracking-wider text-white text-base sm:text-lg">
                   FLAME <span className="text-nasa-cyan">IN FREEFALL</span>
                 </span>
-                <span className="text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded bg-space-800 border border-space-700 text-slate-400 font-mono">
+                <span className="hidden xl:inline text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded bg-space-800 border border-space-700 text-slate-400 font-mono">
                   NASA SI
                 </span>
               </div>
@@ -92,32 +154,88 @@ export default function Navbar() {
 
           {/* Desktop Nav Links */}
           <div className="hidden lg:flex items-center space-x-1">
-            {NAV_LINKS.map((item) => {
+            {PRIMARY_LINKS.map((item) => {
               const Icon = item.icon;
-              const isActive =
-                item.href === "/"
-                  ? pathname === "/"
-                  : pathname.startsWith(item.href);
+              const active = isLinkActive(pathname, item.href);
 
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center space-x-1.5 px-2 py-1.5 rounded-lg text-xs 2xl:text-sm font-medium transition-all ${
-                    isActive
+                  aria-current={active ? "page" : undefined}
+                  className={`flex items-center space-x-1.5 px-2 py-1.5 rounded-lg text-xs 2xl:text-sm font-medium transition-colors ${
+                    active
                       ? "bg-space-800 text-nasa-cyan border border-nasa-cyan/40 shadow-sm shadow-cyan-500/10"
                       : "text-slate-300 hover:text-white hover:bg-space-800/60"
                   }`}
                 >
-                  <Icon className={`w-3.5 h-3.5 2xl:w-4 2xl:h-4 ${isActive ? "text-nasa-cyan" : "text-slate-400"}`} />
+                  <Icon
+                    className={`w-3.5 h-3.5 2xl:w-4 2xl:h-4 ${
+                      active ? "text-nasa-cyan" : "text-slate-400"
+                    }`}
+                  />
                   <span>{item.label}</span>
                 </Link>
               );
             })}
+
+            {/* Secondary destinations, collapsed so the row never overflows */}
+            <div ref={moreRef} className="relative">
+              <button
+                ref={moreButtonRef}
+                type="button"
+                onClick={() => setMoreOpen((open) => !open)}
+                aria-expanded={moreOpen}
+                aria-controls="more-navigation"
+                aria-haspopup="true"
+                className={`flex items-center space-x-1.5 px-2 py-1.5 rounded-lg text-xs 2xl:text-sm font-medium transition-colors ${
+                  moreOpen || isSecondaryActive
+                    ? "bg-space-800 text-nasa-cyan border border-nasa-cyan/40"
+                    : "text-slate-300 hover:text-white hover:bg-space-800/60 border border-transparent"
+                }`}
+              >
+                <span>More</span>
+                <ChevronDown
+                  aria-hidden="true"
+                  className={`w-3 h-3 transition-transform ${moreOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+
+              {moreOpen && (
+                <div
+                  id="more-navigation"
+                  className="absolute right-0 mt-2 w-56 rounded-xl border border-space-700 bg-space-900/95 backdrop-blur-md shadow-xl p-1.5 space-y-0.5"
+                >
+                  {SECONDARY_LINKS.map((item) => {
+                    const Icon = item.icon;
+                    const active = isLinkActive(pathname, item.href);
+
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setMoreOpen(false)}
+                        aria-current={active ? "page" : undefined}
+                        className={`flex items-center space-x-2.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-colors ${
+                          active
+                            ? "bg-space-800 text-nasa-cyan"
+                            : "text-slate-300 hover:text-white hover:bg-space-800/60"
+                        }`}
+                      >
+                        <Icon
+                          className={`w-4 h-4 ${active ? "text-nasa-cyan" : "text-slate-400"}`}
+                        />
+                        <span>{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Right side: Live Health Badge */}
-          <div className="hidden sm:flex items-center space-x-3">
+          <div className="hidden xl:flex items-center space-x-3 shrink-0">
             <div
               className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs font-mono border transition-all ${
                 isHealthy
@@ -131,6 +249,7 @@ export default function Navbar() {
               }
             >
               <span
+                aria-hidden="true"
                 className={`w-2 h-2 rounded-full animate-pulse ${
                   isHealthy ? "bg-emerald-400" : "bg-amber-400"
                 }`}
@@ -142,18 +261,26 @@ export default function Navbar() {
                   ? "BACKEND LIVE"
                   : "CACHED MODE"}
               </span>
-              <ShieldCheck className="w-3.5 h-3.5 opacity-80" />
+              <ShieldCheck aria-hidden="true" className="w-3.5 h-3.5 opacity-80" />
             </div>
           </div>
 
           {/* Mobile Menu Button */}
           <div className="flex lg:hidden items-center space-x-2">
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-space-800 focus:outline-none"
-              aria-label="Toggle menu"
+              ref={menuButtonRef}
+              type="button"
+              onClick={() => setMobileMenuOpen((open) => !open)}
+              className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-space-800"
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-navigation"
+              aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? (
+                <X aria-hidden="true" className="w-6 h-6" />
+              ) : (
+                <Menu aria-hidden="true" className="w-6 h-6" />
+              )}
             </button>
           </div>
         </div>
@@ -161,26 +288,29 @@ export default function Navbar() {
 
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-space-900 border-b border-space-700 px-4 pt-2 pb-4 space-y-2">
+        <div
+          id="mobile-navigation"
+          className="lg:hidden bg-space-900 border-b border-space-700 px-4 pt-2 pb-4 space-y-2 max-h-[calc(100dvh-4rem)] overflow-y-auto custom-scrollbar"
+        >
           {NAV_LINKS.map((item) => {
             const Icon = item.icon;
-            const isActive =
-              item.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(item.href);
+            const active = isLinkActive(pathname, item.href);
 
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
+                aria-current={active ? "page" : undefined}
                 className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium ${
-                  isActive
+                  active
                     ? "bg-space-800 text-nasa-cyan border border-nasa-cyan/40"
                     : "text-slate-300 hover:text-white hover:bg-space-800/60"
                 }`}
               >
-                <Icon className={`w-5 h-5 ${isActive ? "text-nasa-cyan" : "text-slate-400"}`} />
+                <Icon
+                  className={`w-5 h-5 ${active ? "text-nasa-cyan" : "text-slate-400"}`}
+                />
                 <span>{item.label}</span>
               </Link>
             );
